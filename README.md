@@ -1,4 +1,4 @@
-# Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy
+# Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy (JAMBOREE)
 Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 
 ## Status of automation script
