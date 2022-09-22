@@ -1,6 +1,8 @@
 # Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy (JAMBOREE)
 Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 
+This is going to be a Windows Installer that will grab and automate most of the process of setting up a Portable Android Emulator!
+
 ![image](https://user-images.githubusercontent.com/4307863/191853475-3fe11324-e52b-4b3c-8f72-fdceb27ed337.png)
 
 _"Run ARM apps on the Android Emulator
