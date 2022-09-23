@@ -38,19 +38,20 @@ https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulat
 |Logcat All In One Window|❌|
 |Detect/Split Apks? https://github.com/NickstaDB/patch-apk|❌|
 
-ODER OPS:
+##ODER OPS
 * download android command line installer
 * use 7z ps1 script to install licences files
 * download all stuff for  Pixel_2_API_30 x86 with PLAY working !
 * run rootAVD
 * setup magisk
+* run google play to add account
 * disable play protect (command line ? )
 * install magisk manager ? https://github.com/Fox2Code/FoxMagiskModuleManager/releases
 * install ?  https://forum.xda-developers.com/attachments/magiskhidepropsconf-v6-1-2-zip.5453567/ 
 * https://github.com/whalehub/custom-certificate-authorities
 * /data/misc/user/0/cacerts-custom
 
-Credit/References/Unsorted:
+##Credit/References/Unsorted:
 
 https://www.droidwin.com/how-to-hide-root-from-apps-via-magisk-denylist/
 https://github.com/Fox2Code/FoxMagiskModuleManager/releases
@@ -75,5 +76,4 @@ https://systemweakness.com/how-to-install-burp-suite-certificate-on-an-android-e
 PINNING
 https://book.hacktricks.xyz/mobile-pentesting/android-app-pentesting
 
-DOWNLOAD TO APK  FOLDER
-https://github.com/topjohnwu/Magisk/releases/download/v25.2/Magisk-v25.2.apk
+
