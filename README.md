@@ -38,7 +38,7 @@ https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulat
 |Logcat All In One Window|❌|
 |Detect/Split Apks? https://github.com/NickstaDB/patch-apk|❌|
 
-##ODER OPS
+## Order of Opperations
 * download android command line installer
 * use 7z ps1 script to install licences files
 * download all stuff for  Pixel_2_API_30 x86 with PLAY working !
@@ -51,7 +51,7 @@ https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulat
 * https://github.com/whalehub/custom-certificate-authorities
 * /data/misc/user/0/cacerts-custom
 
-##Credit/References/Unsorted:
+## Credit/References/Unsorted:
 
 https://www.droidwin.com/how-to-hide-root-from-apps-via-magisk-denylist/
 https://github.com/Fox2Code/FoxMagiskModuleManager/releases
