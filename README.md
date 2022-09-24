@@ -10,7 +10,11 @@ _"Run ARM apps on the Android Emulator
 Posted by Michael Hazard
 As part of the Android 11 developer preview we’ve released Android 11 system images, which are capable of executing ARM binaries with significantly improved performance. Previously, developers who were dependent on ARM libraries and could not build an x86 variant of their app either had to use system images with full ARM emulation, which are much slower than x86 system images when run on x86-based computers, or resort to physical devices. The new Android 11 system images are capable of translating ARM instructions to x86 without impacting the entire system. This allows the execution of ARM binaries for testing without the performance overhead of full ARM emulation."_
 
+## Burp/Android Emulator
 https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulator.html
+## LuckPatcher
+![image](https://user-images.githubusercontent.com/4307863/192104230-fae1cbc8-f2f8-405e-8c3d-bba7a0a5505b.png)
+
 
 ## Status of Automation Script
 
