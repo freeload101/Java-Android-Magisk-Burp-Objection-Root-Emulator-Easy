@@ -47,6 +47,9 @@ https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulat
 |Audo add Google Services to DenyList|❌|
 |Disable Updates/Google Play|❌|
 |Disable Base Apps like Google Music etc|❌|
+|Split APK install SAI App from GitHub|❌|
+
+
 
 ## Order of Opperations
 * download android command line installer
