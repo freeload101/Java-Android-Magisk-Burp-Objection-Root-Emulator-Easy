@@ -29,6 +29,7 @@ https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulat
 |Feature/Idea|Status|
 |--|--|
 |Kill Task/Wipe Storage|❌|
+|Kill all Apps/Root before launch of app|❌|
 |Fix Allow All/Perms All Apps|❌|
 |Autohide Root/Magisk Before Patch or Frida|❌|
 |build.prop (see reddit build.prop)|❌|
