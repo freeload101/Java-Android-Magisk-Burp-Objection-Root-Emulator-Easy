@@ -38,6 +38,8 @@ https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulat
 |Logcat All In One Window|❌|
 |Detect/Split Apks? https://github.com/NickstaDB/patch-apk|❌|
 |Generate New Burp/ZAP certs/openssl .0  .cet .der|❌|
+|Proxy Switch|❌|
+|Disable Updates/Google Play|❌|
 
 ## Order of Opperations
 * download android command line installer
