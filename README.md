@@ -46,6 +46,7 @@ https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulat
 |Proxy Switch|❌|
 |Audo add Google Services to DenyList|❌|
 |Disable Updates/Google Play|❌|
+|Disable Base Apps like Google Music etc|❌|
 
 ## Order of Opperations
 * download android command line installer
