@@ -249,9 +249,7 @@ if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
         else {
             Write-Host "[+] $VARCD\rootAVD-master already exists"
         }
-    Set-Location -Path "C:\DELETE\GG\rootAVD-master"
-	Set-Location -LiteralPath "C:\DELETE\GG\rootAVD-master"
-
+    
 	$varadb=CheckADB
 	$env:ANDROID_SERIAL=$varadb
 	cd "$VARCD\rootAVD-master"
