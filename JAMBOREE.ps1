@@ -111,7 +111,7 @@ function CheckADB {
     $varadb = $varadb -match 'device\b' -replace 'device','' -replace '\s',''
     Write-Host "[+] Online Device: $varadb"
         if (($varadb.length -lt 1 )) {
-            Write-Host "[+] ADB Failed!"
+            Write-Host "[+] ADB Failed! Check for unathorized devices listed in ADB!"
 			adb devices
         }
     
