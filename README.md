@@ -10,6 +10,11 @@ _"Run ARM apps on the Android Emulator
 As part of the Android 11 developer preview we’ve released Android 11 system images, which are capable of executing ARM binaries with significantly improved performance. "_
 
 https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulator.html
+
+## Lame Interface :stuck_out_tongue_closed_eyes:
+![image](https://user-images.githubusercontent.com/4307863/192395895-c137dc3d-225e-4aec-a222-c56126a63575.png)
+
+
 ## LuckPatcher
 ![image](https://user-images.githubusercontent.com/4307863/192104230-fae1cbc8-f2f8-405e-8c3d-bba7a0a5505b.png)
 
