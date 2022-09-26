@@ -19,8 +19,8 @@ https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulat
 |--|--|
 |Java|✔️|
 |Android|✔️|
-|Magisk|❌|
-|Burp|✔️|
+|Magisk|✔️|
+|Burp|❌|
 |Objection|❌|
 |Root|✔️|
 |Python|❌|
