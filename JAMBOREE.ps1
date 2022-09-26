@@ -17,7 +17,8 @@ rd q/s "c:\Users\internet\AppData\Local\Android"
 rd q/s "c:\Users\internet\AppData\Local\Google"
 
 -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
-
+start RedirectStandardOutput.txt 
+start RedirectStandardError.txt
 #>
 
 # set current directory
@@ -34,7 +35,7 @@ New-Item -Path "$VARCD\avd" -ItemType Directory  -ErrorAction SilentlyContinue |
 $env:ANDROID_SDK_HOME="$VARCD"
 
 $env:JAVA_HOME = "$VARCD\jdk-11.0.1"
-$env:Path = "$env:Path;$VARCD\platform-tools\"
+$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master"
 
 # Setup Form
 Add-Type -assembly System.Windows.Forms
@@ -44,7 +45,6 @@ $main_form.Text = "JAMBOREE"
 
 $hShift = 0
 $vShift = 0
-
 
 ### MAIN ###
 
@@ -68,7 +68,7 @@ function downloadFile($url, $targetFile)
     while ($count -gt 0)
     {
         #[System.Console]::CursorLeft = 0
-        [System.Console]::Write("`nDownloaded {0}K of {1}K", [System.Math]::Floor($downloadedBytes/1024), $totalLength)
+        #[System.Console]::Write("`nDownloaded {0}K of {1}K", [System.Math]::Floor($downloadedBytes/1024), $totalLength)
         $targetStream.Write($buffer, 0, $count)
         $count = $responseStream.Read($buffer,0,$buffer.length)
         $downloadedBytes = $downloadedBytes + $count
@@ -104,18 +104,23 @@ Function CheckJava {
 
 
 
-################################# FUNCTIONS END
+############# CheckADB
 function CheckADB {
     $varadb = (adb devices)
     Write-Host "[+] $varadb"
-    $varadb = $varadb -match 'device\b' -replace 'device',''
-    Write-Host "[+] Online Device is: $varadb"
+    $varadb = $varadb -match 'device\b' -replace 'device','' -replace '\s',''
+    Write-Host "[+] Online Device: $varadb"
         if (($varadb.length -lt 1 )) {
-            Write-Host "[+] ADB Failed"
-            [void][System.Windows.MessageBox]::Show("ADB Failed. Wait and try again","Error")
+            Write-Host "[+] ADB Failed!"
+			adb devices
         }
-    return $varadb
+    
+    # set ANDROID_SERIAL because it breaks rootAVD if more then one devices is listed
+	return $varadb
 }
+
+################################# FUNCTIONS END
+
 
 ############# BUTTON1
 $Button1 = New-Object System.Windows.Forms.Button
@@ -127,13 +132,14 @@ $main_form.Controls.Add($Button1)
 
 Function Button1 {
     $varadb=CheckADB
-    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  "-s $varadb shell " -Wait  
+	$env:ANDROID_SERIAL=$varadb
+    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell " -Wait  
 }
 
 ############# BUTTON2
 $Button2 = New-Object System.Windows.Forms.Button
 $Button2.AutoSize = $true
-$Button2.Text = "AVD Download/Install"
+$Button2.Text = "1. AVD Download/Install"
 $Button2.Location = New-Object System.Drawing.Point(($hShift),($vShift+30))
 $Button2.Add_Click({Button2})
 $main_form.Controls.Add($Button2)
@@ -172,32 +178,30 @@ Function Button2 {
     
 
     # now we are using latest cmdline-tools ...!?
-    Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platform-tools" -Verbose
-    Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "extras;intel;Hardware_Accelerated_Execution_Manager" -Verbose
-    Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platforms;android-30" -Verbose 
-    Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "emulator" -Verbose
-    Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "system-images;android-30;google_apis_playstore;x86" -Verbose
-    Write-Host "[+] Wait for AVD Install to Complete"
+    Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platform-tools" -Verbose -Wait -NoNewWindow 
+    Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "extras;intel;Hardware_Accelerated_Execution_Manager" -Verbose -Wait -NoNewWindow 
+    Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platforms;android-30" -Verbose -Wait -NoNewWindow 
+    Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "emulator" -Verbose -Wait -NoNewWindow 
+    Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "system-images;android-30;google_apis_playstore;x86" -Verbose -Wait -NoNewWindow 
+    Write-Host "[+] AVD Install Complete"
     }
     
 ############# BUTTON3
 $Button3 = New-Object System.Windows.Forms.Button
 $Button3.AutoSize = $true
-$Button3.Text = "Create AVD"
+$Button3.Text = "3. Create AVD"
 $Button3.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+60))
 $Button3.Add_Click({Button3})
 $main_form.Controls.Add($Button3)
 
 Function Button3 {
-    Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-30;google_apis_playstore;x86`"  -d `"pixel_2`" --force" -Wait   -Verbose  -RedirectStandardError error.txt -RedirectStandardOutput output.txt
-    Get-Content "$VARCD\error.txt"
-    Get-Content "$VARCD\output.txt"
+    Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-30;google_apis_playstore;x86`"  -d `"pixel_2`" --force" -Wait -Verbose
 }
 
 ############# BUTTON4
 $Button4 = New-Object System.Windows.Forms.Button
 $Button4.AutoSize = $true
-$Button4.Text = "Start AVD -writable-system"
+$Button4.Text = "4. Start AVD -writable-system"
 $Button4.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+90))
 $Button4.Add_Click({Button4})
 $main_form.Controls.Add($Button4)
@@ -217,18 +221,20 @@ $main_form.Controls.Add($Button5)
 
 Function Button5 {
     $varadb=CheckADB
-    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  "-s $varadb shell -t  `"reboot -p`"" -Wait
+	$env:ANDROID_SERIAL=$varadb
+    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell -t  `"reboot -p`"" -Wait
 }
 
 ############# Button6
 $Button6 = New-Object System.Windows.Forms.Button
 $Button6.AutoSize = $true
-$Button6.Text = "rootAVD/Install Magisk"
+$Button6.Text = "5. rootAVD/Install Magisk"
 $Button6.Location = New-Object System.Drawing.Point(($hShift),($vShift+150))
 $Button6.Add_Click({Button6})
 $main_form.Controls.Add($Button6)
 
 Function Button6 {
+
 if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
     try {
             Write-Host "[+] Downloading rootAVD"
@@ -243,19 +249,51 @@ if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
         else {
             Write-Host "[+] $VARCD\rootAVD-master already exists"
         }
-    
-    Set-Location -Path "$VARCD\rootAVD-master"
-    $varadb=CheckADB   
-    Write-Host "[+] Running installing magisk via rootAVD to ramdisk.img"
-    Start-Process -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "$VARCD\system-images\android-30\google_apis_playstore\x86\ramdisk.img" -Wait 
+    Set-Location -Path "C:\DELETE\GG\rootAVD-master"
+	Set-Location -LiteralPath "C:\DELETE\GG\rootAVD-master"
+
+	$varadb=CheckADB
+	$env:ANDROID_SERIAL=$varadb
+	cd "$VARCD\rootAVD-master"
+	Write-Host "[+] Running installing magisk via rootAVD to ramdisk.img"
+	Start-Process -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "$VARCD\system-images\android-30\google_apis_playstore\x86\ramdisk.img" -Wait 
     Write-Host "[+] rootAVD Finished if the emulator did not close/poweroff try again"
-    
 }
- 
+
+
+
+############# Button7
+$Button7 = New-Object System.Windows.Forms.Button
+$Button7.AutoSize = $true
+$Button7.Text = "Kill adb.exe"
+$Button7.Location = New-Object System.Drawing.Point(($hShift),($vShift+180))
+$Button7.Add_Click({Button7})
+$main_form.Controls.Add($Button7)
+
+Function Button7 {
+Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
+}
+
+############# Button8
+$Button8 = New-Object System.Windows.Forms.Button
+$Button8.AutoSize = $true
+$Button8.Text = "2. Install HAXM (Reboot?) "
+$Button8.Location = New-Object System.Drawing.Point(($hShift),($vShift+210))
+$Button8.Add_Click({Button8})
+$main_form.Controls.Add($Button8)
+
+Function Button8 {
+Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
+Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager\silent_install.bat" -WorkingDirectory "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager" -Wait
+}
+
 <#
 Shell Notes:
 
-cd  C:\JAMBOREE
+cd C:\DELETE\GG
+powershell
+.\JAMBOREE.ps1
+
 set ANDROID_SDK_ROOT=%CD%
 set ANDROID_AVD_HOME=%CD%
 set ANDROID_HOME=%CD%
@@ -264,9 +302,12 @@ set ANDROID_SDK_HOME=%CD%
 set JAVA_HOME=%CD%\jdk-11.0.1
 set PATH=%CD%\platform-tools\;%Path%
 cd  rootAVD-master
-rootAVD.bat "C:\JAMBOREE\system-images\android-30\google_apis_playstore\x86\ramdisk.img"
-#>
 
+set ANDROID_SERIAL=emulator-5554
+
+
+rootAVD.bat "..\system-images\android-30\google_apis_playstore\x86\ramdisk.img"
+#>
 
 ############# SHOW FORM
 $main_form.ShowDialog()
