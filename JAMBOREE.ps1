@@ -281,8 +281,10 @@ $Button8.Add_Click({Button8})
 $main_form.Controls.Add($Button8)
 
 Function Button8 {
-Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
-Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager\silent_install.bat" -WorkingDirectory "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager" -Wait
+Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager\silent_install.bat" -ArgumentList  " -u "  -WorkingDirectory "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager" -Wait
+Start-Sleep -s 5
+Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager\silent_install.bat"   -WorkingDirectory "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager" -Wait
+}
 }
 
 <#
