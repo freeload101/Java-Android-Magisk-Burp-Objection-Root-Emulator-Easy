@@ -26,6 +26,7 @@ https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulat
 |Android|✔️|
 |Magisk|✔️|
 |Burp|❌|
+|Old Firefox 103.0.2 (64-bit) NOT ESR|❌|
 |ZAP|❌|
 |Objection|❌|
 |Root|✔️|
