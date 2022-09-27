@@ -287,6 +287,19 @@ Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Mana
 }
 }
 
+############# Button9
+$Button9 = New-Object System.Windows.Forms.Button
+$Button9.AutoSize = $true
+$Button9.Text = "Start AVD -wipe-data no internet"
+$Button9.Location = New-Object System.Drawing.Point(($hShift),($vShift+240))
+$Button9.Add_Click({Button9})
+$main_form.Controls.Add($Button9)
+
+Function Button9 {
+    Write-Host "[+] Starting AVD emulator"
+    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -wipe-data -http-proxy localhost:99"  -WindowStyle Minimized	
+}
+
 <#
 Shell Notes:
 
