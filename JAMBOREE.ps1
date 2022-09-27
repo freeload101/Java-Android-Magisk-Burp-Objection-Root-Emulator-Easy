@@ -201,7 +201,7 @@ Function Button3 {
 ############# BUTTON4
 $Button4 = New-Object System.Windows.Forms.Button
 $Button4.AutoSize = $true
-$Button4.Text = "4. Start AVD -writable-system"
+$Button4.Text = "6. Start AVD -writable-system"
 $Button4.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+90))
 $Button4.Add_Click({Button4})
 $main_form.Controls.Add($Button4)
@@ -290,7 +290,7 @@ Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Mana
 ############# Button9
 $Button9 = New-Object System.Windows.Forms.Button
 $Button9.AutoSize = $true
-$Button9.Text = "Start AVD -wipe-data no internet"
+$Button9.Text = "3. Start AVD -wipe-data no internet"
 $Button9.Location = New-Object System.Drawing.Point(($hShift),($vShift+240))
 $Button9.Add_Click({Button9})
 $main_form.Controls.Add($Button9)
