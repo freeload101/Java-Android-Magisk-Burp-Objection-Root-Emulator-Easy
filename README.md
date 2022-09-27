@@ -52,7 +52,7 @@ https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulat
 |Disable Updates/Google Play|❌|
 |Disable Base Apps like Google Music etc|❌|
 |Split APK install SAI App from GitHub|❌|
-
+|Brida,Burp to Frida brige|❌|
 
 
 ## Order of Opperations
