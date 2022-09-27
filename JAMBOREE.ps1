@@ -201,7 +201,7 @@ Function Button3 {
 ############# BUTTON4
 $Button4 = New-Object System.Windows.Forms.Button
 $Button4.AutoSize = $true
-$Button4.Text = "6. Start AVD -writable-system"
+$Button4.Text = "5. Start AVD -writable-system"
 $Button4.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+90))
 $Button4.Add_Click({Button4})
 $main_form.Controls.Add($Button4)
@@ -228,7 +228,7 @@ Function Button5 {
 ############# Button6
 $Button6 = New-Object System.Windows.Forms.Button
 $Button6.AutoSize = $true
-$Button6.Text = "5. rootAVD/Install Magisk"
+$Button6.Text = "4. rootAVD/Install Magisk"
 $Button6.Location = New-Object System.Drawing.Point(($hShift),($vShift+150))
 $Button6.Add_Click({Button6})
 $main_form.Controls.Add($Button6)
@@ -285,7 +285,7 @@ Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Mana
 Start-Sleep -s 5
 Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager\silent_install.bat"   -WorkingDirectory "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager" -Wait
 }
-}
+
 
 ############# Button9
 $Button9 = New-Object System.Windows.Forms.Button
