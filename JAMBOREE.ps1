@@ -284,8 +284,8 @@ Function Button8 {
 Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager\silent_install.bat" -ArgumentList  " -u "  -WorkingDirectory "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager" -Wait
 Start-Sleep -s 5
 Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager\silent_install.bat"   -WorkingDirectory "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager" -Wait
-}
 
+}
 
 ############# Button9
 $Button9 = New-Object System.Windows.Forms.Button
