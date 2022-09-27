@@ -34,8 +34,15 @@ $env:ANDROID_AVD_HOME="$VARCD\avd"
 New-Item -Path "$VARCD\avd" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 $env:ANDROID_SDK_HOME="$VARCD"
 
+#java 
 $env:JAVA_HOME = "$VARCD\jdk-11.0.1"
+
+# rootAVD
 $env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master"
+
+# python
+$env:PYTHONHOME="$VARCD\python\tools"
+$env:Path="$VARCD\python\tools\Scripts;$env:Path"
 
 # Setup Form
 Add-Type -assembly System.Windows.Forms
@@ -101,8 +108,39 @@ Function CheckJava {
             }
 }
 
+############# CHECK PYTHON
+Function CheckPython {
+   if (-not(Test-Path -Path "$VARCD\python" )) { 
+        try {
+            Write-Host "[+] Downloading Python nuget package" 
+            Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/python"  -Out "$VARCD\python.zip"
+            Expand-Archive -Path  "$VARCD\python.zip" -DestinationPath "$VARCD\python" -Force
+            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection "
+            Start-Process -FilePath "$VARCD\python\tools\Scripts\frida-ps" -WorkingDirectory "$VARCD\python\tools"  -ArgumentList " -Uai" -NoNewWindow
+            }
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+            Write-Host "[+] $VARCD\python already exists"
+            }
+}
 
+############# CheckADB
+function InstallAPKS {
+New-Item -Path "$VARCD\APKS" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 
+$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/Aefyr/SAI/releases/latest").assets | Where-Object name -like *.apk ).browser_download_url
+Invoke-WebRequest -Uri $downloadUri -Out "$VARCD\APKS\SAI.apk"
+
+$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/TeamAmaze/AmazeFileManager/releases/latest").assets | Where-Object name -like *.apk ).browser_download_url
+Invoke-WebRequest -Uri $downloadUri -Out "$VARCD\APKS\AmazeFileManager.apk"
+
+$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/duckduckgo/Android/releases/latest").assets | Where-Object name -like *.apk ).browser_download_url
+Invoke-WebRequest -Uri $downloadUri -Out "$VARCD\APKS\duckduckgo.apk"
+
+}
 
 ############# CheckADB
 function CheckADB {
@@ -114,8 +152,6 @@ function CheckADB {
             Write-Host "[+] ADB Failed! Check for unathorized devices listed in ADB!"
 			adb devices
         }
-    
-    # set ANDROID_SERIAL because it breaks rootAVD if more then one devices is listed
 	return $varadb
 }
 
@@ -133,7 +169,7 @@ $main_form.Controls.Add($Button1)
 Function Button1 {
     $varadb=CheckADB
 	$env:ANDROID_SERIAL=$varadb
-    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell " -Wait  
+    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell  " -Wait  
 }
 
 ############# BUTTON2
@@ -153,7 +189,7 @@ Function Button2 {
             Expand-Archive -Path  "$VARCD\commandlinetools-win.zip" -DestinationPath "$VARCD" -Force 
             Write-Host "[+] Setting path to latest that AVD wants ..."
             Rename-Item -Path "$VARCD\cmdline-tools" -NewName "$VARCD\latest"
-            New-Item -Path "$VARCD\cmdline-tools" -ItemType Directory
+            New-Item -Path "$VARCD\cmdline-tools" -ItemType Directory 
             Move-Item "$VARCD\latest" "$VARCD\cmdline-tools\"
             }
                 catch {
@@ -201,7 +237,7 @@ Function Button3 {
 ############# BUTTON4
 $Button4 = New-Object System.Windows.Forms.Button
 $Button4.AutoSize = $true
-$Button4.Text = "5. Start AVD -writable-system"
+$Button4.Text = "4. Start AVD -writable-system"
 $Button4.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+90))
 $Button4.Add_Click({Button4})
 $main_form.Controls.Add($Button4)
@@ -228,7 +264,7 @@ Function Button5 {
 ############# Button6
 $Button6 = New-Object System.Windows.Forms.Button
 $Button6.AutoSize = $true
-$Button6.Text = "4. rootAVD/Install Magisk"
+$Button6.Text = "5. rootAVD/Install Magisk"
 $Button6.Location = New-Object System.Drawing.Point(($hShift),($vShift+150))
 $Button6.Add_Click({Button6})
 $main_form.Controls.Add($Button6)
@@ -281,24 +317,60 @@ $Button8.Add_Click({Button8})
 $main_form.Controls.Add($Button8)
 
 Function Button8 {
-Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager\silent_install.bat" -ArgumentList  " -u "  -WorkingDirectory "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager" -Wait
-Start-Sleep -s 5
-Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager\silent_install.bat"   -WorkingDirectory "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager" -Wait
-
+Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
+Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager\silent_install.bat" -WorkingDirectory "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager" -Wait
 }
 
 ############# Button9
 $Button9 = New-Object System.Windows.Forms.Button
 $Button9.AutoSize = $true
-$Button9.Text = "3. Start AVD -wipe-data no internet"
+$Button9.Text = "cmd prompt"
 $Button9.Location = New-Object System.Drawing.Point(($hShift),($vShift+240))
 $Button9.Add_Click({Button9})
 $main_form.Controls.Add($Button9)
 
 Function Button9 {
-    Write-Host "[+] Starting AVD emulator"
-    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -wipe-data -http-proxy localhost:99"  -WindowStyle Minimized	
+Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
+Start-Process -FilePath "cmd" -WorkingDirectory "$VARCD"  
 }
+
+#CheckPython
+#InstallAPKS
+
+############# SHOW FORM
+$main_form.ShowDialog()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <#
 Shell Notes:
@@ -319,8 +391,24 @@ cd  rootAVD-master
 set ANDROID_SERIAL=emulator-5554
 
 
-rootAVD.bat "..\system-images\android-30\google_apis_playstore\x86\ramdisk.img"
-#>
+ 
+adb push .\_SUPPORT\certs\9a5ba575.0  /data/local/tmp/
+adb push .\_SUPPORT\certs\9a5ba575.0  /sdcard/download
+adb push "C:\DELETE\ATS\_SUPPORT\certs\BURP.der" /sdcard/download
+adb push "C:\DELETE\ATS\_SUPPORT\certs\BURP.der" /sdcard/download/BURP.cer
 
-############# SHOW FORM
-$main_form.ShowDialog()
+adb push AlwaysTrustUserCerts.zip /sdcard/download
+
+adb shell "su -c mv /data/local/tmp/9a5ba575.0 /system/etc/security/cacerts/9a5ba575.0 "
+ 
+adb shell "su -c mv /data/local/tmp/9a5ba575.0 /system/etc/security/cacerts/9a5ba575.0 "
+ 
+ 
+
+:: adb shell -t "chown root:root /system/etc/security/cacerts/*"
+:: adb shell -t "chmod 644 /system/etc/security/cacerts/*"
+:: adb shell -t "chcon u:object_r:system_file:s0 /system/etc/security/cacerts/*"
+:: adb shell -t "ls -laht /system/etc/security/cacerts/9a5ba575.0"
+
+
+#>
