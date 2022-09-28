@@ -15,6 +15,7 @@ rd q/s "c:\Users\internet\.gradle"
 rd q/s "c:\Users\internet\AndroidStudioProjects"
 rd q/s "c:\Users\internet\AppData\Local\Android"
 rd q/s "c:\Users\internet\AppData\Local\Google"
+C:\Users\internet\AppData\Roaming\BurpSuite
 
 -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
 start RedirectStandardOutput.txt 
@@ -37,12 +38,12 @@ $env:ANDROID_SDK_HOME="$VARCD"
 #java 
 $env:JAVA_HOME = "$VARCD\jdk-11.0.1"
 
-# rootAVD
-$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master"
+# Path rootAVD java python
+$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;$VARCD\jdk-11.0.1\bin"
 
 # python
 $env:PYTHONHOME="$VARCD\python\tools"
-$env:Path="$VARCD\python\tools\Scripts;$env:Path"
+ 
 
 # Setup Form
 Add-Type -assembly System.Windows.Forms
@@ -127,7 +128,24 @@ Function CheckPython {
             }
 }
 
-############# CheckADB
+############# CHECK BURP
+Function CheckBurp {
+   if (-not(Test-Path -Path "$VARCD\burpsuite_community.jar" )) { 
+        try {
+            Write-Host "[+] Downloading Burpsuite" 
+            downloadFile "https://portswigger-cdn.net/burp/releases/download?product=community&type=Jar" "$VARCD\burpsuite_community.jar"
+           }
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+            Write-Host "[+] $VARCD\python Burpsuite"
+            }
+}
+
+
+############# InstallAPKS
 function InstallAPKS {
 New-Item -Path "$VARCD\APKS" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 
@@ -202,6 +220,7 @@ Function Button2 {
   
     
     CheckJava
+    CheckPython
     Write-Host "[+] Creating licenses Files"
     $licenseContentBase64 = "UEsDBBQAAAAAAKNK11IAAAAAAAAAAAAAAAAJAAAAbGljZW5zZXMvUEsDBAoAAAAAAJ1K11K7n0IrKgAAACoAAAAhAAAAbGljZW5zZXMvYW5kcm9pZC1nb29nbGV0di1saWNlbnNlDQo2MDEwODViOTRjZDc3ZjBiNTRmZjg2NDA2OTU3MDk5ZWJlNzljNGQ2UEsDBAoAAAAAAKBK11LzQumJKgAAACoAAAAkAAAAbGljZW5zZXMvYW5kcm9pZC1zZGstYXJtLWRidC1saWNlbnNlDQo4NTlmMzE3Njk2ZjY3ZWYzZDdmMzBhNTBhNTU2MGU3ODM0YjQzOTAzUEsDBAoAAAAAAKFK11IKSOJFKgAAACoAAAAcAAAAbGljZW5zZXMvYW5kcm9pZC1zZGstbGljZW5zZQ0KMjQzMzNmOGE2M2I2ODI1ZWE5YzU1MTRmODNjMjgyOWIwMDRkMWZlZVBLAwQKAAAAAACiStdSec1a4SoAAAAqAAAAJAAAAGxpY2Vuc2VzL2FuZHJvaWQtc2RrLXByZXZpZXctbGljZW5zZQ0KODQ4MzFiOTQwOTY0NmE5MThlMzA1NzNiYWI0YzljOTEzNDZkOGFiZFBLAwQKAAAAAACiStdSk6vQKCoAAAAqAAAAGwAAAGxpY2Vuc2VzL2dvb2dsZS1nZGstbGljZW5zZQ0KMzNiNmEyYjY0NjA3ZjExYjc1OWYzMjBlZjlkZmY0YWU1YzQ3ZDk3YVBLAwQKAAAAAACiStdSrE3jESoAAAAqAAAAJAAAAGxpY2Vuc2VzL2ludGVsLWFuZHJvaWQtZXh0cmEtbGljZW5zZQ0KZDk3NWY3NTE2OThhNzdiNjYyZjEyNTRkZGJlZWQzOTAxZTk3NmY1YVBLAwQKAAAAAACjStdSkb1vWioAAAAqAAAAJgAAAGxpY2Vuc2VzL21pcHMtYW5kcm9pZC1zeXNpbWFnZS1saWNlbnNlDQplOWFjYWI1YjVmYmI1NjBhNzJjZmFlY2NlODk0Njg5NmZmNmFhYjlkUEsBAj8AFAAAAAAAo0rXUgAAAAAAAAAAAAAAAAkAJAAAAAAAAAAQAAAAAAAAAGxpY2Vuc2VzLwoAIAAAAAAAAQAYACIHOBcRaNcBIgc4FxFo1wHBTVQTEWjXAVBLAQI/AAoAAAAAAJ1K11K7n0IrKgAAACoAAAAhACQAAAAAAAAAIAAAACcAAABsaWNlbnNlcy9hbmRyb2lkLWdvb2dsZXR2LWxpY2Vuc2UKACAAAAAAAAEAGACUEFUTEWjXAZQQVRMRaNcB6XRUExFo1wFQSwECPwAKAAAAAACgStdS80LpiSoAAAAqAAAAJAAkAAAAAAAAACAAAACQAAAAbGljZW5zZXMvYW5kcm9pZC1zZGstYXJtLWRidC1saWNlbnNlCgAgAAAAAAABABgAsEM0FBFo1wGwQzQUEWjXAXb1MxQRaNcBUEsBAj8ACgAAAAAAoUrXUgpI4kUqAAAAKgAAABwAJAAAAAAAAAAgAAAA/AAAAGxpY2Vuc2VzL2FuZHJvaWQtc2RrLWxpY2Vuc2UKACAAAAAAAAEAGAAsMGUVEWjXASwwZRURaNcB5whlFRFo1wFQSwECPwAKAAAAAACiStdSec1a4SoAAAAqAAAAJAAkAAAAAAAAACAAAABgAQAAbGljZW5zZXMvYW5kcm9pZC1zZGstcHJldmlldy1saWNlbnNlCgAgAAAAAAABABgA7s3WFRFo1wHuzdYVEWjXAfGm1hURaNcBUEsBAj8ACgAAAAAAokrXUpOr0CgqAAAAKgAAABsAJAAAAAAAAAAgAAAAzAEAAGxpY2Vuc2VzL2dvb2dsZS1nZGstbGljZW5zZQoAIAAAAAAAAQAYAGRDRxYRaNcBZENHFhFo1wFfHEcWEWjXAVBLAQI/AAoAAAAAAKJK11KsTeMRKgAAACoAAAAkACQAAAAAAAAAIAAAAC8CAABsaWNlbnNlcy9pbnRlbC1hbmRyb2lkLWV4dHJhLWxpY2Vuc2UKACAAAAAAAAEAGADGsq0WEWjXAcayrRYRaNcBxrKtFhFo1wFQSwECPwAKAAAAAACjStdSkb1vWioAAAAqAAAAJgAkAAAAAAAAACAAAACbAgAAbGljZW5zZXMvbWlwcy1hbmRyb2lkLXN5c2ltYWdlLWxpY2Vuc2UKACAAAAAAAAEAGAA4LjgXEWjXATguOBcRaNcBIgc4FxFo1wFQSwUGAAAAAAgACACDAwAACQMAAAAA"
     $licenseContent = [System.Convert]::FromBase64String($licenseContentBase64)
@@ -334,6 +353,20 @@ Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
 Start-Process -FilePath "cmd" -WorkingDirectory "$VARCD"  
 }
 
+
+############# Button10
+$Button10 = New-Object System.Windows.Forms.Button
+$Button10.AutoSize = $true
+$Button10.Text = "Start Burpsuite"
+$Button10.Location = New-Object System.Drawing.Point(($hShift),($vShift+270))
+$Button10.Add_Click({Button10})
+$main_form.Controls.Add($Button10)
+
+Function Button10 {
+CheckBurp
+Start-Process -FilePath "$VARCD\jdk-11.0.1\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk-11.0.1\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" " 
+}
+
 #CheckPython
 #InstallAPKS
 
@@ -391,6 +424,31 @@ cd  rootAVD-master
 set ANDROID_SERIAL=emulator-5554
 
 
+https://portswigger-cdn.net/burp/releases/download?product=community&type=Jar
+
+
+$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/frida/frida/releases/latest").assets | Where-Object name -like frida-server-*-android-x86.xz ).browser_download_url
+Invoke-WebRequest -Uri $downloadUri -Out "$VARCD\frida-server"
+
+
+:: pip3 install objection
+:: objection --gadget com.spotme.eventspace explore
+objection --gadget  casual.match3.theme.parks.puzzles explore
+:: android sslpinning disable
+
+frida-ps -Uai
+
+adb push .\frida-server /data/local/tmp
+
+adb shell -t "chmod 777 /data/local/tmp/frida-server"
+
+::start "FRIDA-SERVER" adb shell "/data/local/tmp/frida-server"
+::adb shell "/data/local/tmp/frida-server  -l 0.0.0.0"
+adb shell "su -c /data/local/tmp/frida-server"
+
+
+
+
  
 adb push .\_SUPPORT\certs\9a5ba575.0  /data/local/tmp/
 adb push .\_SUPPORT\certs\9a5ba575.0  /sdcard/download
@@ -409,6 +467,25 @@ adb shell "su -c mv /data/local/tmp/9a5ba575.0 /system/etc/security/cacerts/9a5b
 :: adb shell -t "chmod 644 /system/etc/security/cacerts/*"
 :: adb shell -t "chcon u:object_r:system_file:s0 /system/etc/security/cacerts/*"
 :: adb shell -t "ls -laht /system/etc/security/cacerts/9a5ba575.0"
+
+
+: burp suite
+Dhttp.proxyHost=10.0.0.100 -Dhttp.proxyPort=8800
+certutil -user -addstore "Root"  "%~dp0_SUPPORT\certs\BURP.der"
+certutil -user -addstore "Root"  "%~dp0_SUPPORT\certs\ZAP.der"
+
+keytool.exe -keystore C:/Users/Administrator/.keystore -genkey -alias client
+
+& 'C:\Program Files\BurpSuitePro\jre\bin\keytool.exe' -importcert -file "C:\Users\foo\Documents\root_ca_DER.cer" -keystore "C:\Users\foo\Documents\cacerts" -alias "customer"
+& "C:\Program Files\BurpSuitePro\jre\bin\java.exe" -jar "C:\Program Files\BurpSuitePro\burpsuite_pro.jar" -Djavax.net.ssl.trustStore="C:\Users\foo\Documents\cacerts" -XX:MaxRAMPercentage=50
+
+--
+
+
+keytool.exe -keystore keystore -genkey -alias burp
+
+keytool.exe -importcert -file "BURP_root_ca_DER.cer" -keystore keystore -alias burp
+& "C:\Program Files\BurpSuitePro\jre\bin\java.exe" -jar "C:\Program Files\BurpSuitePro\burpsuite_pro.jar" -Djavax.net.ssl.trustStore="C:\Users\foo\Documents\cacerts" -XX:MaxRAMPercentage=50
 
 
 #>
