@@ -25,13 +25,13 @@ https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulat
 |Java|✔️|
 |Android|✔️|
 |Magisk|✔️|
-|Burp|❌|
+|Burp|✔️|
 |Old Firefox 103.0.2 (64-bit) NOT ESR|❌|
 |ZAP|❌|
-|Objection|❌|
+|Objection|✔️|
 |Root|✔️|
-|Python|❌|
-|Frida|❌|
+|Python|✔️|
+|Frida|✔️|
 |Certs|❌|
 
 |Feature/Idea|Status|
