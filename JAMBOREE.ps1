@@ -167,7 +167,7 @@ function CheckADB {
     $varadb = $varadb -match 'device\b' -replace 'device','' -replace '\s',''
     Write-Host "[+] Online Device: $varadb"
         if (($varadb.length -lt 1 )) {
-            Write-Host "[+] ADB Failed! Check for unathorized devices listed in ADB!"
+            Write-Host "[+] ADB Failed! Check for unauthorized devices listed in ADB!"
 			adb devices
         }
 	return $varadb
@@ -357,7 +357,7 @@ Start-Process -FilePath "cmd" -WorkingDirectory "$VARCD"
 ############# Button10
 $Button10 = New-Object System.Windows.Forms.Button
 $Button10.AutoSize = $true
-$Button10.Text = "Start Burpsuite"
+$Button10.Text = "6. Start Burpsuite"
 $Button10.Location = New-Object System.Drawing.Point(($hShift),($vShift+270))
 $Button10.Add_Click({Button10})
 $main_form.Controls.Add($Button10)
@@ -366,11 +366,23 @@ Function Button10 {
     CheckBurp
     Start-Process -FilePath "$VARCD\jdk-11.0.1\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk-11.0.1\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   
     (New-Object -ComObject Wscript.Shell).Popup("Press OK once burp proxy is listening" ,0,"Waiting",0+64)
+    Write-Host "[+] Converting BURP.der to PEM and pushing it as AVD system cert"
     Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der"
 }
 
-#CheckPython
-#InstallAPKS
+############# BUTTON11
+$BUTTON11 = New-Object System.Windows.Forms.Button
+$BUTTON11.AutoSize = $true
+$BUTTON11.Text = "Start AVD -writable-system -wipe-data (Fix unauthorized adb) "
+$BUTTON11.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+300))
+$BUTTON11.Add_Click({BUTTON11})
+$main_form.Controls.Add($BUTTON11)
+
+Function BUTTON11 {
+    Write-Host "[+] Starting AVD emulator"
+    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -wipe-data"  -WindowStyle Minimized
+}
+
 
 ############# SHOW FORM
 $main_form.ShowDialog()
@@ -481,6 +493,17 @@ keytool.exe -keystore C:/Users/Administrator/.keystore -genkey -alias client
 & 'C:\Program Files\BurpSuitePro\jre\bin\keytool.exe' -importcert -file "C:\Users\foo\Documents\root_ca_DER.cer" -keystore "C:\Users\foo\Documents\cacerts" -alias "customer"
 & "C:\Program Files\BurpSuitePro\jre\bin\java.exe" -jar "C:\Program Files\BurpSuitePro\burpsuite_pro.jar" -Djavax.net.ssl.trustStore="C:\Users\foo\Documents\cacerts" -XX:MaxRAMPercentage=50
 
+
+openssl rsa -in f.pem -inform PEM -out f.der -outform DER
+
+openssl x509 -in <filename>.cer -inform DER -out <filename>.pem -outform PEM
+
+C:\Users\internet\cygwin\bin\openssl.exe x509 -in BERP.der -inform DER -out BERP.pem -outform PEM
+
+C:\Users\internet\cygwin\bin\openssl.exe x509 -in BURP.der -inform DER -out BURP.pem -outform PEM
+
+ -in f.pem -inform PEM -out f.der -outform DER
+
 --
 
 
@@ -489,5 +512,14 @@ keytool.exe -keystore keystore -genkey -alias burp
 keytool.exe -importcert -file "BURP_root_ca_DER.cer" -keystore keystore -alias burp
 & "C:\Program Files\BurpSuitePro\jre\bin\java.exe" -jar "C:\Program Files\BurpSuitePro\burpsuite_pro.jar" -Djavax.net.ssl.trustStore="C:\Users\foo\Documents\cacerts" -XX:MaxRAMPercentage=50
 
+C:\Users\internet\cygwin\bin\openssl.exe  x509 -inform PEM -subject_hash_old -in BURP.pem | head -1`.0
+
+9a5ba575
+
+certutil -encode BURP.der BURP.pem
+
+ -wipe-data 
+
 
 #>
+
