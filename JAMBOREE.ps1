@@ -363,8 +363,10 @@ $Button10.Add_Click({Button10})
 $main_form.Controls.Add($Button10)
 
 Function Button10 {
-CheckBurp
-Start-Process -FilePath "$VARCD\jdk-11.0.1\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk-11.0.1\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" " 
+    CheckBurp
+    Start-Process -FilePath "$VARCD\jdk-11.0.1\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk-11.0.1\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   
+    (New-Object -ComObject Wscript.Shell).Popup("Press OK once burp proxy is listening" ,0,"Waiting",0+64)
+    Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der"
 }
 
 #CheckPython
