@@ -32,8 +32,10 @@ https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulat
 |Frida|✔️|
 |Certs|❌|
 
+
 |Feature/Idea|Status|
 |--|--|
+|https://github.com/google/android-emulator-hypervisor-driver-for-amd-processors|❌|
 |Kill Task/Wipe Storage|❌|
 |Kill all Apps/Root before launch of app|❌|
 |Fix Allow All/Perms All Apps|❌|
