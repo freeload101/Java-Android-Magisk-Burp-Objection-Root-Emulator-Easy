@@ -35,6 +35,7 @@ https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulat
 
 |Feature/Idea|Status|
 |--|--|
+|UI Automation https://www.lambdatest.com/blog/best-mobile-app-testing-framework/|❌|
 |https://github.com/google/android-emulator-hypervisor-driver-for-amd-processors|❌|
 |Kill Task/Wipe Storage|❌|
 |Kill all Apps/Root before launch of app|❌|
