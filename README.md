@@ -23,7 +23,7 @@ https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulat
 |Core|Status|
 |--|--|
 |Java|✔️|
-|Android|✔️|
+|Android 11 API 30|✔️|
 |Magisk|✔️|
 |Burp|✔️|
 |Objection|✔️|
@@ -55,7 +55,7 @@ https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulat
 |Brida,Burp to Frida brige|❌|
 
 
-## Order of Opperations
+## Order of Operations
 * download android command line installer
 * use 7z ps1 script to install licences files
 * download all stuff for  Pixel_2_API_30 x86 with PLAY working !
