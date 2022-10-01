@@ -141,17 +141,30 @@ Function CheckBurp {
 
 ############# InstallAPKS
 function InstallAPKS {
+Write-Host "[+] Downloading Base APKS"
 New-Item -Path "$VARCD\APKS" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 
+Write-Host "[+] Downloading SAI Split Package Installer"
 $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/Aefyr/SAI/releases/latest").assets | Where-Object name -like *.apk ).browser_download_url
-Invoke-WebRequest -Uri $downloadUri -Out "$VARCD\APKS\SAI.apk"
+downloadFile "$downloadUri" "$VARCD\APKS\SAI.apk"
 
+Write-Host "[+] Downloading Amaze File Manager"
 $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/TeamAmaze/AmazeFileManager/releases/latest").assets | Where-Object name -like *.apk ).browser_download_url
-Invoke-WebRequest -Uri $downloadUri -Out "$VARCD\APKS\AmazeFileManager.apk"
+downloadFile "$downloadUri" "$VARCD\APKS\AmazeFileManager.apk"
 
+Write-Host "[+] Downloading Duckduckgo"
 $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/duckduckgo/Android/releases/latest").assets | Where-Object name -like *.apk ).browser_download_url
-Invoke-WebRequest -Uri $downloadUri -Out "$VARCD\APKS\duckduckgo.apk"
+downloadFile "$downloadUri" "$VARCD\APKS\duckduckgo.apk"
 
+
+$varadb=CheckADB
+$env:ANDROID_SERIAL=$varadb
+
+Write-Host "[+] Installing Base APKS"
+
+(Get-ChildItem -Path "$VARCD\APKS").FullName |ForEach-Object {
+    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " install $_ "  -NoNewWindow -Wait
+    }
 }
 
 ############# CheckADB
@@ -429,7 +442,7 @@ Function Button10 {
 ############# BUTTON11
 $BUTTON11 = New-Object System.Windows.Forms.Button
 $BUTTON11.AutoSize = $true
-$BUTTON11.Text = "Start AVD -writable-system -wipe-data (Fix unauthorized adb) "
+$BUTTON11.Text = "Start AVD -writable-system -wipe-data NO PROXY (Fix unauthorized adb) "
 $BUTTON11.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+300))
 $BUTTON11.Add_Click({BUTTON11})
 $main_form.Controls.Add($BUTTON11)
@@ -453,8 +466,18 @@ Function BUTTON12 {
     CertPush
 }
 
- 
- 
+############# BUTTON13
+$BUTTON13 = New-Object System.Windows.Forms.Button
+$BUTTON13.AutoSize = $true
+$BUTTON13.Text = "Install Base APKs"
+$BUTTON13.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+360))
+$BUTTON13.Add_Click({BUTTON13})
+$main_form.Controls.Add($BUTTON13)
+
+Function BUTTON13 {
+    InstallAPKS
+}
+
 
 ############# SHOW FORM
 $main_form.ShowDialog()
