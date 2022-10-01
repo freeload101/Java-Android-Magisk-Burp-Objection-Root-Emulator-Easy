@@ -140,7 +140,7 @@ Function CheckBurp {
             }
             }
         else {
-            Write-Host "[+] $VARCD\python Burpsuite"
+            Write-Host "[+] $VARCD\Burpsuite already exists"
             }
 }
 
@@ -173,6 +173,73 @@ function CheckADB {
 	return $varadb
 }
 
+
+############# CertPush
+function CertPush {
+
+Write-Host "[+] Checking for AlwaysTrustUserCerts.zip"
+AlwaysTrustUserCerts
+
+$varadb=CheckADB
+$env:ANDROID_SERIAL=$varadb
+
+Write-Host "[+] Copying PEM to Androind format just in case its not standard burp suite cert Subject Hash 9a5ba575.0"
+# Rename a PEM in Android format (openssl -subject_hash_old ) with just certutil and powershell
+$CertSubjectHash = (certutil "$VARCD\BURP.pem")
+$CertSubjectHash = $CertSubjectHash |Select-String  -Pattern 'Subject:.*' -AllMatches  -Context 1, 8
+$CertSubjectHash = ($CertSubjectHash.Context.PostContext[7]).SubString(24,2)+($CertSubjectHash.Context.PostContext[7]).SubString(22,2)+($CertSubjectHash.Context.PostContext[7]).SubString(20,2)+($CertSubjectHash.Context.PostContext[7]).SubString(18,2)+"."+0
+Copy-Item -Path "$VARCD\BURP.pem" -Destination "$VARCD\$CertSubjectHash" -Force
+
+Write-Host "[+] Pushing $VARCD\$CertSubjectHash to /data/misc/user/0/cacerts-added/ "
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push $VARCD\$CertSubjectHash   /data/local/tmp"  -NoNewWindow -Wait
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chown root:root /data/local/tmp/$CertSubjectHash"  -NoNewWindow -Wait
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chmod 644 /data/local/tmp/$CertSubjectHash"  -NoNewWindow -Wait
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c ls -laht /data/local/tmp/$CertSubjectHash"  -NoNewWindow -Wait
+
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c mkdir /data/misc/user/0/cacerts-added`" "  -NoNewWindow -Wait
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp /data/local/tmp/$CertSubjectHash /data/misc/user/0/cacerts-added`" " -NoNewWindow -Wait
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chown root:root /data/misc/user/0/cacerts-added/$CertSubjectHash"  -NoNewWindow -Wait
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chmod 644 /data/misc/user/0/cacerts-added/$CertSubjectHash"  -NoNewWindow -Wait
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c ls -laht /data/misc/user/0/cacerts-added/$CertSubjectHash"  -NoNewWindow -Wait
+
+
+Write-Host "[+] Reboot for changes to take effect!"
+
+}
+
+############# AlwaysTrustUserCerts
+Function AlwaysTrustUserCerts {
+
+$varadb=CheckADB
+$env:ANDROID_SERIAL=$varadb
+
+   if (-not(Test-Path -Path "$VARCD\AlwaysTrustUserCerts.zip" )) { 
+        try {
+            Write-Host "[+] Downloading Magisk Module AlwaysTrustUserCerts.zip"
+            $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/NVISOsecurity/MagiskTrustUserCerts/releases/latest").assets | Where-Object name -like *.zip ).browser_download_url
+            Invoke-WebRequest -Uri $downloadUri -Out "$VARCD\AlwaysTrustUserCerts.zip"
+            Write-Host "[+] Extracting AlwaysTrustUserCerts.zip"
+            Expand-Archive -Path  "$VARCD\AlwaysTrustUserCerts.zip" -DestinationPath "$VARCD\trustusercerts" -Force
+            }
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+            Write-Host "[+] $VARCD\AlwaysTrustUserCerts.zip already exists"
+            }
+$varadb=CheckADB
+$env:ANDROID_SERIAL=$varadb
+
+Write-Host "[+] Pushing $VARCD\AlwaysTrustUserCerts.zip"
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\trustusercerts`"   /data/local/tmp"  -NoNewWindow -Wait
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp -R /data/local/tmp/trustusercerts /data/adb/modules`" " -NoNewWindow -Wait
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c find /data/adb/modules`" "  -NoNewWindow -Wait
+
+}
+
+
+
 ################################# FUNCTIONS END
 
 
@@ -187,7 +254,7 @@ $main_form.Controls.Add($Button1)
 Function Button1 {
     $varadb=CheckADB
 	$env:ANDROID_SERIAL=$varadb
-    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell  " -Wait  
+    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell  "   
 }
 
 ############# BUTTON2
@@ -263,7 +330,7 @@ $main_form.Controls.Add($Button4)
 
 Function Button4 {
     Write-Host "[+] Starting AVD emulator"
-    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system"  -WindowStyle Minimized
+    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy localhost:8080"  -WindowStyle Minimized
 }
 
 ############# BUTTON5
@@ -384,6 +451,21 @@ Function BUTTON11 {
 }
 
 
+############# BUTTON12
+$BUTTON12 = New-Object System.Windows.Forms.Button
+$BUTTON12.AutoSize = $true
+$BUTTON12.Text = "7. Upload BURP.pem as System Cert"
+$BUTTON12.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+330))
+$BUTTON12.Add_Click({BUTTON12})
+$main_form.Controls.Add($BUTTON12)
+
+Function BUTTON12 {
+    Write-Host "[+] Starting CertPush"
+    CertPush
+}
+
+ 
+
 ############# SHOW FORM
 $main_form.ShowDialog()
 
@@ -419,35 +501,24 @@ $main_form.ShowDialog()
 
 
 
-<#
-Shell Notes:
+<# 
 
-cd C:\DELETE\GG
-powershell
-.\JAMBOREE.ps1
+download frida
+unzip if
+push it 
+chmod it
+run it on AVD
 
-set ANDROID_SDK_ROOT=%CD%
-set ANDROID_AVD_HOME=%CD%
-set ANDROID_HOME=%CD%
-set ANDROID_AVD_HOME=%CD%\avd
-set ANDROID_SDK_HOME=%CD%
-set JAVA_HOME=%CD%\jdk-11.0.1
-set PATH=%CD%\platform-tools\;%Path%
-cd  rootAVD-master
-
-set ANDROID_SERIAL=emulator-5554
+then have dropdown of objectoin based on Frida-ps output and have it sendkeys android sslpinning disable etc .. or find cmdline options for it to auto depinnin etc ..
 
 
-https://portswigger-cdn.net/burp/releases/download?product=community&type=Jar
 
-
-$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/frida/frida/releases/latest").assets | Where-Object name -like frida-server-*-android-x86.xz ).browser_download_url
-Invoke-WebRequest -Uri $downloadUri -Out "$VARCD\frida-server"
 
 
 :: pip3 install objection
 :: objection --gadget com.spotme.eventspace explore
 objection --gadget  casual.match3.theme.parks.puzzles explore
+objection --gadget  com.duckduckgo.mobile.android explore
 :: android sslpinning disable
 
 frida-ps -Uai
@@ -460,66 +531,7 @@ adb shell -t "chmod 777 /data/local/tmp/frida-server"
 ::adb shell "/data/local/tmp/frida-server  -l 0.0.0.0"
 adb shell "su -c /data/local/tmp/frida-server"
 
-
-
-
- 
-adb push .\_SUPPORT\certs\9a5ba575.0  /data/local/tmp/
-adb push .\_SUPPORT\certs\9a5ba575.0  /sdcard/download
-adb push "C:\DELETE\ATS\_SUPPORT\certs\BURP.der" /sdcard/download
-adb push "C:\DELETE\ATS\_SUPPORT\certs\BURP.der" /sdcard/download/BURP.cer
-
-adb push AlwaysTrustUserCerts.zip /sdcard/download
-
-adb shell "su -c mv /data/local/tmp/9a5ba575.0 /system/etc/security/cacerts/9a5ba575.0 "
- 
-adb shell "su -c mv /data/local/tmp/9a5ba575.0 /system/etc/security/cacerts/9a5ba575.0 "
  
  
-
-:: adb shell -t "chown root:root /system/etc/security/cacerts/*"
-:: adb shell -t "chmod 644 /system/etc/security/cacerts/*"
-:: adb shell -t "chcon u:object_r:system_file:s0 /system/etc/security/cacerts/*"
-:: adb shell -t "ls -laht /system/etc/security/cacerts/9a5ba575.0"
-
-
-: burp suite
-Dhttp.proxyHost=10.0.0.100 -Dhttp.proxyPort=8800
-certutil -user -addstore "Root"  "%~dp0_SUPPORT\certs\BURP.der"
-certutil -user -addstore "Root"  "%~dp0_SUPPORT\certs\ZAP.der"
-
-keytool.exe -keystore C:/Users/Administrator/.keystore -genkey -alias client
-
-& 'C:\Program Files\BurpSuitePro\jre\bin\keytool.exe' -importcert -file "C:\Users\foo\Documents\root_ca_DER.cer" -keystore "C:\Users\foo\Documents\cacerts" -alias "customer"
-& "C:\Program Files\BurpSuitePro\jre\bin\java.exe" -jar "C:\Program Files\BurpSuitePro\burpsuite_pro.jar" -Djavax.net.ssl.trustStore="C:\Users\foo\Documents\cacerts" -XX:MaxRAMPercentage=50
-
-
-openssl rsa -in f.pem -inform PEM -out f.der -outform DER
-
-openssl x509 -in <filename>.cer -inform DER -out <filename>.pem -outform PEM
-
-C:\Users\internet\cygwin\bin\openssl.exe x509 -in BERP.der -inform DER -out BERP.pem -outform PEM
-
-C:\Users\internet\cygwin\bin\openssl.exe x509 -in BURP.der -inform DER -out BURP.pem -outform PEM
-
- -in f.pem -inform PEM -out f.der -outform DER
-
---
-
-
-keytool.exe -keystore keystore -genkey -alias burp
-
-keytool.exe -importcert -file "BURP_root_ca_DER.cer" -keystore keystore -alias burp
-& "C:\Program Files\BurpSuitePro\jre\bin\java.exe" -jar "C:\Program Files\BurpSuitePro\burpsuite_pro.jar" -Djavax.net.ssl.trustStore="C:\Users\foo\Documents\cacerts" -XX:MaxRAMPercentage=50
-
-C:\Users\internet\cygwin\bin\openssl.exe  x509 -inform PEM -subject_hash_old -in BURP.pem | head -1`.0
-
-9a5ba575
-
-certutil -encode BURP.der BURP.pem
-
- -wipe-data 
-
-
 #>
 
