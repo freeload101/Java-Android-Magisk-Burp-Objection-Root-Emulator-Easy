@@ -5,17 +5,11 @@ TODO:
 * actualy download latest cmdline tools
 
 PRECHECK/REQUIREMENTS:
+* Tested on Windows 10
 * Intel for HAXM
 * Hyperv disabled
 * Enabled Xesst in BIOS
 
-CLEANUP:
-rd q/s "c:\Python310\"
-rd q/s "c:\Users\internet\.gradle"
-rd q/s "c:\Users\internet\AndroidStudioProjects"
-rd q/s "c:\Users\internet\AppData\Local\Android"
-rd q/s "c:\Users\internet\AppData\Local\Google"
-C:\Users\internet\AppData\Roaming\BurpSuite
 
 -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
 start RedirectStandardOutput.txt 
@@ -207,19 +201,11 @@ Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chmod 644 /data/misc/user/0/cacerts-added/$CertSubjectHash"  -NoNewWindow -Wait
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c ls -laht /data/misc/user/0/cacerts-added/$CertSubjectHash"  -NoNewWindow -Wait
 
-
-
-
 Write-Host "[+] Reboot for changes to take effect!"
-
 }
 
 ############# AlwaysTrustUserCerts
 Function AlwaysTrustUserCerts {
-
-$varadb=CheckADB
-$env:ANDROID_SERIAL=$varadb
-
    if (-not(Test-Path -Path "$VARCD\AlwaysTrustUserCerts.zip" )) { 
         try {
             Write-Host "[+] Downloading Magisk Module AlwaysTrustUserCerts.zip"
@@ -235,6 +221,7 @@ $env:ANDROID_SERIAL=$varadb
         else {
             Write-Host "[+] $VARCD\AlwaysTrustUserCerts.zip already exists"
             }
+
 $varadb=CheckADB
 $env:ANDROID_SERIAL=$varadb
 
@@ -302,10 +289,6 @@ Function Button2 {
     Expand-Archive  "$VARCD\android-sdk-licenses.zip"  -DestinationPath "$VARCD\"  -Force
     Write-Host "[+] Running sdkmanager/Installing"
     
-
-   
-    
-
     # now we are using latest cmdline-tools ...!?
     Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platform-tools" -Verbose -Wait -NoNewWindow 
     Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "extras;intel;Hardware_Accelerated_Execution_Manager" -Verbose -Wait -NoNewWindow 
@@ -398,7 +381,7 @@ $Button7.Add_Click({Button7})
 $main_form.Controls.Add($Button7)
 
 Function Button7 {
-Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
+	Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 }
 
 ############# Button8
@@ -410,8 +393,8 @@ $Button8.Add_Click({Button8})
 $main_form.Controls.Add($Button8)
 
 Function Button8 {
-Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
-Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager\silent_install.bat" -WorkingDirectory "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager" -Wait
+	Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
+	Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager\silent_install.bat" -WorkingDirectory "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager" -Wait
 }
 
 ############# Button9
@@ -423,8 +406,8 @@ $Button9.Add_Click({Button9})
 $main_form.Controls.Add($Button9)
 
 Function Button9 {
-Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
-Start-Process -FilePath "cmd" -WorkingDirectory "$VARCD"  
+	Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
+	Start-Process -FilePath "cmd" -WorkingDirectory "$VARCD"  
 }
 
 
@@ -440,7 +423,6 @@ Function Button10 {
     CheckBurp
     Start-Process -FilePath "$VARCD\jdk-11.0.1\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk-11.0.1\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   
     (New-Object -ComObject Wscript.Shell).Popup("Press OK once burp proxy is listening" ,0,"Waiting",0+64)
-    Write-Host "[+] Converting BURP.der to PEM and pushing it as AVD system cert"
     Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
 }
 
