@@ -183,24 +183,31 @@ AlwaysTrustUserCerts
 $varadb=CheckADB
 $env:ANDROID_SERIAL=$varadb
 
+Write-Host "[+] Converting "$VARCD\BURP.der" to "$VARCD\BURP.pem""
+Remove-Item -Path "$VARCD\BURP.pem" -Force
+Start-Process -FilePath "$env:SYSTEMROOT\System32\certutil.exe" -ArgumentList  " -encode `"$VARCD\BURP.der`"  `"$VARCD\BURP.pem`" "  -NoNewWindow -Wait
+
 Write-Host "[+] Copying PEM to Androind format just in case its not standard burp suite cert Subject Hash 9a5ba575.0"
 # Rename a PEM in Android format (openssl -subject_hash_old ) with just certutil and powershell
-$CertSubjectHash = (certutil "$VARCD\BURP.pem")
+$CertSubjectHash = (certutil "$VARCD\BURP.der")
 $CertSubjectHash = $CertSubjectHash |Select-String  -Pattern 'Subject:.*' -AllMatches  -Context 1, 8
 $CertSubjectHash = ($CertSubjectHash.Context.PostContext[7]).SubString(24,2)+($CertSubjectHash.Context.PostContext[7]).SubString(22,2)+($CertSubjectHash.Context.PostContext[7]).SubString(20,2)+($CertSubjectHash.Context.PostContext[7]).SubString(18,2)+"."+0
 Copy-Item -Path "$VARCD\BURP.pem" -Destination "$VARCD\$CertSubjectHash" -Force
 
-Write-Host "[+] Pushing $VARCD\$CertSubjectHash to /data/misc/user/0/cacerts-added/ "
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push $VARCD\$CertSubjectHash   /data/local/tmp"  -NoNewWindow -Wait
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chown root:root /data/local/tmp/$CertSubjectHash"  -NoNewWindow -Wait
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chmod 644 /data/local/tmp/$CertSubjectHash"  -NoNewWindow -Wait
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c ls -laht /data/local/tmp/$CertSubjectHash"  -NoNewWindow -Wait
+Write-Host "[+] Pushing $VARCD\$CertSubjectHash to /sdcard "
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push $VARCD\$CertSubjectHash   /sdcard"  -NoNewWindow -Wait
+
+Write-Host "[+] Pushing Copying /scard/$CertSubjectHash /data/misc/user/0/cacerts-added "
 
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c mkdir /data/misc/user/0/cacerts-added`" "  -NoNewWindow -Wait
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp /data/local/tmp/$CertSubjectHash /data/misc/user/0/cacerts-added`" " -NoNewWindow -Wait
+
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp /sdcard/$CertSubjectHash /data/misc/user/0/cacerts-added`" " -NoNewWindow -Wait
+
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chown root:root /data/misc/user/0/cacerts-added/$CertSubjectHash"  -NoNewWindow -Wait
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chmod 644 /data/misc/user/0/cacerts-added/$CertSubjectHash"  -NoNewWindow -Wait
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c ls -laht /data/misc/user/0/cacerts-added/$CertSubjectHash"  -NoNewWindow -Wait
+
+
 
 
 Write-Host "[+] Reboot for changes to take effect!"
@@ -232,8 +239,8 @@ $varadb=CheckADB
 $env:ANDROID_SERIAL=$varadb
 
 Write-Host "[+] Pushing $VARCD\AlwaysTrustUserCerts.zip"
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\trustusercerts`"   /data/local/tmp"  -NoNewWindow -Wait
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp -R /data/local/tmp/trustusercerts /data/adb/modules`" " -NoNewWindow -Wait
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\trustusercerts`"   /sdcard"  -NoNewWindow -Wait
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp -R /sdcard/trustusercerts /data/adb/modules`" " -NoNewWindow -Wait
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c find /data/adb/modules`" "  -NoNewWindow -Wait
 
 }
@@ -323,14 +330,14 @@ Function Button3 {
 ############# BUTTON4
 $Button4 = New-Object System.Windows.Forms.Button
 $Button4.AutoSize = $true
-$Button4.Text = "4. Start AVD -writable-system"
+$Button4.Text = "4. Start AVD NO PROXY"
 $Button4.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+90))
 $Button4.Add_Click({Button4})
 $main_form.Controls.Add($Button4)
 
 Function Button4 {
     Write-Host "[+] Starting AVD emulator"
-    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy localhost:8080"  -WindowStyle Minimized
+    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system"  -WindowStyle Minimized
 }
 
 ############# BUTTON5
@@ -410,7 +417,7 @@ Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Mana
 ############# Button9
 $Button9 = New-Object System.Windows.Forms.Button
 $Button9.AutoSize = $true
-$Button9.Text = "cmd prompt"
+$Button9.Text = "CMD.exe Prompt"
 $Button9.Location = New-Object System.Drawing.Point(($hShift),($vShift+240))
 $Button9.Add_Click({Button9})
 $main_form.Controls.Add($Button9)
@@ -434,7 +441,7 @@ Function Button10 {
     Start-Process -FilePath "$VARCD\jdk-11.0.1\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk-11.0.1\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   
     (New-Object -ComObject Wscript.Shell).Popup("Press OK once burp proxy is listening" ,0,"Waiting",0+64)
     Write-Host "[+] Converting BURP.der to PEM and pushing it as AVD system cert"
-    Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der"
+    Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
 }
 
 ############# BUTTON11
@@ -462,6 +469,20 @@ $main_form.Controls.Add($BUTTON12)
 Function BUTTON12 {
     Write-Host "[+] Starting CertPush"
     CertPush
+}
+
+
+############# BUTTON13
+$BUTTON13 = New-Object System.Windows.Forms.Button
+$BUTTON13.AutoSize = $true
+$BUTTON13.Text = "Start AVD Proxy 8080"
+$BUTTON13.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+360))
+$BUTTON13.Add_Click({BUTTON13})
+$main_form.Controls.Add($BUTTON13)
+
+Function BUTTON13 {
+    Write-Host "[+] Starting AVD emulator with -writable-system -http-proxy localhost:8080 "
+    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy localhost:8080"  -WindowStyle Minimized
 }
 
  
