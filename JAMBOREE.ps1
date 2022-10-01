@@ -313,14 +313,14 @@ Function Button3 {
 ############# BUTTON4
 $Button4 = New-Object System.Windows.Forms.Button
 $Button4.AutoSize = $true
-$Button4.Text = "4. Start AVD NO PROXY"
+$Button4.Text = "X. Start AVD With Proxy on 8080"
 $Button4.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+90))
 $Button4.Add_Click({Button4})
 $main_form.Controls.Add($Button4)
 
 Function Button4 {
     Write-Host "[+] Starting AVD emulator"
-    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system"  -WindowStyle Minimized
+    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy localhost:8080"  -WindowStyle Minimized
 }
 
 ############# BUTTON5
@@ -414,7 +414,7 @@ Function Button9 {
 ############# Button10
 $Button10 = New-Object System.Windows.Forms.Button
 $Button10.AutoSize = $true
-$Button10.Text = "6. Start Burpsuite"
+$Button10.Text = "4. Start Burpsuite"
 $Button10.Location = New-Object System.Drawing.Point(($hShift),($vShift+270))
 $Button10.Add_Click({Button10})
 $main_form.Controls.Add($Button10)
@@ -453,20 +453,7 @@ Function BUTTON12 {
     CertPush
 }
 
-
-############# BUTTON13
-$BUTTON13 = New-Object System.Windows.Forms.Button
-$BUTTON13.AutoSize = $true
-$BUTTON13.Text = "Start AVD Proxy 8080"
-$BUTTON13.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+360))
-$BUTTON13.Add_Click({BUTTON13})
-$main_form.Controls.Add($BUTTON13)
-
-Function BUTTON13 {
-    Write-Host "[+] Starting AVD emulator with -writable-system -http-proxy localhost:8080 "
-    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy localhost:8080"  -WindowStyle Minimized
-}
-
+ 
  
 
 ############# SHOW FORM
