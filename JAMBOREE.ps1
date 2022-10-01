@@ -443,7 +443,7 @@ Function BUTTON11 {
 ############# BUTTON12
 $BUTTON12 = New-Object System.Windows.Forms.Button
 $BUTTON12.AutoSize = $true
-$BUTTON12.Text = "6. Upload BURP.pem as System Cert"
+$BUTTON12.Text = "7. Upload BURP.pem as System Cert"
 $BUTTON12.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+330))
 $BUTTON12.Add_Click({BUTTON12})
 $main_form.Controls.Add($BUTTON12)
