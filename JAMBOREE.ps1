@@ -326,7 +326,7 @@ Function Button3 {
 ############# BUTTON4
 $Button4 = New-Object System.Windows.Forms.Button
 $Button4.AutoSize = $true
-$Button4.Text = "6. Start AVD With Proxy on 8080"
+$Button4.Text = "6. Start AVD With Proxy Support"
 $Button4.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+90))
 $Button4.Add_Click({Button4})
 $main_form.Controls.Add($Button4)
@@ -448,8 +448,11 @@ $BUTTON11.Add_Click({BUTTON11})
 $main_form.Controls.Add($BUTTON11)
 
 Function BUTTON11 {
-    Write-Host "[+] Starting AVD emulator"
-    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -wipe-data"  -WindowStyle Minimized
+	Write-Host "[+] Starting AVD emulator"
+	(New-Object -ComObject Wscript.Shell).Popup("Are you sure you want to wipe all data !?" ,0,"Waiting",0+64)
+	(New-Object -ComObject Wscript.Shell).Popup("Are you sure you want to wipe all data !? Really?" ,0,"Waiting",0+64)
+	Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -wipe-data"  -WindowStyle Minimized
+	
 }
 
 
