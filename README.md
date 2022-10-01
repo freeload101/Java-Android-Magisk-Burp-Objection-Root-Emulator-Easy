@@ -30,12 +30,13 @@ https://android-developers.googleblog.com/2020/03/run-arm-apps-on-android-emulat
 |Root|✔️|
 |Python|✔️|
 |Frida|✔️|
-|Certs|❌|
+|Certs|✔️|
 
 
 |Feature/Idea|Status|
 |--|--|
 |easy backup button|❌|
+|easy objection based on Firda-ps output|❌|
 |UI Automation https://www.lambdatest.com/blog/best-mobile-app-testing-framework/|❌|
 |https://github.com/google/android-emulator-hypervisor-driver-for-amd-processors|❌|
 |Kill Task/Wipe Storage|❌|
