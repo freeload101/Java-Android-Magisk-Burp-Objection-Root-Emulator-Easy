@@ -196,7 +196,6 @@ Start-Process -FilePath "$env:SYSTEMROOT\System32\certutil.exe" -ArgumentList  "
 
 Write-Host "[+] Copying PEM to Androind format just in case its not standard burp suite cert Subject Hash 9a5ba575.0"
 # Rename a PEM in Android format (openssl -subject_hash_old ) with just certutil and powershell
-$CertSubjectHash = (certutil "$VARCD\BURP.der")
 $CertSubjectHash = $CertSubjectHash |Select-String  -Pattern 'Subject:.*' -AllMatches  -Context 1, 8
 $CertSubjectHash = ($CertSubjectHash.Context.PostContext[7]).SubString(24,2)+($CertSubjectHash.Context.PostContext[7]).SubString(22,2)+($CertSubjectHash.Context.PostContext[7]).SubString(20,2)+($CertSubjectHash.Context.PostContext[7]).SubString(18,2)+"."+0
 Copy-Item -Path "$VARCD\BURP.pem" -Destination "$VARCD\$CertSubjectHash" -Force
