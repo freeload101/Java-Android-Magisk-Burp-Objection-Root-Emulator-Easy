@@ -60,7 +60,10 @@ Portable Android 11 Emulator Build Script!
 * https://github.com/whalehub/custom-certificate-authorities
 * /data/misc/user/0/cacerts-custom
 
-## Credit/References/Unsorted:
+## Credit
+https://github.com/Rogdham/python-xz/issues/4 for xz extraction in Python!!!
+
+## References/Unsorted:
 
 https://www.droidwin.com/how-to-hide-root-from-apps-via-magisk-denylist/
 https://github.com/Fox2Code/FoxMagiskModuleManager/releases
