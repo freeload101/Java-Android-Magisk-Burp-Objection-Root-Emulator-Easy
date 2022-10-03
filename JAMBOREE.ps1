@@ -106,10 +106,14 @@ Function CheckPython {
             Write-Host "[+] Downloading Python nuget package" 
             downloadFile "https://www.nuget.org/api/v2/package/python" "$VARCD\python.zip"
             New-Item -Path "$VARCD\python" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
-            Expand-Archive -Path  "$VARCD\python.zip" -DestinationPath "$VARCD\python" -Force
+            Write-Host "[+] Extracting Python nuget package" 
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            Add-Type -AssemblyName System.IO.Compression
+            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\python.zip", "$VARCD\python")
+
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection "
             # for Frida Android Binary
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz "
+            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait
             }
                 catch {
                     throw $_.Exception.Message
@@ -246,6 +250,7 @@ Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `
 
 }
 Function StartFrida {
+CheckPython
    if (-not(Test-Path -Path "$VARCD\frida-server" )) { 
         try {
             Write-Host "[+] Downloading Latest frida-server-*android-x86.xz "
@@ -411,7 +416,7 @@ $main_form.Controls.Add($Button4)
 
 Function Button4 {
     Write-Host "[+] Starting AVD emulator"
-    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy localhost:8080"  -WindowStyle Minimized
+    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080"  -WindowStyle Minimized
 }
 
 ############# BUTTON5
@@ -630,3 +635,4 @@ adb shell "su -c /data/local/tmp/frida-server"
  
 #>
 
+	
