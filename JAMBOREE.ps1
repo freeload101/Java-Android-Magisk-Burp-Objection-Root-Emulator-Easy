@@ -1,8 +1,4 @@
 <# 
-TODO:
-* somehow auto accespt all licences or get all licence hashes and create them ?
-* Clean/wipe install/cache 
-* actualy download latest cmdline tools
 
 PRECHECK/REQUIREMENTS:
 * Tested on Windows 10
@@ -108,14 +104,16 @@ Function CheckPython {
    if (-not(Test-Path -Path "$VARCD\python" )) { 
         try {
             Write-Host "[+] Downloading Python nuget package" 
-            Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/python"  -Out "$VARCD\python.zip"
+            downloadFile "https://www.nuget.org/api/v2/package/python" "$VARCD\python.zip"
+            New-Item -Path "$VARCD\python" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
             Expand-Archive -Path  "$VARCD\python.zip" -DestinationPath "$VARCD\python" -Force
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection "
-            Start-Process -FilePath "$VARCD\python\tools\Scripts\frida-ps" -WorkingDirectory "$VARCD\python\tools"  -ArgumentList " -Uai" -NoNewWindow
+            # for Frida Android Binary
+            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz "
             }
                 catch {
                     throw $_.Exception.Message
-            }
+                }
             }
         else {
             Write-Host "[+] $VARCD\python already exists"
@@ -165,6 +163,7 @@ Write-Host "[+] Installing Base APKS"
 (Get-ChildItem -Path "$VARCD\APKS").FullName |ForEach-Object {
     Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " install $_ "  -NoNewWindow -Wait
     }
+Write-Host "[+] Complete Installing Base APKS"
 }
 
 ############# CheckADB
@@ -184,18 +183,20 @@ function CheckADB {
 ############# CertPush
 function CertPush {
 
-Write-Host "[+] Checking for AlwaysTrustUserCerts.zip"
+
 AlwaysTrustUserCerts
 
 $varadb=CheckADB
 $env:ANDROID_SERIAL=$varadb
 
 Write-Host "[+] Converting "$VARCD\BURP.der" to "$VARCD\BURP.pem""
-Remove-Item -Path "$VARCD\BURP.pem" -Force
+Remove-Item -Path "$VARCD\BURP.pem" -Force -ErrorAction SilentlyContinue |Out-Null
 Start-Process -FilePath "$env:SYSTEMROOT\System32\certutil.exe" -ArgumentList  " -encode `"$VARCD\BURP.der`"  `"$VARCD\BURP.pem`" "  -NoNewWindow -Wait
+
 
 Write-Host "[+] Copying PEM to Androind format just in case its not standard burp suite cert Subject Hash 9a5ba575.0"
 # Rename a PEM in Android format (openssl -subject_hash_old ) with just certutil and powershell
+$CertSubjectHash = (certutil "$VARCD\BURP.der")
 $CertSubjectHash = $CertSubjectHash |Select-String  -Pattern 'Subject:.*' -AllMatches  -Context 1, 8
 $CertSubjectHash = ($CertSubjectHash.Context.PostContext[7]).SubString(24,2)+($CertSubjectHash.Context.PostContext[7]).SubString(22,2)+($CertSubjectHash.Context.PostContext[7]).SubString(20,2)+($CertSubjectHash.Context.PostContext[7]).SubString(18,2)+"."+0
 Copy-Item -Path "$VARCD\BURP.pem" -Destination "$VARCD\$CertSubjectHash" -Force
@@ -218,6 +219,7 @@ Write-Host "[+] Reboot for changes to take effect!"
 
 ############# AlwaysTrustUserCerts
 Function AlwaysTrustUserCerts {
+Write-Host "[+] Checking for AlwaysTrustUserCerts.zip"
    if (-not(Test-Path -Path "$VARCD\AlwaysTrustUserCerts.zip" )) { 
         try {
             Write-Host "[+] Downloading Magisk Module AlwaysTrustUserCerts.zip"
@@ -243,8 +245,83 @@ Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c find /data/adb/modules`" "  -NoNewWindow -Wait
 
 }
+Function StartFrida {
+   if (-not(Test-Path -Path "$VARCD\frida-server" )) { 
+        try {
+            Write-Host "[+] Downloading Latest frida-server-*android-x86.xz "
+            $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/frida/frida/releases/latest").assets | Where-Object name -like frida-server-*-android-x86.xz ).browser_download_url
+
+            Invoke-WebRequest -Uri $downloadUri -Out "$VARCD\frida-server-android-x86.xz"
+
+            Write-Host "[+] Extracting frida-server-android-x86.xz"
+# don't mess with spaces for these lines for python ...
+$PythonXZ = @'
+import xz
+import shutil
+
+with xz.open('frida-server-android-x86.xz') as f:
+    with open('frida-server', 'wb') as fout:
+        shutil.copyfileobj(f, fout)
+'@ 
+# don't mess with spaces for these lines for python ...
+
+            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\frida-server-extract.py`" "
+            $PythonXZ | Out-File -FilePath frida-server-extract.py 
+            # change endoding from Windows-1252 to UTF-8
+            Set-Content -Path "frida-server-extract.py" -Value $PythonXZ -Encoding UTF8 -PassThru -Force
+
+            }
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+            Write-Host "[+] $VARCD\frida-server already exists"
+            }
 
 
+
+
+$varadb=CheckADB
+$env:ANDROID_SERIAL=$varadb
+
+Write-Host "[+] Pushing $VARCD\frida-server"
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c killall frida-server;sleep 1`" "  -NoNewWindow -Wait -ErrorAction SilentlyContinue |Out-Null
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\frida-server`"   /sdcard"  -NoNewWindow -Wait
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp -R /sdcard/frida-server /data/local/tmp`" " -NoNewWindow -Wait
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chmod 777 /data/local/tmp/frida-server`" "  -NoNewWindow -Wait
+Write-Host "[+] Starting /data/local/tmp/frida-server"
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c /data/local/tmp/frida-server &`" "  -NoNewWindow  
+
+
+Start-Process -FilePath "$VARCD\python\tools\Scripts\frida-ps.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " -Uai " -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+
+
+Get-Content -Path "RedirectStandardOutput.txt"   | Out-GridView 
+
+
+
+pause
+pause
+pause
+pause
+
+Write-Host "[+] Starting Objection"
+Start-Process -FilePath "$VARCD\python\tools\Scripts\objection.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " --gadget com.duckduckgo.mobile.android explore " 
+
+start-sleep -Seconds 5
+
+<#
+# wscript may not work as good ? 
+$SendWait = New-Object -ComObject wscript.shell;
+$SendWait.SendKeys('android sslpinning disable')
+#>
+
+Add-Type -AssemblyName System.Windows.Forms
+[System.Windows.Forms.SendKeys]::SendWait("android sslpinning disable{enter}")
+
+
+}
 
 ################################# FUNCTIONS END
 
@@ -307,25 +384,27 @@ Function Button2 {
     Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platforms;android-30" -Verbose -Wait -NoNewWindow 
     Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "emulator" -Verbose -Wait -NoNewWindow 
     Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "system-images;android-30;google_apis_playstore;x86" -Verbose -Wait -NoNewWindow 
-    Write-Host "[+] AVD Install Complete"
+    Write-Host "[+] AVD Install Complete Creating AVD Device"
+    Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-30;google_apis_playstore;x86`"  -d `"pixel_2`" --force" -Wait -Verbose
+
     }
     
 ############# BUTTON3
 $Button3 = New-Object System.Windows.Forms.Button
 $Button3.AutoSize = $true
-$Button3.Text = "3. Create AVD"
+$Button3.Text = "UNUSED"
 $Button3.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+60))
 $Button3.Add_Click({Button3})
 $main_form.Controls.Add($Button3)
 
 Function Button3 {
-    Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-30;google_apis_playstore;x86`"  -d `"pixel_2`" --force" -Wait -Verbose
-}
+  echo "UNUSED"
+    }
 
 ############# BUTTON4
 $Button4 = New-Object System.Windows.Forms.Button
 $Button4.AutoSize = $true
-$Button4.Text = "6. Start AVD With Proxy Support"
+$Button4.Text = "5. Start AVD With Proxy Support"
 $Button4.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+90))
 $Button4.Add_Click({Button4})
 $main_form.Controls.Add($Button4)
@@ -352,7 +431,7 @@ Function Button5 {
 ############# Button6
 $Button6 = New-Object System.Windows.Forms.Button
 $Button6.AutoSize = $true
-$Button6.Text = "5. rootAVD/Install Magisk"
+$Button6.Text = "6. rootAVD/Install Magisk"
 $Button6.Location = New-Object System.Drawing.Point(($hShift),($vShift+150))
 $Button6.Add_Click({Button6})
 $main_form.Controls.Add($Button6)
@@ -387,13 +466,13 @@ if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
 ############# Button7
 $Button7 = New-Object System.Windows.Forms.Button
 $Button7.AutoSize = $true
-$Button7.Text = "Kill adb.exe"
+$Button7.Text = "8. Start Frida/Objection"
 $Button7.Location = New-Object System.Drawing.Point(($hShift),($vShift+180))
 $Button7.Add_Click({Button7})
 $main_form.Controls.Add($Button7)
 
 Function Button7 {
-	Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
+	StartFrida
 }
 
 ############# Button8
@@ -541,6 +620,7 @@ frida-ps -Uai
 adb push .\frida-server /data/local/tmp
 
 adb shell -t "chmod 777 /data/local/tmp/frida-server"
+adb shell "su -c /data/local/tmp/frida-server"
 
 ::start "FRIDA-SERVER" adb shell "/data/local/tmp/frida-server"
 ::adb shell "/data/local/tmp/frida-server  -l 0.0.0.0"
