@@ -1,9 +1,18 @@
 ## Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy (JAMBOREE)
 
 Lajit Portable Android 11 Emulator Build Script! 
-
 ## Burp/Android Emulator
-![image](https://user-images.githubusercontent.com/4307863/191853475-3fe11324-e52b-4b3c-8f72-fdceb27ed337.png)
+
+
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/jRKYf0gahu4/0.jpg)](https://www.youtube.com/watch?v=jRKYf0gahu4)
+
+Easy as 1,2,?.... 4,5,6,7,8 ;)
+
+![image](https://user-images.githubusercontent.com/4307863/194109411-98af7950-02b5-4faa-9a1a-0a02eddfc489.png)
+
+
+
 
 ## Status of Automation Script
 
@@ -23,7 +32,7 @@ Lajit Portable Android 11 Emulator Build Script!
 |Feature/Idea|Status|
 |--|--|
 |easy backup button|❌|
-|easy objection based on Firda-ps output|❌|
+|easy objection based on pm list output|✔️|
 |UI Automation https://www.lambdatest.com/blog/best-mobile-app-testing-framework/|❌|
 |https://github.com/google/android-emulator-hypervisor-driver-for-amd-processors|❌|
 |Kill Task/Wipe Storage|❌|
@@ -31,35 +40,20 @@ Lajit Portable Android 11 Emulator Build Script!
 |Fix Allow All/Perms All Apps|❌|
 |Autohide Root/Magisk Before Patch or Frida|❌|
 |build.prop (see reddit build.prop)|❌|
-|Resize if Image <N (* "${ANDROID_HOME}/emulator/bin64/resize2fs" "${HOME}/.android/avd/${AVD}.avd/system.img" 3072M) |❌|
 |Fix Aspect Radio/QR code in Virtual Scene|❌|
 |Proxy Switch|❌|
 |Logcat All In One Window|❌|
 |Detect/Split Apks? https://github.com/NickstaDB/patch-apk|❌|
-|Generate New Burp/ZAP certs/openssl .0  .cet .der|❌|
-|Proxy Switch|❌|
+|Generate New Burp/ZAP certs/openssl .0  .cet .der|✔️|
 |Audo add Google Services to DenyList|❌|
 |Disable Updates/Google Play|❌|
 |Disable Base Apps like Google Music etc|❌|
-|Split APK install SAI App from GitHub|❌|
+|Split APK install SAI App from GitHub|✔️|
 |Brida,Burp to Frida brige|❌|
-
-
-## Order of Operations
-* download android command line installer
-* use 7z ps1 script to install licences files
-* download all stuff for  Pixel_2_API_30 x86 with PLAY working !
-* run rootAVD
-* setup magisk
-* run google play to add account
-* disable play protect (command line ? )
-* install magisk manager ? https://github.com/Fox2Code/FoxMagiskModuleManager/releases
-* install ?  https://forum.xda-developers.com/attachments/magiskhidepropsconf-v6-1-2-zip.5453567/ 
-* https://github.com/whalehub/custom-certificate-authorities
-* /data/misc/user/0/cacerts-custom
-
+ 
 ## Credit
 https://github.com/Rogdham/python-xz/issues/4 for xz extraction in Python!!!
+https://github.com/newbit1/rootAVD RootAVD
 
 ## References/Unsorted:
 
@@ -77,16 +71,16 @@ https://forum.xda-developers.com/t/script-rootavd-root-your-android-studio-virtu
 https://www.studytonight.com/post/intercept-android-app-traffic-in-burp-suite-from-root-to-hack-ultimate-guide
 https://markuta.com/magisk-root-detection-banking-apps/
 
-CERT Install
+###CERT Install
 https://www.youtube.com/watch?v=Ml2GIRNIstI
 https://www.youtube.com/watch?v=KL1jUvNSL94
 https://www.youtube.com/watch?v=Jg4hyZfFTdc
 https://systemweakness.com/how-to-install-burp-suite-certificate-on-an-android-emulator-bb2972ba188c
 
-PINNING
+###PINNING
 https://book.hacktricks.xyz/mobile-pentesting/android-app-pentesting
 
-## NOTES
+### NOTES
 https://gist.github.com/Pulimet/5013acf2cd5b28e55036c82c91bd56d8
 
 
