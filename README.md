@@ -1,11 +1,9 @@
-# Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy (JAMBOREE)
-Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
+## Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy (JAMBOREE)
 
-Portable Android 11 Emulator Build Script!
+Lajit Portable Android 11 Emulator Build Script! 
 
 ## Burp/Android Emulator
 ![image](https://user-images.githubusercontent.com/4307863/191853475-3fe11324-e52b-4b3c-8f72-fdceb27ed337.png)
-
 
 ## Status of Automation Script
 
