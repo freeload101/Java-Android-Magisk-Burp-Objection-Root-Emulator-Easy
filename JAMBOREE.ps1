@@ -298,33 +298,26 @@ Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `
 Write-Host "[+] Starting /data/local/tmp/frida-server"
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c /data/local/tmp/frida-server &`" "  -NoNewWindow  
 
+Write-Host "[+] Running Frida-ps select package to run Objection on:"
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c pm list packages  `" "  -NoNewWindow -RedirectStandardOutput "$VARCDRedirectStandardOutput.txt"
+Start-Sleep -Seconds 2
+$PackageName = (Get-Content -Path "$VARCDRedirectStandardOutput.txt") -replace 'package:',''    | Out-GridView -Title "Select Package to Run Objection" -OutputMode Single
 
-Start-Process -FilePath "$VARCD\python\tools\Scripts\frida-ps.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " -Uai " -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
-
-
-Get-Content -Path "RedirectStandardOutput.txt"   | Out-GridView 
-
-
-
-pause
-pause
-pause
-pause
+ 
 
 Write-Host "[+] Starting Objection"
-Start-Process -FilePath "$VARCD\python\tools\Scripts\objection.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " --gadget com.duckduckgo.mobile.android explore " 
+Start-Process -FilePath "$VARCD\python\tools\Scripts\objection.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " --gadget $PackageName explore " 
 
 start-sleep -Seconds 5
-
-<#
 # wscript may not work as good ? 
-$SendWait = New-Object -ComObject wscript.shell;
-$SendWait.SendKeys('android sslpinning disable')
-#>
+#$SendWait = New-Object -ComObject wscript.shell;
+#$SendWait.SendKeys('android sslpinning disable')
 
 Add-Type -AssemblyName System.Windows.Forms
-[System.Windows.Forms.SendKeys]::SendWait("android sslpinning disable{enter}")
-
+[System.Windows.Forms.SendKeys]::SendWait("android sslpinning disable")
+start-sleep -Seconds 1
+[System.Windows.Forms.SendKeys]::SendWait("{enter}")
+[System.Windows.Forms.SendKeys]::SendWait("{enter}")
 
 }
 
@@ -567,72 +560,3 @@ Function BUTTON13 {
 
 ############# SHOW FORM
 $main_form.ShowDialog()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<# 
-
-download frida
-unzip if
-push it 
-chmod it
-run it on AVD
-
-then have dropdown of objectoin based on Frida-ps output and have it sendkeys android sslpinning disable etc .. or find cmdline options for it to auto depinnin etc ..
-
-
-
-
-
-:: pip3 install objection
-:: objection --gadget com.spotme.eventspace explore
-objection --gadget  casual.match3.theme.parks.puzzles explore
-objection --gadget  com.duckduckgo.mobile.android explore
-:: android sslpinning disable
-
-frida-ps -Uai
-
-adb push .\frida-server /data/local/tmp
-
-adb shell -t "chmod 777 /data/local/tmp/frida-server"
-adb shell "su -c /data/local/tmp/frida-server"
-
-::start "FRIDA-SERVER" adb shell "/data/local/tmp/frida-server"
-::adb shell "/data/local/tmp/frida-server  -l 0.0.0.0"
-adb shell "su -c /data/local/tmp/frida-server"
-
- 
- 
-#>
-
-	
