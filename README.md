@@ -1,6 +1,11 @@
 ## Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy (JAMBOREE)
 
 Lajit Portable Android 11 Emulator Build Script! 
+
+### Usage:
+
+Rightclick Run with PowerShell
+
 ## Burp/Android Emulator
 
 
