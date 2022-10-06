@@ -1,12 +1,4 @@
 <# 
-
-PRECHECK/REQUIREMENTS:
-* Tested on Windows 10
-* Intel for HAXM
-* Hyperv disabled
-* Enabled Xesst in BIOS
-
-
 -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
 start RedirectStandardOutput.txt 
 start RedirectStandardError.txt
@@ -78,7 +70,6 @@ function downloadFile($url, $targetFile)
     $responseStream.Dispose()
 }
 
-
 ############# CHECK JAVA
 Function CheckJava {
    if (-not(Test-Path -Path "$VARCD\jdk-11.0.1" )) { 
@@ -140,7 +131,6 @@ Function CheckBurp {
             }
 }
 
-
 ############# InstallAPKS
 function InstallAPKS {
 Write-Host "[+] Downloading Base APKS"
@@ -157,7 +147,6 @@ downloadFile "$downloadUri" "$VARCD\APKS\AmazeFileManager.apk"
 Write-Host "[+] Downloading Duckduckgo"
 $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/duckduckgo/Android/releases/latest").assets | Where-Object name -like *.apk ).browser_download_url
 downloadFile "$downloadUri" "$VARCD\APKS\duckduckgo.apk"
-
 
 $varadb=CheckADB
 $env:ANDROID_SERIAL=$varadb
@@ -183,10 +172,9 @@ function CheckADB {
 	return $varadb
 }
 
-
 ############# CertPush
 function CertPush {
-
+Write-Host "[+] Starting CertPush"
 
 AlwaysTrustUserCerts
 
@@ -196,7 +184,6 @@ $env:ANDROID_SERIAL=$varadb
 Write-Host "[+] Converting "$VARCD\BURP.der" to "$VARCD\BURP.pem""
 Remove-Item -Path "$VARCD\BURP.pem" -Force -ErrorAction SilentlyContinue |Out-Null
 Start-Process -FilePath "$env:SYSTEMROOT\System32\certutil.exe" -ArgumentList  " -encode `"$VARCD\BURP.der`"  `"$VARCD\BURP.pem`" "  -NoNewWindow -Wait
-
 
 Write-Host "[+] Copying PEM to Androind format just in case its not standard burp suite cert Subject Hash 9a5ba575.0"
 # Rename a PEM in Android format (openssl -subject_hash_old ) with just certutil and powershell
@@ -273,7 +260,7 @@ with xz.open('frida-server-android-x86.xz') as f:
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\frida-server-extract.py`" "
             $PythonXZ | Out-File -FilePath frida-server-extract.py 
             # change endoding from Windows-1252 to UTF-8
-            Set-Content -Path "frida-server-extract.py" -Value $PythonXZ -Encoding UTF8 -PassThru -Force
+            Set-Content -Path "$VARCD\frida-server-extract.py" -Value $PythonXZ -Encoding UTF8 -PassThru -Force
 
             }
                 catch {
@@ -321,32 +308,15 @@ start-sleep -Seconds 1
 
 }
 
-################################# FUNCTIONS END
-
-
-############# BUTTON1
-$Button1 = New-Object System.Windows.Forms.Button
-$Button1.AutoSize = $true
-$Button1.Text = "ADB Shell"
-$Button1.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button1.Add_Click({Button1})
-$main_form.Controls.Add($Button1)
-
-Function Button1 {
+############# StartADB
+function StartADB {
     $varadb=CheckADB
 	$env:ANDROID_SERIAL=$varadb
-    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell  "   
+    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell  " 
 }
 
-############# BUTTON2
-$Button2 = New-Object System.Windows.Forms.Button
-$Button2.AutoSize = $true
-$Button2.Text = "1. AVD Download/Install"
-$Button2.Location = New-Object System.Drawing.Point(($hShift),($vShift+30))
-$Button2.Add_Click({Button2})
-$main_form.Controls.Add($Button2)
-
-Function Button2 {
+############# AVDDownload
+Function AVDDownload {
     if (-not(Test-Path -Path "$VARCD\cmdline-tools" )) {
         try {
             Write-Host "[+] Downloading Android Command Line Tools"
@@ -385,56 +355,35 @@ Function Button2 {
     Write-Host "[+] AVD Install Complete Creating AVD Device"
     Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-30;google_apis_playstore;x86`"  -d `"pixel_2`" --force" -Wait -Verbose
 
-    }
-    
-############# BUTTON3
-$Button3 = New-Object System.Windows.Forms.Button
-$Button3.AutoSize = $true
-$Button3.Text = "UNUSED"
-$Button3.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+60))
-$Button3.Add_Click({Button3})
-$main_form.Controls.Add($Button3)
+}
 
-Function Button3 {
-  echo "UNUSED"
-    }
+############# HAXMInstall
+Function HAXMInstall {
+	Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
+	Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager\silent_install.bat" -WorkingDirectory "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager" -Wait
+}
 
-############# BUTTON4
-$Button4 = New-Object System.Windows.Forms.Button
-$Button4.AutoSize = $true
-$Button4.Text = "5. Start AVD With Proxy Support"
-$Button4.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+90))
-$Button4.Add_Click({Button4})
-$main_form.Controls.Add($Button4)
-
-Function Button4 {
+############# AVDStart
+Function AVDStart {
     Write-Host "[+] Starting AVD emulator"
     Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080"  -WindowStyle Minimized
 }
 
-############# BUTTON5
-$Button5 = New-Object System.Windows.Forms.Button
-$Button5.AutoSize = $true
-$Button5.Text = "ADB Poweroff"
-$Button5.Location = New-Object System.Drawing.Point(($hShift),($vShift+120))
-$Button5.Add_Click({Button5})
-$main_form.Controls.Add($Button5)
-
-Function Button5 {
+############# AVDPoweroff
+Function AVDPoweroff {
     $varadb=CheckADB
 	$env:ANDROID_SERIAL=$varadb
+
     Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell -t  `"reboot -p`"" -Wait
 }
 
-############# Button6
-$Button6 = New-Object System.Windows.Forms.Button
-$Button6.AutoSize = $true
-$Button6.Text = "6. rootAVD/Install Magisk"
-$Button6.Location = New-Object System.Drawing.Point(($hShift),($vShift+150))
-$Button6.Add_Click({Button6})
-$main_form.Controls.Add($Button6)
+############# AVDPoweroff
+Function CMDPrompt {
+	Start-Process -FilePath "cmd" -WorkingDirectory "$VARCD"  
+}
 
-Function Button6 {
+############# RootAVD
+Function RootAVD {
 
 if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
     try {
@@ -453,77 +402,15 @@ if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
     
 	$varadb=CheckADB
 	$env:ANDROID_SERIAL=$varadb
+
 	cd "$VARCD\rootAVD-master"
 	Write-Host "[+] Running installing magisk via rootAVD to ramdisk.img"
-	Start-Process -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "$VARCD\system-images\android-30\google_apis_playstore\x86\ramdisk.img" -Wait 
+	Start-Process -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "$VARCD\system-images\android-30\google_apis_playstore\x86\ramdisk.img" -WorkingDirectory "$VARCD\rootAVD-master\" 
     Write-Host "[+] rootAVD Finished if the emulator did not close/poweroff try again"
 }
 
-
-
-############# Button7
-$Button7 = New-Object System.Windows.Forms.Button
-$Button7.AutoSize = $true
-$Button7.Text = "8. Start Frida/Objection"
-$Button7.Location = New-Object System.Drawing.Point(($hShift),($vShift+180))
-$Button7.Add_Click({Button7})
-$main_form.Controls.Add($Button7)
-
-Function Button7 {
-	StartFrida
-}
-
-############# Button8
-$Button8 = New-Object System.Windows.Forms.Button
-$Button8.AutoSize = $true
-$Button8.Text = "2. Install HAXM (Reboot?) "
-$Button8.Location = New-Object System.Drawing.Point(($hShift),($vShift+210))
-$Button8.Add_Click({Button8})
-$main_form.Controls.Add($Button8)
-
-Function Button8 {
-	Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
-	Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager\silent_install.bat" -WorkingDirectory "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager" -Wait
-}
-
-############# Button9
-$Button9 = New-Object System.Windows.Forms.Button
-$Button9.AutoSize = $true
-$Button9.Text = "CMD.exe Prompt"
-$Button9.Location = New-Object System.Drawing.Point(($hShift),($vShift+240))
-$Button9.Add_Click({Button9})
-$main_form.Controls.Add($Button9)
-
-Function Button9 {
-	Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
-	Start-Process -FilePath "cmd" -WorkingDirectory "$VARCD"  
-}
-
-
-############# Button10
-$Button10 = New-Object System.Windows.Forms.Button
-$Button10.AutoSize = $true
-$Button10.Text = "4. Start Burpsuite"
-$Button10.Location = New-Object System.Drawing.Point(($hShift),($vShift+270))
-$Button10.Add_Click({Button10})
-$main_form.Controls.Add($Button10)
-
-Function Button10 {
-    CheckBurp
-    Start-Process -FilePath "$VARCD\jdk-11.0.1\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk-11.0.1\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   
-    (New-Object -ComObject Wscript.Shell).Popup("Press OK once burp proxy is listening" ,0,"Waiting",0+64)
-    Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
-}
-
-############# BUTTON11
-$BUTTON11 = New-Object System.Windows.Forms.Button
-$BUTTON11.AutoSize = $true
-$BUTTON11.Text = "Start AVD -writable-system -wipe-data NO PROXY (Fix unauthorized adb) "
-$BUTTON11.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+300))
-$BUTTON11.Add_Click({BUTTON11})
-$main_form.Controls.Add($BUTTON11)
-
-Function BUTTON11 {
+############# AVDWipeData
+Function AVDWipeData {
 	Write-Host "[+] Starting AVD emulator"
 	(New-Object -ComObject Wscript.Shell).Popup("Are you sure you want to wipe all data !?" ,0,"Waiting",0+64)
 	(New-Object -ComObject Wscript.Shell).Popup("Are you sure you want to wipe all data !? Really?" ,0,"Waiting",0+64)
@@ -531,32 +418,113 @@ Function BUTTON11 {
 	
 }
 
+############# StartBurp
+Function StartBurp {
+    CheckBurp
+    Start-Process -FilePath "$VARCD\jdk-11.0.1\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk-11.0.1\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   
+    (New-Object -ComObject Wscript.Shell).Popup("Press OK once burp proxy is listening" ,0,"Waiting",0+64)
+    Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
+}
+
+
+################################# FUNCTIONS END
+
+
+############# BUTTON1
+$Button1 = New-Object System.Windows.Forms.Button
+$Button1.AutoSize = $true
+$Button1.Text = "1. AVD Download/Install" #AVDDownload
+$Button1.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
+$Button1.Add_Click({AVDDownload})
+$main_form.Controls.Add($Button1)
+
+############# BUTTON2
+$Button2 = New-Object System.Windows.Forms.Button 
+$Button2.AutoSize = $true
+$Button2.Text = "2. HAXM Install (Reboot?)" #HAXMInstall
+$Button2.Location = New-Object System.Drawing.Point(($hShift),($vShift+30))
+$Button2.Add_Click({HAXMInstall})
+$main_form.Controls.Add($Button2)
+    
+############# BUTTON3
+$Button3 = New-Object System.Windows.Forms.Button
+$Button3.AutoSize = $true
+$Button3.Text = "3. Start BurpSuite" #StartBurp
+$Button3.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+60))
+$Button3.Add_Click({StartBurp})
+$main_form.Controls.Add($Button3)
+
+############# BUTTON4
+$Button4 = New-Object System.Windows.Forms.Button
+$Button4.AutoSize = $true
+$Button4.Text = "4. Start AVD With Proxy Support" #AVDStart 
+$Button4.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+90))
+$Button4.Add_Click({AVDStart})
+$main_form.Controls.Add($Button4)
+
+############# BUTTON5
+$Button5 = New-Object System.Windows.Forms.Button
+$Button5.AutoSize = $true
+$Button5.Text = "5. rootAVD/Install Magisk" #RootAVD
+$Button5.Location = New-Object System.Drawing.Point(($hShift),($vShift+120))
+$Button5.Add_Click({RootAVD})
+$main_form.Controls.Add($Button5)
+
+############# Button6
+$Button6 = New-Object System.Windows.Forms.Button
+$Button6.AutoSize = $true
+$Button6.Text = "6. Upload BURP.pem as System Cert" #CertPush
+$Button6.Location = New-Object System.Drawing.Point(($hShift),($vShift+150))
+$Button6.Add_Click({CertPush})
+$main_form.Controls.Add($Button6)
+
+############# Button7
+$Button7 = New-Object System.Windows.Forms.Button
+$Button7.AutoSize = $true
+$Button7.Text = "7. Start Frida/Objection" #StartFrida
+$Button7.Location = New-Object System.Drawing.Point(($hShift),($vShift+180))
+$Button7.Add_Click({StartFrida})
+$main_form.Controls.Add($Button7)
+
+############# Button8
+$Button8 = New-Object System.Windows.Forms.Button
+$Button8.AutoSize = $true
+$Button8.Text = "CMD.exe Prompt" #CMDPrompt
+$Button8.Location = New-Object System.Drawing.Point(($hShift),($vShift+210))
+$Button8.Add_Click({CMDPrompt})
+$main_form.Controls.Add($Button8)
+
+############# Button9
+$Button9 = New-Object System.Windows.Forms.Button
+$Button9.AutoSize = $true
+$Button9.Text = "ADB Shell" #StartADB
+$Button9.Location = New-Object System.Drawing.Point(($hShift),($vShift+240))
+$Button9.Add_Click({StartADB})
+$main_form.Controls.Add($Button9)
+
+############# Button10
+$Button10 = New-Object System.Windows.Forms.Button
+$Button10.AutoSize = $true
+$Button10.Text = "AVD Poweroff adb reboot -p" #AVDPoweroff
+$Button10.Location = New-Object System.Drawing.Point(($hShift),($vShift+270))
+$Button10.Add_Click({AVDPoweroff})
+$main_form.Controls.Add($Button10)
+
+############# BUTTON11
+$BUTTON11 = New-Object System.Windows.Forms.Button
+$BUTTON11.AutoSize = $true
+$BUTTON11.Text = "Start AVD -wipe-data (Fix unauthorized adb)" #AVDWipeData
+$BUTTON11.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+300))
+$BUTTON11.Add_Click({AVDWipeData})
+$main_form.Controls.Add($BUTTON11)
 
 ############# BUTTON12
 $BUTTON12 = New-Object System.Windows.Forms.Button
 $BUTTON12.AutoSize = $true
-$BUTTON12.Text = "7. Upload BURP.pem as System Cert"
+$BUTTON12.Text = "Install Base APKs" #InstallAPKS
 $BUTTON12.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+330))
-$BUTTON12.Add_Click({BUTTON12})
+$BUTTON12.Add_Click({InstallAPKS})
 $main_form.Controls.Add($BUTTON12)
-
-Function BUTTON12 {
-    Write-Host "[+] Starting CertPush"
-    CertPush
-}
-
-############# BUTTON13
-$BUTTON13 = New-Object System.Windows.Forms.Button
-$BUTTON13.AutoSize = $true
-$BUTTON13.Text = "Install Base APKs"
-$BUTTON13.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+360))
-$BUTTON13.Add_Click({BUTTON13})
-$main_form.Controls.Add($BUTTON13)
-
-Function BUTTON13 {
-    InstallAPKS
-}
-
-
+ 
 ############# SHOW FORM
 $main_form.ShowDialog()
