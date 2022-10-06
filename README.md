@@ -23,6 +23,7 @@ Rightclick Run with PowerShell
 
 |Core|Status|
 |--|--|
+|Google Play|✔️|
 |Java|✔️|
 |Android 11 API 30|✔️|
 |Magisk|✔️|
