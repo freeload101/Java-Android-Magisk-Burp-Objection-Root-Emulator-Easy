@@ -58,34 +58,50 @@ Rightclick Run with PowerShell
  
 ## Credit
 https://github.com/Rogdham/python-xz/issues/4 for xz extraction in Python!!!
+
 https://github.com/newbit1/rootAVD RootAVD
 
 ## References/Unsorted:
 
 https://www.droidwin.com/how-to-hide-root-from-apps-via-magisk-denylist/
+
 https://github.com/Fox2Code/FoxMagiskModuleManager/releases
+
 https://forum.xda-developers.com/attachments/magiskhidepropsconf-v6-1-2-zip.5453567/
+
 https://github.com/whalehub/custom-certificate-authorities
-/data/misc/user/0/cacerts-custom
+
 https://github.com/NickstaDB/patch-apk/archive/refs/heads/master.zip
+
 https://payatu.com/blog/amit/android_pentesting_lab
+
 https://medium.com/@pranavggang/ssl-pinning-bypass-with-frida-framework-6fb71ca43e33
+
 https://joshspicer.com/ssl-pinning-android
+
 https://www.youtube.com/watch?v=JR4gDRYzY2c
+
 https://forum.xda-developers.com/t/script-rootavd-root-your-android-studio-virtual-device-emulator-with-magisk-android-12-linux-darwin-macos-win-google-play-store-apis.4218123/page-9
+
 https://www.studytonight.com/post/intercept-android-app-traffic-in-burp-suite-from-root-to-hack-ultimate-guide
+
 https://markuta.com/magisk-root-detection-banking-apps/
 
-###CERT Install
+### CERT Install
 https://www.youtube.com/watch?v=Ml2GIRNIstI
+
 https://www.youtube.com/watch?v=KL1jUvNSL94
+
 https://www.youtube.com/watch?v=Jg4hyZfFTdc
+
 https://systemweakness.com/how-to-install-burp-suite-certificate-on-an-android-emulator-bb2972ba188c
 
-###PINNING
+### PINNING
+
 https://book.hacktricks.xyz/mobile-pentesting/android-app-pentesting
 
 ### NOTES
+
 https://gist.github.com/Pulimet/5013acf2cd5b28e55036c82c91bd56d8
 
 
