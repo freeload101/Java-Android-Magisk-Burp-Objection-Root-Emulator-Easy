@@ -37,6 +37,7 @@ Rightclick Run with PowerShell
 
 |Feature/Idea|Status|
 |--|--|
+|Intent fuzzing in android|❌|
 |easy backup button|❌|
 |easy objection based on pm list output|✔️|
 |UI Automation https://www.lambdatest.com/blog/best-mobile-app-testing-framework/|❌|
