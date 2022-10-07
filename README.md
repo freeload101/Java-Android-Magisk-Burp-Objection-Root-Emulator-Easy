@@ -7,7 +7,7 @@ Lajit Portable Android 11 Emulator Build Script!
 Put ps1 file in a folder WITH NO SPACES ( WIP for true portability for now path must stay the same )  
 Rightclick Run with PowerShell
 
-## Burp/Android Emulator
+## Burp/Android Emulator (Video Tutorial )
 
 
 
