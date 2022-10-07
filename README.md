@@ -1,6 +1,14 @@
 ## Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy (JAMBOREE)
 
-Lajit Portable Android 11 Emulator Build Script! 
+Lajit Portable Android 11 Emulator Build Script! ( Not a single binary is in this script )
+
+### Requirements:
+
+Local admin just to install:
+
+HAXM Intel driver ( https://github.com/intel/haxm )
+
+AMD ( https://github.com/google/android-emulator-hypervisor-driver-for-amd-processors )
 
 ### Usage:
 
