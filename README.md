@@ -45,6 +45,7 @@ Rightclick Run with PowerShell
 
 |Feature/Idea|Status|
 |--|--|
+|Detect when Burp proxy is up and remove Popup("Press OK   |❌|
 |Intent fuzzing in android|❌|
 |easy backup button|❌|
 |easy objection based on pm list output|✔️|
