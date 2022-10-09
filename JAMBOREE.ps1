@@ -3,11 +3,82 @@
 start RedirectStandardOutput.txt 
 start RedirectStandardError.txt
 #>
+$splashArt = @"
+ "                                  .
+      .              .   .'.     \   /
+    \   /      .'. .' '.'   '  -=  o  =-
+  -=  o  =-  .'   '              / | \
+    / | \                          |
+      |        JAMBOREE            |
+      |                            |
+      |                      .=====|
+      |=====.                |.---.|
+      |.---.|                ||=o=||
+      ||=o=||                ||   ||
+      ||   ||                |[___]|
+      ||___||                |[:::]|
+      |[:::]|                '-----'
+      '-----'   
+ 
+"@
+
+
+function Draw-Splash{
+    param([string]$Text)
+
+    # Use a random colour for each character
+    $Text.ToCharArray() | ForEach-Object{
+        switch -Regex ($_){
+            # Ignore new line characters
+            "`r"{
+                break
+            }
+            # Start a new line
+            "`n"{
+                Write-Host " ";break
+            }
+            # Use random colours for displaying this non-space character
+            "[^ ]"{
+                # Splat the colours to write-host
+                $arrColors = @('DarkRed','DarkYellow','Gray','DarkGray','Green','Cyan','Red','Magenta','Yellow','White')
+                $writeHostOptions = @{
+                    ForegroundColor = ($arrColors) | get-random
+                    NoNewLine = $true
+                }
+                Write-Host $_ @writeHostOptions
+                break
+            }
+            " "{Write-Host " " -NoNewline}
+
+        } 
+    }
+}
+
+
+
+
+# splash art
+Draw-Splash $splashArt
 
 # set current directory
 $VARCD = (Get-Location)
-Write-Host "[+] Current Working Directory $VARCD"
+
+Write-Host "`n[+] Current Working Directory $VARCD"
 Set-Location -Path "$VARCD"
+
+# Auto elevate
+if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')) {
+    if ([int](Get-CimInstance -Class Win32_OperatingSystem | Select-Object -ExpandProperty BuildNumber) -ge 6000) {
+        $CommandLine = "-NoExit -c cd '$pwd'; & `"" + $MyInvocation.MyCommand.Path + "`""
+        #Write-Host "Starting JAMBOREE as admin with command:"
+        #Write-Host "Start-Process powershell -Verb runas -ArgumentList $CommandLine"
+        #pause
+        Start-Process powershell -Verb runas -ArgumentList $CommandLine
+        Exit
+    }
+}
+
+
 
 # env 
 $env:ANDROID_SDK_ROOT="$VARCD"
@@ -357,6 +428,20 @@ Function AVDDownload {
 
 }
 
+
+############# HAXMInstall
+Function HyperVInstall {
+    $hyperv = Get-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V-All -Online
+    # Check if Hyper-V is enabled
+    if($hyperv.State -eq "Enabled") {
+        Write-Host "[!] Hyper-V is already enabled."
+    } else {
+        Write-Host "[+] Hyper-V not found, installing ..."        
+        Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
+        Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart
+    }
+}
+
 ############# HAXMInstall
 Function HAXMInstall {
 	Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
@@ -438,13 +523,42 @@ $Button1.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button1.Add_Click({AVDDownload})
 $main_form.Controls.Add($Button1)
 
-############# BUTTON2
-$Button2 = New-Object System.Windows.Forms.Button 
-$Button2.AutoSize = $true
-$Button2.Text = "2. HAXM Install (Reboot?)" #HAXMInstall
-$Button2.Location = New-Object System.Drawing.Point(($hShift),($vShift+30))
-$Button2.Add_Click({HAXMInstall})
-$main_form.Controls.Add($Button2)
+
+
+$pname=(Get-WMIObject win32_Processor | Select-Object name)
+if ($pname -like "*AMD*") { 
+    Write-host "[+] AMD Processor detected"
+    ############# BUTTON22
+    ############# AMD PROCESSOR DETECTED
+    $Button22 = New-Object System.Windows.Forms.Button 
+    $Button22.AutoSize = $true
+    $hyperv = Get-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V-All -Online
+    # Check if Hyper-V is enabled
+        if($hyperv.State -eq "Enabled") {
+            Write-Host "[!] Hyper-V is already enabled."
+            # Already installed, disable button    
+            $Button22.Text = "2. Hyper-V Already Installed"
+            $Button22.Enabled = $false
+        } else {
+
+        $Button22.Text = "2. Hyper-V Install (Reboot?)" # Install Hyper-V
+        $Button22.Enabled = $true
+        }
+    $Button22.Location = New-Object System.Drawing.Point(($hShift),($vShift+30))
+    $Button22.Add_Click({HyperVInstall})
+    $main_form.Controls.Add($Button22)
+}
+else {
+    ############# BUTTON2
+    ############# INTEL PROCESSOR DETECTED
+    $Button2 = New-Object System.Windows.Forms.Button 
+    $Button2.AutoSize = $true
+    $Button2.Text = "2. HAXM Install (Reboot?)" #HAXMInstall
+    $Button2.Location = New-Object System.Drawing.Point(($hShift),($vShift+30))
+    $Button2.Add_Click({HAXMInstall})
+    $main_form.Controls.Add($Button2)
+}
+
     
 ############# BUTTON3
 $Button3 = New-Object System.Windows.Forms.Button
