@@ -66,6 +66,7 @@ $VARCD = (Get-Location)
 Write-Host "`n[+] Current Working Directory $VARCD"
 Set-Location -Path "$VARCD"
 
+<#
 # Auto elevate
 if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')) {
     if ([int](Get-CimInstance -Class Win32_OperatingSystem | Select-Object -ExpandProperty BuildNumber) -ge 6000) {
@@ -77,7 +78,7 @@ if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
         Exit
     }
 }
-
+#>
 
 
 # env 
