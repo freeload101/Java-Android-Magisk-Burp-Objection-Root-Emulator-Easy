@@ -1,12 +1,23 @@
 ## Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy (JAMBOREE)
 
-Lajit Portable Android 11 Emulator Build Script! ( Not a single binary is in this script )
+Want to pentest or run Android apps in minutes ? Sick of BlueStacks or NOX malware/adware ? Not a single binary in this script and it's open source and downloads are direct from proper sources. There is lots of great powershell tricks (not great code) in this script. I worked hard on thing's like:
+
+- Making it portable as possible
+
+- Setting up and downloading extremely fast environment for Android, Java and Python
+
+- Converting ssl certs to Android without openssl using certutil.exe only
+
+I would like to make it even easier to use but I don't want to spend more time developing it if nobody is going to use it so please let me know if you like it and open bugs/suggestions/feature request etc!
+
 
 ### Requirements:
 
-Local admin just to install:
+- Local admin just to install:
 
 HAXM Intel driver ( https://github.com/intel/haxm )
+
+OR 
 
 AMD ( https://github.com/google/android-emulator-hypervisor-driver-for-amd-processors )
 
