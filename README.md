@@ -53,30 +53,6 @@ Rightclick Run with PowerShell
 |Frida|✔️|
 |Certs|✔️|
 
-
-|Feature/Idea|Status|
-|--|--|
-|Detect when Burp proxy is up and remove Popup("Press OK   |❌|
-|Intent fuzzing in android|❌|
-|easy backup button|❌|
-|easy objection based on pm list output|✔️|
-|UI Automation https://www.lambdatest.com/blog/best-mobile-app-testing-framework/|❌|
-|https://github.com/google/android-emulator-hypervisor-driver-for-amd-processors|❌|
-|Kill Task/Wipe Storage|❌|
-|Kill all Apps/Root before launch of app|❌|
-|Fix Allow All/Perms All Apps|❌|
-|Autohide Root/Magisk Before Patch or Frida|❌|
-|build.prop (see reddit build.prop)|❌|
-|Fix Aspect Radio/QR code in Virtual Scene|❌|
-|Proxy Switch|❌|
-|Logcat All In One Window|❌|
-|Detect/Split Apks? https://github.com/NickstaDB/patch-apk|❌|
-|Generate New Burp/ZAP certs/openssl .0  .cet .der|✔️|
-|Audo add Google Services to DenyList|❌|
-|Disable Updates/Google Play|❌|
-|Disable Base Apps like Google Music etc|❌|
-|Split APK install SAI App from GitHub|✔️|
-|Brida,Burp to Frida brige|❌|
  
 ## Credit
 https://github.com/Rogdham/python-xz/issues/4 for xz extraction in Python!!!
