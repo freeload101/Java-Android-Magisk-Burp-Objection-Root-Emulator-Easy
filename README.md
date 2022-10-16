@@ -8,7 +8,7 @@ Want to pentest or run Android apps in minutes ? Sick of BlueStacks or NOX malwa
 
 - Converting ssl certs to Android without openssl using certutil.exe only
 
-I would like to make it even easier to use but I don't want to spend more time developing it if nobody is going to use it so please let me know if you like it and open bugs/suggestions/feature request etc!
+I would like to make it even easier to use but I don't want to spend more time developing it if nobody is going to use it! Please let me know if you like it and open bugs/suggestions/feature request etc!
 
 
 ### Requirements:
