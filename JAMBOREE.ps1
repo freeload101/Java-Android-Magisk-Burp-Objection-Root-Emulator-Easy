@@ -220,6 +220,12 @@ Write-Host "[+] Downloading Duckduckgo"
 $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/duckduckgo/Android/releases/latest").assets | Where-Object name -like *.apk ).browser_download_url
 downloadFile "$downloadUri" "$VARCD\APKS\duckduckgo.apk"
 
+Write-Host "[+] Downloading Gameguardian"
+downloadFile "https://gameguardian.net/forum/files/file/2-gameguardian/?do=download&r=50314&confirm=1&t=1" "$VARCD\APKS\gameguardian.apk"
+
+Write-Host "[+] Downloading Lucky Patcher"
+downloadFile "https://files.androidhd.com/LP_Downloader.apk" "$VARCD\APKS\LP_Downloader.apk"
+
 $varadb=CheckADB
 $env:ANDROID_SERIAL=$varadb
 
