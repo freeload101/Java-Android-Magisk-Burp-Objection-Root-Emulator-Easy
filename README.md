@@ -26,6 +26,8 @@ AMD ( https://github.com/google/android-emulator-hypervisor-driver-for-amd-proce
 Put ps1 file in a folder WITH NO SPACES ( WIP for true portability for now path must stay the same )  
 Rightclick Run with PowerShell
 
+Button click order is easy as... 1,2,3,4,5,4,6,4,7 ;) 
+
 ## Burp/Android Emulator (Video Tutorial )
 
 
