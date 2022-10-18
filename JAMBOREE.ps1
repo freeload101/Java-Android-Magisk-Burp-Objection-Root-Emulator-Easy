@@ -460,12 +460,12 @@ Function AVDStart {
     Write-Host "[+] Starting AVD emulator"
     Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080"  -WindowStyle Minimized
     # I had to start the image before I enabled keyboard ....
-    Start-Sleep -Seconds 2
+    <#Start-Sleep -Seconds 2
     Write-Host "[+] Enbleing keyboard and GPU in config.ini"
     (Get-Content "$VARCD\avd\pixel_2.avd\config.ini") `
     -replace 'hw.keyboard = no', 'hw.keyboard = yes' `
     -replace 'hw.keyboard=no', 'hw.keyboard=yes' ` |
-    Out-File "$VARCD\avd\pixel_2.avd\config.ini"
+    Out-File "$VARCD\avd\pixel_2.avd\config.ini" #>
 }
 
 ############# AVDPoweroff
