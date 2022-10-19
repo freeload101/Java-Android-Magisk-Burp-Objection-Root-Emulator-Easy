@@ -26,10 +26,19 @@ AMD ( https://github.com/google/android-emulator-hypervisor-driver-for-amd-proce
 Put ps1 file in a folder WITH NO SPACES ( WIP for true portability for now path must stay the same )  
 Rightclick Run with PowerShell
 
+OR
+
+From command prompt (NO SPACES IN THE PATH)
+
+    powershell -ExecutionPolicy Bypass -Command "[scriptblock]::Create((Invoke-WebRequest "https://raw.githubusercontent.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/main/JAMBOREE.ps1").Content).Invoke();"
+
 Button click order is easy as... 1,2,3,4,5,4,6,4,7 ;) 
 
 ( Watch the Video Tutorial below it's a 3-5 min process. You only have to setup once. After that it's start burp then start AVD ) 
 
+
+
+    
 ## Burp/Android Emulator (Video Tutorial )
 
 
