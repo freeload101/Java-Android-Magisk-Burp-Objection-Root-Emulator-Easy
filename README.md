@@ -34,6 +34,9 @@ From command prompt (NO SPACES IN THE PATH)
 
 Button click order is easy as... 1,2,3,4,5,4,6,4,7 ;) 
 
+More infomation on bypass Root Detection and SafeNet
+https://www.droidwin.com/how-to-hide-root-from-apps-via-magisk-denylist/
+
 ( Watch the Video Tutorial below it's a 3-5 min process. You only have to setup once. After that it's start burp then start AVD ) 
 
 
