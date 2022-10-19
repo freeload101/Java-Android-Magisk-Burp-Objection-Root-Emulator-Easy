@@ -28,6 +28,8 @@ Rightclick Run with PowerShell
 
 Button click order is easy as... 1,2,3,4,5,4,6,4,7 ;) 
 
+( Watch the Video Tutorial below it's a 3-5 min process. You only have to setup once. After that it's start burp then start AVD ) 
+
 ## Burp/Android Emulator (Video Tutorial )
 
 
