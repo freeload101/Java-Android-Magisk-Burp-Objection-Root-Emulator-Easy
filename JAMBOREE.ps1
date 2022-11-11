@@ -93,7 +93,7 @@ $env:ANDROID_SDK_HOME="$VARCD"
 $env:JAVA_HOME = "$VARCD\jdk-11.0.1"
 
 # Path rootAVD java python
-$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;$VARCD\jdk-11.0.1\bin"
+$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;$VARCD\jdk-11.0.1\bin;python\tools\Lib\site-packages"
 
 # python
 $env:PYTHONHOME="$VARCD\python\tools"
