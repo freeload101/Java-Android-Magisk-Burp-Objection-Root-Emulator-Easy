@@ -189,6 +189,7 @@ Function CheckPython {
 
 ############# CHECK BURP
 Function CheckBurp {
+CheckJava
    if (-not(Test-Path -Path "$VARCD\burpsuite_community.jar" )) { 
         try {
             Write-Host "[+] Downloading Burpsuite" 
