@@ -477,9 +477,12 @@ Function AVDPoweroff {
     Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell -t  `"reboot -p`"" -Wait
 }
 
-############# AVDPoweroff
+############# CMDPrompt
 Function CMDPrompt {
+	CheckJava
+	CheckPython
 	Start-Process -FilePath "cmd" -WorkingDirectory "$VARCD"  
+	
 }
 
 ############# RootAVD
@@ -618,7 +621,7 @@ $main_form.Controls.Add($Button7)
 ############# Button8
 $Button8 = New-Object System.Windows.Forms.Button
 $Button8.AutoSize = $true
-$Button8.Text = "CMD.exe Prompt" #CMDPrompt
+$Button8.Text = "CMD.exe Prompt Java/Python" #CMDPrompt
 $Button8.Location = New-Object System.Drawing.Point(($hShift),($vShift+210))
 $Button8.Add_Click({CMDPrompt})
 $main_form.Controls.Add($Button8)
