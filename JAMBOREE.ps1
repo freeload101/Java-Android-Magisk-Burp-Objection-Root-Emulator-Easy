@@ -149,7 +149,9 @@ Function CheckJava {
             Write-Host "[+] Downloading Java"
             downloadFile "https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.zip" "$VARCD\openjdk.zip"
             Write-Host "[+] Extracting Java"
-            Expand-Archive -Path  "$VARCD\openjdk.zip" -DestinationPath "$VARCD" -Force
+			Add-Type -AssemblyName System.IO.Compression.FileSystem
+            Add-Type -AssemblyName System.IO.Compression
+            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\openjdk.zip", "$VARCD")
 			Get-ChildItem "$VARCD\jdk*"  | Rename-Item -NewName { $_.Name -replace '-.*','' }
             $env:JAVA_HOME = "$VARCD\jdk"
             $env:Path = "$VARCD\jdk;$env:Path"
