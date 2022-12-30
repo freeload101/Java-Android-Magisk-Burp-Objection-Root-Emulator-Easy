@@ -90,10 +90,10 @@ New-Item -Path "$VARCD\avd" -ItemType Directory  -ErrorAction SilentlyContinue |
 $env:ANDROID_SDK_HOME="$VARCD"
 
 #java 
-$env:JAVA_HOME = "$VARCD\jdk-11.0.1"
+$env:JAVA_HOME = "$VARCD\jdk"
 
 # Path rootAVD java python
-$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;$VARCD\jdk-11.0.1\bin;python\tools\Lib\site-packages"
+$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;$VARCD\jdk\bin;python\tools\Lib\site-packages"
 
 # python
 $env:PYTHONHOME="$VARCD\python\tools"
@@ -144,14 +144,15 @@ function downloadFile($url, $targetFile)
 
 ############# CHECK JAVA
 Function CheckJava {
-   if (-not(Test-Path -Path "$VARCD\jdk-11.0.1" )) { 
+   if (-not(Test-Path -Path "$VARCD\jdk" )) { 
         try {
             Write-Host "[+] Downloading Java"
-            downloadFile "https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_windows-x64_bin.zip" "$VARCD\openjdk.zip"
+            downloadFile "https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.zip" "$VARCD\openjdk.zip"
             Write-Host "[+] Extracting Java"
             Expand-Archive -Path  "$VARCD\openjdk.zip" -DestinationPath "$VARCD" -Force
-            $env:JAVA_HOME = "$VARCD\jdk-11.0.1"
-            $env:Path = "$VARCD\jdk-11.0.1;$env:Path"
+			Get-ChildItem "$VARCD\jdk*"  | Rename-Item -NewName { $_.Name -replace '-.*','' }
+            $env:JAVA_HOME = "$VARCD\jdk"
+            $env:Path = "$VARCD\jdk;$env:Path"
             }
                 catch {
                     throw $_.Exception.Message
@@ -524,7 +525,7 @@ Function AVDWipeData {
 ############# StartBurp
 Function StartBurp {
     CheckBurp
-    Start-Process -FilePath "$VARCD\jdk-11.0.1\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk-11.0.1\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   
+    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   
     (New-Object -ComObject Wscript.Shell).Popup("Press OK once burp proxy is listening" ,0,"Waiting",0+64)
     Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
 }
