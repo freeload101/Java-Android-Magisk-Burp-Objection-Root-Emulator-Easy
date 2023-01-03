@@ -533,6 +533,54 @@ Function StartBurp {
 }
 
 
+############# ZAPCheck
+Function ZAPCheck {
+    CheckJava
+    if (-not(Test-Path -Path "$VARCD\ZAP.zip" )) {
+        try {
+            Write-Host "[+] Downloading ZAP"
+            $xmlResponseIWR = Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/zaproxy/zap-admin/master/ZapVersions.xml'
+            $xmlContentIWR = [xml]$xmlResponseIWR.Content
+            $LatestZap = $xmlContentIWR.ZAP.core.daily.url
+
+            downloadFile "$LatestZap" "$VARCD\ZAP.zip"
+            Write-Host "[+] Extracting ZAP"
+            
+            ##
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            Add-Type -AssemblyName System.IO.Compression
+            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\ZAP.zip", "$VARCD")
+			Get-ChildItem "$VARCD\ZAP_D*"  | Rename-Item -NewName { $_.Name -replace '_.*','' }
+
+            ###
+
+
+            }
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+            Write-Host "[+] $VARCD\ZAP.zip already exists"
+            }
+  
+    
+   
+}
+
+############# StartZAP
+Function StartZAP {
+    ZAPCheck
+    # reference
+    # https://www.zaproxy.org/faq/how-do-you-find-out-what-key-to-use-to-set-a-config-value-on-the-command-line/
+    # needs -proxy to run on 8081
+    # needs cert import
+    # needs proxy 8080 to burp
+    $ZAPJarPath = (Get-ChildItem "$VARCD\ZAP\*.jar")
+    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$ZAPJarPath`" "   
+}
+
+
 ################################# FUNCTIONS END
 
 
