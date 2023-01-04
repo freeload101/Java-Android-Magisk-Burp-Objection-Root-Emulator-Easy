@@ -570,14 +570,13 @@ Function ZAPCheck {
 
 ############# StartZAP
 Function StartZAP {
+	StartBurp
     ZAPCheck
-    # reference
+	Write-Host "[+] Starting ZAP"
     # https://www.zaproxy.org/faq/how-do-you-find-out-what-key-to-use-to-set-a-config-value-on-the-command-line/
-    # needs -proxy to run on 8081
-    # needs cert import
-    # needs proxy 8080 to burp
+    # needs cert import ??
     $ZAPJarPath = (Get-ChildItem "$VARCD\ZAP\*.jar")
-    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$ZAPJarPath`" "   
+    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$ZAPJarPath`" -config network.localServers.mainProxy.address=localhost -config network.localServers.mainProxy.port=8081 -config network.connection.httpProxy.host=localhost -config network.connection.httpProxy.port=8080 -config network.connection.httpProxy.enabled=true" 
 }
 
 
@@ -708,6 +707,15 @@ $BUTTON12.Text = "Install Base APKs" #InstallAPKS
 $BUTTON12.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+330))
 $BUTTON12.Add_Click({InstallAPKS})
 $main_form.Controls.Add($BUTTON12)
- 
+
+
+############# BUTTON13
+$Button13 = New-Object System.Windows.Forms.Button
+$Button13.AutoSize = $true
+$Button13.Text = "Start StartZAP Using Burp" #StartZAP
+$Button13.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+360))
+$Button13.Add_Click({StartZAP})
+$main_form.Controls.Add($Button13)
+
 ############# SHOW FORM
 $main_form.ShowDialog()
