@@ -46,6 +46,10 @@ https://www.droidwin.com/how-to-hide-root-from-apps-via-magisk-denylist/
 
 ![image](https://user-images.githubusercontent.com/4307863/210651638-82479cb4-0eeb-4178-a28c-e39e0c5222a2.png)
 
+## Burp Proxy/ZAP Proxy
+![image](https://user-images.githubusercontent.com/4307863/210654556-88cc1eab-a7d3-448d-891d-1c4c3e9fd14c.png)
+
+
 ## Status of Automation Script
 
 |Core|Status|
