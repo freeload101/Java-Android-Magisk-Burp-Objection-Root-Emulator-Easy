@@ -44,20 +44,13 @@ https://www.droidwin.com/how-to-hide-root-from-apps-via-magisk-denylist/
     
 ## Burp/Android Emulator (Video Tutorial )
 
-
-
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/G1Iv-OoacpQ/0.jpg)](https://youtu.be/G1Iv-OoacpQ)
-
- 
-
-![image](https://user-images.githubusercontent.com/4307863/194215435-7d775b8d-441f-452c-9b91-1932d88dcfe8.png)
-
-
+![image](https://user-images.githubusercontent.com/4307863/210651638-82479cb4-0eeb-4178-a28c-e39e0c5222a2.png)
 
 ## Status of Automation Script
 
 |Core|Status|
 |--|--|
+|ZAP Using Burp|✔️|
 |Google Play|✔️|
 |Java|✔️|
 |Android 11 API 30|✔️|
