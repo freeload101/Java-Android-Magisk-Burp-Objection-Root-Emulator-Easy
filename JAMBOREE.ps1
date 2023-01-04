@@ -712,7 +712,7 @@ $main_form.Controls.Add($BUTTON12)
 ############# BUTTON13
 $Button13 = New-Object System.Windows.Forms.Button
 $Button13.AutoSize = $true
-$Button13.Text = "Start StartZAP Using Burp" #StartZAP
+$Button13.Text = "Start ZAP Using Burp" #StartZAP
 $Button13.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+360))
 $Button13.Add_Click({StartZAP})
 $main_form.Controls.Add($Button13)
