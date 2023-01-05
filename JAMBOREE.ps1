@@ -527,6 +527,7 @@ Function AVDWipeData {
 ############# StartBurp
 Function StartBurp {
     CheckBurp
+    SecListsCheck
     Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   
     (New-Object -ComObject Wscript.Shell).Popup("Press OK once burp proxy is listening" ,0,"Waiting",0+64)
     Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
@@ -572,6 +573,7 @@ Function ZAPCheck {
 Function StartZAP {
 	StartBurp
     ZAPCheck
+    SecListsCheck
 	Write-Host "[+] Starting ZAP"
     # https://www.zaproxy.org/faq/how-do-you-find-out-what-key-to-use-to-set-a-config-value-on-the-command-line/
     # needs cert import ??
@@ -582,6 +584,31 @@ Function StartZAP {
 
 ################################# FUNCTIONS END
 
+
+############# SecListsCheck
+Function SecListsCheck {
+    if (-not(Test-Path -Path "$VARCD\SecLists.zip" )) {
+        try {
+            Write-Host "[+] Downloading SecLists.zip"
+            downloadFile "https://github.com/danielmiessler/SecLists/archive/refs/heads/master.zip" "$VARCD\SecLists.zip"
+            Write-Host "[+] Extracting SecLists.zip"
+
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            Add-Type -AssemblyName System.IO.Compression
+            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\SecLists.zip", "$VARCD")
+			#Get-ChildItem "$VARCD\ZAP_D*"  | Rename-Item -NewName { $_.Name -replace '_.*','' }
+            }
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+            Write-Host "[+] $VARCD\SecLists.zip already exists"
+            }
+  
+    
+   
+} 
 
 ############# BUTTON1
 $Button1 = New-Object System.Windows.Forms.Button
