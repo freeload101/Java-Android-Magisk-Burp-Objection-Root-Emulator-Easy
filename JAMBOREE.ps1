@@ -540,14 +540,12 @@ Function ZAPCheck {
     if (-not(Test-Path -Path "$VARCD\ZAP.zip" )) {
         try {
             Write-Host "[+] Downloading ZAP"
-            $xmlResponseIWR = Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/zaproxy/zap-admin/master/ZapVersions.xml'
-            $xmlContentIWR = [xml]$xmlResponseIWR.Content
-            $LatestZap = $xmlContentIWR.ZAP.core.daily.url
-
-            downloadFile "$LatestZap" "$VARCD\ZAP.zip"
+            $xmlResponseIWR = Invoke-WebRequest -Method GET -Uri 'https://raw.githubusercontent.com/zaproxy/zap-admin/master/ZapVersions.xml' -OutFile ZapVersions.xml
+            [xml]$xmlAttr = Get-Content -Path ZapVersions.xml
+            Write-Host ([xml]$xmlAttr).ZAP.core.daily.url
+            downloadFile ([xml]$xmlAttr).ZAP.core.daily.url "$VARCD\ZAP.zip"
+	   
             Write-Host "[+] Extracting ZAP"
-            
-            ##
             Add-Type -AssemblyName System.IO.Compression.FileSystem
             Add-Type -AssemblyName System.IO.Compression
             [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\ZAP.zip", "$VARCD")
