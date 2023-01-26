@@ -462,14 +462,7 @@ Function HAXMInstall {
 ############# AVDStart
 Function AVDStart {
     Write-Host "[+] Starting AVD emulator"
-    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080"  -WindowStyle Minimized
-    # I had to start the image before I enabled keyboard ....
-    <#Start-Sleep -Seconds 2
-    Write-Host "[+] Enbleing keyboard and GPU in config.ini"
-    (Get-Content "$VARCD\avd\pixel_2.avd\config.ini") `
-    -replace 'hw.keyboard = no', 'hw.keyboard = yes' `
-    -replace 'hw.keyboard=no', 'hw.keyboard=yes' ` |
-    Out-File "$VARCD\avd\pixel_2.avd\config.ini" #>
+    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080"  -WindowStyle Minimized   
 }
 
 ############# AVDPoweroff
@@ -490,7 +483,13 @@ Function CMDPrompt {
 
 ############# RootAVD
 Function RootAVD {
-
+    # I had to start the image before I enabled keyboard ....
+	Start-Sleep -Seconds 2
+	Write-Host "[+] Enbleing keyboard in config.ini"
+	(Get-Content "$VARCD\avd\pixel_2.avd\config.ini") `
+	-replace 'hw.keyboard = no', 'hw.keyboard = yes' `
+	-replace 'hw.keyboard=no', 'hw.keyboard=yes' ` |
+	Out-File -Encoding Ascii "$VARCD\avd\pixel_2.avd\config.ini"
 if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
     try {
             Write-Host "[+] Downloading rootAVD"
