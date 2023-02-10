@@ -527,7 +527,7 @@ Function AVDWipeData {
 Function StartBurp {
     CheckBurp
     SecListsCheck
-    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   
+    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   -WindowStyle Minimized
     (New-Object -ComObject Wscript.Shell).Popup("Press OK once burp proxy is listening" ,0,"Waiting",0+64)
     Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
 }
