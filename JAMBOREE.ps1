@@ -440,7 +440,7 @@ Function AVDDownload {
 }
 
 
-############# HAXMInstall
+############# HyperVInstall
 Function HyperVInstall {
     $hyperv = Get-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V-All -Online
     # Check if Hyper-V is enabled
@@ -528,8 +528,9 @@ Function StartBurp {
     CheckBurp
     SecListsCheck
     Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   -WindowStyle Minimized
-    (New-Object -ComObject Wscript.Shell).Popup("Press OK once burp proxy is listening" ,0,"Waiting",0+64)
-    Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
+    #(New-Object -ComObject Wscript.Shell).Popup("Press OK once burp proxy is listening" ,0,"Waiting",0+64)
+    #Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
+	 Retry({PullCert "Error Pulling Cert from Burp Suite. Is burp running?"})
 }
 
 
@@ -579,6 +580,63 @@ Function StartZAP {
 }
 
 
+# [Solution with passing a delegate into a function instead of script block](https://stackoverflow.com/a/47712807/)
+function Retry()
+{
+    param(
+        [Parameter(Mandatory=$true)][Action]$action,
+        [Parameter(Mandatory=$false)][int]$maxAttempts = 10
+    )
+
+    $attempts=1    
+    $ErrorActionPreferenceToRestore = $ErrorActionPreference
+    $ErrorActionPreference = "Stop"
+
+    do
+    {
+        try
+        {
+            $action.Invoke();
+            break;
+        }
+        catch [Exception]
+        {
+            Write-Host $_.Exception.Message
+        }
+
+        # exponential backoff delay
+        $attempts++
+        if ($attempts -le $maxAttempts) {
+            $retryDelaySeconds = [math]::Pow(2, $attempts)
+            $retryDelaySeconds = $retryDelaySeconds - 1  # Exponential Backoff Max == (2^n)-1
+            Write-Host("Action failed. Waiting " + $retryDelaySeconds + " seconds before attempt " + $attempts + " of " + $maxAttempts + ".")
+            Start-Sleep $retryDelaySeconds 
+        }
+        else {
+            $ErrorActionPreference = $ErrorActionPreferenceToRestore
+            Write-Error $_.Exception.Message
+        }
+    } while ($attempts -le $maxAttempts)
+    $ErrorActionPreference = $ErrorActionPreferenceToRestore
+}
+
+# function MyFunction($inputArg)
+# {
+#     Throw $inputArg
+# }
+
+# #Example of a call:
+#Retry({MyFunction "Oh no! It happened again!"})
+# Retry {MyFunction "Oh no! It happened again!"} -maxAttempts 10
+
+
+############# PullCert
+Function PullCert {
+Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
+}
+
+
+
 ################################# FUNCTIONS END
 
 
@@ -612,7 +670,7 @@ $Button1 = New-Object System.Windows.Forms.Button
 $Button1.AutoSize = $true
 $Button1.Text = "1. AVD Download/Install" #AVDDownload
 $Button1.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button1.Add_Click({AVDDownload})
+$Button1.Add_Click({Retry({AVDDownload "errrr AVDDownload"})})
 $main_form.Controls.Add($Button1)
 
 
