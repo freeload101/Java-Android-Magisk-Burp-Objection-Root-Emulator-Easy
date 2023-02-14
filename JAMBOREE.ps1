@@ -430,8 +430,9 @@ Function AVDDownload {
 			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "emulator" -Verbose -Wait -NoNewWindow 
 			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "system-images;android-30;google_apis_playstore;x86" -Verbose -Wait -NoNewWindow 
 			Write-Host "[+] AVD Install Complete Creating AVD Device"
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n 1616_2 -k `"system-images;android-30;google_apis_playstore;x86`"  -d `"pixel_2`" --force" -Wait -Verbose
-
+			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-30;google_apis_playstore;x86`"  -d `"pixel_2`" --force" -Wait -Verbose
+			Start-Sleep -Seconds 2
+			AVDStart
             }
                 catch {
                     throw $_.Exception.Message
@@ -471,7 +472,11 @@ Function HAXMInstall {
 Function AVDStart {
 	if (-not(Test-Path -Path "$VARCD\emulator" )) {
         try {
-				AVDDownload
+			AVDDownload
+			Write-Host "[+] $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup"
+			Write-Host "[+] Starting AVD emulator"
+			Start-Sleep -Seconds 2
+			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080"
             }
                 catch {
                     throw $_.Exception.Message
@@ -479,9 +484,11 @@ Function AVDStart {
 			
             }
     else {
-            Write-Host "[+] $VARCD\commandlinetools-win.zip already exists remove everything but this script to perform full reinstall/setup"
+            Write-Host "[+] $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup"
 			Write-Host "[+] Starting AVD emulator"
+			Start-Sleep -Seconds 2
 			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080"
+			
             }
 }
 
@@ -622,6 +629,50 @@ Function StartZAP {
 }
 
 
+
+############# Retry
+function Retry()
+{
+    param(
+        [Parameter(Mandatory=$true)][Action]$action,
+        [Parameter(Mandatory=$false)][int]$maxAttempts = 10
+    )
+
+    $attempts=1    
+    $ErrorActionPreferenceToRestore = $ErrorActionPreference
+    $ErrorActionPreference = "Stop"
+
+    do
+    {
+        try
+        {
+            $action.Invoke();
+            break;
+        }
+        catch [Exception]
+        {
+            Write-Host $_.Exception.Message
+        }
+
+        # exponential backoff delay
+        $attempts++
+        if ($attempts -le $maxAttempts) {
+            $retryDelaySeconds = [math]::Pow(2, $attempts)
+            $retryDelaySeconds = $retryDelaySeconds - 1  # Exponential Backoff Max == (2^n)-1
+            Write-Host("Action failed. Waiting " + $retryDelaySeconds + " seconds before attempt " + $attempts + " of " + $maxAttempts + ".")
+            Start-Sleep $retryDelaySeconds 
+        }
+        else {
+            $ErrorActionPreference = $ErrorActionPreferenceToRestore
+            Write-Error $_.Exception.Message
+        }
+    } while ($attempts -le $maxAttempts)
+    $ErrorActionPreference = $ErrorActionPreferenceToRestore
+}
+
+
+
+
 ################################# FUNCTIONS END
 
 
@@ -655,7 +706,7 @@ $Button1 = New-Object System.Windows.Forms.Button
 $Button1.AutoSize = $true
 $Button1.Text = "1. Start AVD With Proxy Support" #AVDDownload
 $Button1.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button1.Add_Click({AVDDownload})
+$Button1.Add_Click({Retry({AVDDownload "Error AVDDownload"})})
 $main_form.Controls.Add($Button1)
 
 
