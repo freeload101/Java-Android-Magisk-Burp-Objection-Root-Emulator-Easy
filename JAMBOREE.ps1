@@ -228,7 +228,11 @@ Write-Host "[+] Downloading Gameguardian"
 downloadFile "https://gameguardian.net/forum/files/file/2-gameguardian/?do=download&r=50314&confirm=1&t=1" "$VARCD\APKS\gameguardian.apk"
 
 Write-Host "[+] Downloading Lucky Patcher"
-downloadFile "https://files.androidhd.com/LP_Downloader.apk" "$VARCD\APKS\LP_Downloader.apk"
+downloadFile "https://chelpus.com/download/LuckyPatchers.com_Official_Installer_10.6.5.apk" "$VARCD\APKS\LP_Downloader.apk"
+
+Write-Host "[+] Downloading YASNAC"
+$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/RikkaW/YASNAC/releases/latest").assets | Where-Object name -like *.apk ).browser_download_url
+downloadFile "$downloadUri" "$VARCD\APKS\yasnac.apk"
 
 $varadb=CheckADB
 $env:ANDROID_SERIAL=$varadb
@@ -236,7 +240,9 @@ $env:ANDROID_SERIAL=$varadb
 Write-Host "[+] Installing Base APKS"
 
 (Get-ChildItem -Path "$VARCD\APKS").FullName |ForEach-Object {
+	Write-Host "[+] Installing $_"
     Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " install $_ "  -NoNewWindow -Wait
+	
     }
 Write-Host "[+] Complete Installing Base APKS"
 }
@@ -394,7 +400,7 @@ start-sleep -Seconds 1
 function StartADB {
     $varadb=CheckADB
 	$env:ANDROID_SERIAL=$varadb
-    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell  " 
+    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " logcat *:W  " 
 }
 
 ############# AVDDownload
@@ -435,12 +441,12 @@ Function AVDDownload {
     Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "emulator" -Verbose -Wait -NoNewWindow 
     Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "system-images;android-30;google_apis_playstore;x86" -Verbose -Wait -NoNewWindow 
     Write-Host "[+] AVD Install Complete Creating AVD Device"
-    Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-30;google_apis_playstore;x86`"  -d `"pixel_2`" --force" -Wait -Verbose
+    Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n 1616_2 -k `"system-images;android-30;google_apis_playstore;x86`"  -d `"pixel_2`" --force" -Wait -Verbose
 
 }
 
 
-############# HyperVInstall
+############# HAXMInstall
 Function HyperVInstall {
     $hyperv = Get-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V-All -Online
     # Check if Hyper-V is enabled
@@ -462,22 +468,36 @@ Function HAXMInstall {
 ############# AVDStart
 Function AVDStart {
     Write-Host "[+] Starting AVD emulator"
-    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080"  -WindowStyle Minimized   
+    Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080"  
 }
 
 ############# AVDPoweroff
 Function AVDPoweroff {
     $varadb=CheckADB
 	$env:ANDROID_SERIAL=$varadb
+	
+	$wshell = New-Object -ComObject Wscript.Shell
+	$pause = $wshell.Popup("Are you sure you want to shutdown ?!?", 0, "Wait!", 48+1)
 
-    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell -t  `"reboot -p`"" -Wait
+	if ($pause -eq '1') {
+		Write-Host "[+] Wiping data you will need to rerun Magisk and push cert"
+		Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell -t  `"reboot -p`"" -Wait
+	}
+	Elseif ($pause = '2') {
+		Write-Host "[+] Not rebooting..."
+		return
+	}
 }
 
 ############# CMDPrompt
 Function CMDPrompt {
 	CheckJava
 	CheckPython
-	Start-Process -FilePath "cmd" -WorkingDirectory "$VARCD"  
+	Start-Process -FilePath "cmd" -WorkingDirectory "$VARCD"
+	
+	$varadb=CheckADB
+	$env:ANDROID_SERIAL=$varadb
+    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell  " 
 	
 }
 
@@ -517,9 +537,19 @@ if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
 ############# AVDWipeData
 Function AVDWipeData {
 	Write-Host "[+] Starting AVD emulator"
-	(New-Object -ComObject Wscript.Shell).Popup("Are you sure you want to wipe all data !?" ,0,"Waiting",0+64)
-	(New-Object -ComObject Wscript.Shell).Popup("Are you sure you want to wipe all data !? Really?" ,0,"Waiting",0+64)
-	Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -wipe-data"  -WindowStyle Minimized
+	$wshell = New-Object -ComObject Wscript.Shell
+	$pause = $wshell.Popup("Are you sure you want to wipe all data ?!?", 0, "Wait!", 48+1)
+
+	if ($pause -eq '1') {
+		Write-Host "[+] Wiping data you will need to rerun Magisk and push cert"
+		Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -wipe-data" 
+	}
+	Elseif ($pause = '2') {
+		Write-Host "[+] Not wiping data..."
+		return
+	}
+
+	
 	
 }
 
@@ -527,10 +557,9 @@ Function AVDWipeData {
 Function StartBurp {
     CheckBurp
     SecListsCheck
-    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   -WindowStyle Minimized
-    #(New-Object -ComObject Wscript.Shell).Popup("Press OK once burp proxy is listening" ,0,"Waiting",0+64)
-    #Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
-	 Retry({PullCert "Error Pulling Cert from Burp Suite. Is burp running?"})
+    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   
+    (New-Object -ComObject Wscript.Shell).Popup("Press OK once burp proxy is listening" ,0,"Waiting",0+64)
+    Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
 }
 
 
@@ -574,67 +603,9 @@ Function StartZAP {
     SecListsCheck
 	Write-Host "[+] Starting ZAP"
     # https://www.zaproxy.org/faq/how-do-you-find-out-what-key-to-use-to-set-a-config-value-on-the-command-line/
-    # needs cert import ??
     $ZAPJarPath = (Get-ChildItem "$VARCD\ZAP\*.jar")
     Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$ZAPJarPath`" -config network.localServers.mainProxy.address=localhost -config network.localServers.mainProxy.port=8081 -config network.connection.httpProxy.host=localhost -config network.connection.httpProxy.port=8080 -config network.connection.httpProxy.enabled=true" 
 }
-
-
-# [Solution with passing a delegate into a function instead of script block](https://stackoverflow.com/a/47712807/)
-function Retry()
-{
-    param(
-        [Parameter(Mandatory=$true)][Action]$action,
-        [Parameter(Mandatory=$false)][int]$maxAttempts = 10
-    )
-
-    $attempts=1    
-    $ErrorActionPreferenceToRestore = $ErrorActionPreference
-    $ErrorActionPreference = "Stop"
-
-    do
-    {
-        try
-        {
-            $action.Invoke();
-            break;
-        }
-        catch [Exception]
-        {
-            Write-Host $_.Exception.Message
-        }
-
-        # exponential backoff delay
-        $attempts++
-        if ($attempts -le $maxAttempts) {
-            $retryDelaySeconds = [math]::Pow(2, $attempts)
-            $retryDelaySeconds = $retryDelaySeconds - 1  # Exponential Backoff Max == (2^n)-1
-            Write-Host("Action failed. Waiting " + $retryDelaySeconds + " seconds before attempt " + $attempts + " of " + $maxAttempts + ".")
-            Start-Sleep $retryDelaySeconds 
-        }
-        else {
-            $ErrorActionPreference = $ErrorActionPreferenceToRestore
-            Write-Error $_.Exception.Message
-        }
-    } while ($attempts -le $maxAttempts)
-    $ErrorActionPreference = $ErrorActionPreferenceToRestore
-}
-
-# function MyFunction($inputArg)
-# {
-#     Throw $inputArg
-# }
-
-# #Example of a call:
-#Retry({MyFunction "Oh no! It happened again!"})
-# Retry {MyFunction "Oh no! It happened again!"} -maxAttempts 10
-
-
-############# PullCert
-Function PullCert {
-Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
-}
-
 
 
 ################################# FUNCTIONS END
@@ -670,7 +641,7 @@ $Button1 = New-Object System.Windows.Forms.Button
 $Button1.AutoSize = $true
 $Button1.Text = "1. AVD Download/Install" #AVDDownload
 $Button1.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button1.Add_Click({Retry({AVDDownload "errrr AVDDownload"})})
+$Button1.Add_Click({AVDDownload})
 $main_form.Controls.Add($Button1)
 
 
@@ -753,7 +724,7 @@ $main_form.Controls.Add($Button7)
 ############# Button8
 $Button8 = New-Object System.Windows.Forms.Button
 $Button8.AutoSize = $true
-$Button8.Text = "CMD.exe Prompt Java/Python" #CMDPrompt
+$Button8.Text = "CMD/ADB Prompt" #CMDPrompt
 $Button8.Location = New-Object System.Drawing.Point(($hShift),($vShift+210))
 $Button8.Add_Click({CMDPrompt})
 $main_form.Controls.Add($Button8)
@@ -761,7 +732,7 @@ $main_form.Controls.Add($Button8)
 ############# Button9
 $Button9 = New-Object System.Windows.Forms.Button
 $Button9.AutoSize = $true
-$Button9.Text = "ADB Shell" #StartADB
+$Button9.Text = "ADB Logcat" #StartADB
 $Button9.Location = New-Object System.Drawing.Point(($hShift),($vShift+240))
 $Button9.Add_Click({StartADB})
 $main_form.Controls.Add($Button9)
@@ -769,7 +740,7 @@ $main_form.Controls.Add($Button9)
 ############# Button10
 $Button10 = New-Object System.Windows.Forms.Button
 $Button10.AutoSize = $true
-$Button10.Text = "AVD Poweroff adb reboot -p" #AVDPoweroff
+$Button10.Text = "Shutdown AVD" #AVDPoweroff
 $Button10.Location = New-Object System.Drawing.Point(($hShift),($vShift+270))
 $Button10.Add_Click({AVDPoweroff})
 $main_form.Controls.Add($Button10)
