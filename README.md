@@ -54,6 +54,7 @@ https://www.droidwin.com/how-to-hide-root-from-apps-via-magisk-denylist/
 
 |Core|Status|
 |--|--|
+|SaftyNet+ Bypass|❌|
 |ZAP Using Burp|✔️|
 |Google Play|✔️|
 |Java|✔️|
