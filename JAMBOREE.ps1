@@ -330,9 +330,7 @@ CheckPython
         try {
             Write-Host "[+] Downloading Latest frida-server-*android-x86.xz "
             $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/frida/frida/releases/latest").assets | Where-Object name -like frida-server-*-android-x86.xz ).browser_download_url
-
-            Invoke-WebRequest -Uri $downloadUri -Out "$VARCD\frida-server-android-x86.xz"
-
+            downloadFile  $downloadUri "$VARCD\frida-server-android-x86.xz"
             Write-Host "[+] Extracting frida-server-android-x86.xz"
 # don't mess with spaces for these lines for python ...
 $PythonXZ = @'
