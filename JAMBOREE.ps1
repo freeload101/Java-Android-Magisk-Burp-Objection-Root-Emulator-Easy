@@ -569,9 +569,6 @@ Function AVDWipeData {
 		Write-Host "[+] Not wiping data..."
 		return
 	}
-
-	
-	
 }
 
 ############# StartBurp
@@ -579,7 +576,12 @@ Function StartBurp {
     CheckBurp
     SecListsCheck
     Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   
-    (New-Object -ComObject Wscript.Shell).Popup("Press OK once burp proxy is listening" ,0,"Waiting",0+64)
+	Write-Host "[+] Waiting for Burp Suite to download cert"
+	Retry{PullCert "Error PullCert"} # -maxAttempts 10
+}f
+
+############# PullCert
+Function PullCert {
     Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
 }
 
