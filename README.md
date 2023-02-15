@@ -52,10 +52,16 @@ https://www.droidwin.com/how-to-hide-root-from-apps-via-magisk-denylist/
 ## Burp Crawl Config ??
 ![image](https://user-images.githubusercontent.com/4307863/219084287-74c5abd3-866a-4930-b8ab-753c321e7b3a.png)
 
+## Example Objection / Frida
+
+![image](https://user-images.githubusercontent.com/4307863/219110723-5b3e98b9-4d87-4eed-b855-a8a7b0ba0c0c.png)
+
+
 ## Status of Automation Script
 
 |Core|Status|
 |--|--|
+|Brida, Burp to Frida bridge|❌|
 |SaftyNet+ Bypass|❌|
 |ZAP Using Burp|✔️|
 |Google Play|✔️|
