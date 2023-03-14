@@ -195,7 +195,7 @@ Function CheckBurp {
 CheckJava
    if (-not(Test-Path -Path "$VARCD\burpsuite_community.jar" )) { 
         try {
-            Write-Host "[+] Downloading Burpsuite" 
+            Write-Host "[+] Downloading Burpsuite Community" 
             downloadFile "https://portswigger-cdn.net/burp/releases/download?product=community&type=Jar" "$VARCD\burpsuite_community.jar"
            }
                 catch {
@@ -204,6 +204,19 @@ CheckJava
             }
         else {
             Write-Host "[+] $VARCD\Burpsuite already exists"
+            }
+			
+			   if (-not(Test-Path -Path "$VARCD\burpsuite_pro.jar" )) { 
+        try {
+            Write-Host "[+] Downloading Burpsuite Pro" 
+            downloadFile "https://portswigger-cdn.net/burp/releases/download?product=pro&type=Jar" "$VARCD\burpsuite_pro.jar"
+           }
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+            Write-Host "[+] $VARCD\Burpsuite Pro already exists"
             }
 }
 
@@ -580,6 +593,100 @@ Function StartBurp {
 	Retry{PullCert "Error PullCert"} # -maxAttempts 10
 }
 
+############# StartBurpPro
+Function StartBurpPro {
+    CheckBurp
+    SecListsCheck
+	$BurpProLatest = Get-ChildItem -Force -Recurse -File -Path "$VARCD" -Depth 0 -Filter *pro*.jar -ErrorAction SilentlyContinue | Sort-Object LastwriteTime -Descending | select -first 1
+	Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\$BurpProLatest`" --use-defaults  && "
+	# wait for burp to setup env paths for config
+	Start-Sleep -Seconds 2
+	BurpConfigPush	
+	Write-Host "[+] Waiting for Burp Suite to download cert"
+	Retry{PullCert "Error PullCert"} # -maxAttempts 10
+}
+
+############# BurpConfigPush
+Function BurpConfigPush {
+# BurpConfigChrome.json
+$BurpConfigChrome = @'
+{
+    "crawler":{
+        "crawl_limits":{
+            "maximum_crawl_time":0,
+            "maximum_request_count":0,
+            "maximum_unique_locations":0
+        },
+        "crawl_optimization":{
+            "allow_all_clickables":false,
+            "breadth_first_until_depth":5,
+            "crawl_strategy":"normal",
+            "crawl_strategy_customized":false,
+            "crawl_using_provided_logins_only":false,
+            "discovered_destinations_group_size":10,
+            "error_destination_multiplier":2,
+            "form_destination_optimization_threshold":2,
+            "form_submission_optimization_threshold":10,
+            "idle_time_for_mutations":50,
+            "incy_wincy":false,
+            "link_fingerprinting_threshold":2,
+            "logging_directory":"",
+            "logging_enabled":false,
+            "loopback_link_fingerprinting_threshold":2,
+            "maximum_form_field_permutations":5,
+            "maximum_form_permutations":30,
+            "maximum_link_depth":1,
+            "maximum_state_changing_sequences":20,
+            "maximum_state_changing_sequences_length":5,
+            "maximum_state_changing_sequences_per_destination":6,
+            "maximum_unmatched_anchor_tolerance":2,
+            "maximum_unmatched_form_tolerance":0,
+            "maximum_unmatched_frame_tolerance":0,
+            "maximum_unmatched_iframe_tolerance":2,
+            "maximum_unmatched_image_area_tolerance":0,
+            "maximum_unmatched_redirect_tolerance":0,
+            "recent_destinations_buffer_size":5,
+            "total_unmatched_feature_tolerance":2
+        },
+        "crawl_project_option_overrides":{
+            "connect_timeout":3,
+            "normal_timeout":3
+        },
+        "customization":{
+            "allow_out_of_scope_resources":true,
+            "application_uses_fragments_for_routing":"unsure",
+            "browser_based_navigation_mode":"only_if_hardware_supports",
+            "customize_user_agent":false,
+            "maximum_items_from_sitemap":1000,
+            "maximum_speculative_links":1000,
+            "parse_api_definitions":true,
+            "request_robots_txt":false,
+            "request_sitemap":true,
+            "request_speculative":true,
+            "submit_forms":true,
+            "timeout_for_in_progress_resource_requests":10,
+            "use_headed_browser_for_crawl":true,
+            "user_agent":""
+        },
+        "error_handling":{
+            "number_of_follow_up_passes":0,
+            "pause_task_requests_timed_out_count":0,
+            "pause_task_requests_timed_out_percentage":0
+        },
+        "login_functions":{
+            "attempt_to_self_register_a_user":true,
+            "trigger_login_failures":true
+        }
+    }
+}
+ 
+'@
+$BurpConfigChrome |set-Content "$env:USERPROFILE\AppData\Roaming\BurpSuite\ConfigLibrary\_JAMBOREE_Chrome_Crawl.json"
+
+}
+
+
+
 ############# PullCert
 Function PullCert {
     Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
@@ -836,6 +943,14 @@ $Button13.Text = "Start ZAP Using Burp" #StartZAP
 $Button13.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+360))
 $Button13.Add_Click({StartZAP})
 $main_form.Controls.Add($Button13)
+
+############# BUTTON13
+$Button14 = New-Object System.Windows.Forms.Button
+$Button14.AutoSize = $true
+$Button14.Text = "Start BurpSuite Pro" #StartBurpPro
+$Button14.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+390))
+$Button14.Add_Click({StartBurpPro})
+$main_form.Controls.Add($Button14)
 
 ############# SHOW FORM
 $main_form.ShowDialog()
