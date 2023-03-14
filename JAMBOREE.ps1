@@ -619,34 +619,35 @@ $BurpConfigChrome = @'
         },
         "crawl_optimization":{
             "allow_all_clickables":false,
+            "await_navigation_timeout":10,
             "breadth_first_until_depth":5,
-            "crawl_strategy":"normal",
+            "crawl_strategy":"fastest",
             "crawl_strategy_customized":false,
             "crawl_using_provided_logins_only":false,
-            "discovered_destinations_group_size":10,
-            "error_destination_multiplier":2,
-            "form_destination_optimization_threshold":2,
-            "form_submission_optimization_threshold":10,
-            "idle_time_for_mutations":50,
-            "incy_wincy":false,
-            "link_fingerprinting_threshold":2,
+            "discovered_destinations_group_size":2147483647,
+            "error_destination_multiplier":1,
+            "form_destination_optimization_threshold":1,
+            "form_submission_optimization_threshold":1,
+            "idle_time_for_mutations":0,
+            "incy_wincy":true,
+            "link_fingerprinting_threshold":1,
             "logging_directory":"",
             "logging_enabled":false,
-            "loopback_link_fingerprinting_threshold":2,
-            "maximum_form_field_permutations":5,
-            "maximum_form_permutations":30,
-            "maximum_link_depth":1,
-            "maximum_state_changing_sequences":20,
-            "maximum_state_changing_sequences_length":5,
-            "maximum_state_changing_sequences_per_destination":6,
-            "maximum_unmatched_anchor_tolerance":2,
+            "loopback_link_fingerprinting_threshold":1,
+            "maximum_form_field_permutations":4,
+            "maximum_form_permutations":5,
+            "maximum_link_depth":0,
+            "maximum_state_changing_sequences":0,
+            "maximum_state_changing_sequences_length":3,
+            "maximum_state_changing_sequences_per_destination":0,
+            "maximum_unmatched_anchor_tolerance":3,
             "maximum_unmatched_form_tolerance":0,
             "maximum_unmatched_frame_tolerance":0,
-            "maximum_unmatched_iframe_tolerance":2,
+            "maximum_unmatched_iframe_tolerance":3,
             "maximum_unmatched_image_area_tolerance":0,
             "maximum_unmatched_redirect_tolerance":0,
-            "recent_destinations_buffer_size":5,
-            "total_unmatched_feature_tolerance":2
+            "recent_destinations_buffer_size":1,
+            "total_unmatched_feature_tolerance":3
         },
         "crawl_project_option_overrides":{
             "connect_timeout":3,
@@ -656,7 +657,7 @@ $BurpConfigChrome = @'
             "allow_out_of_scope_resources":true,
             "application_uses_fragments_for_routing":"unsure",
             "browser_based_navigation_mode":"only_if_hardware_supports",
-            "customize_user_agent":false,
+            "customize_user_agent":true,
             "maximum_items_from_sitemap":1000,
             "maximum_speculative_links":1000,
             "parse_api_definitions":true,
@@ -665,8 +666,7 @@ $BurpConfigChrome = @'
             "request_speculative":true,
             "submit_forms":true,
             "timeout_for_in_progress_resource_requests":10,
-            "use_headed_browser_for_crawl":true,
-            "user_agent":""
+            "user_agent":"Mozilla/5.0 (Linux; Android 4.4.2; Nexus 4 Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.114 Mobile Safari/537.36 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
         },
         "error_handling":{
             "number_of_follow_up_passes":0,
@@ -681,7 +681,7 @@ $BurpConfigChrome = @'
 }
  
 '@
-$BurpConfigChrome |set-Content "$env:USERPROFILE\AppData\Roaming\BurpSuite\ConfigLibrary\_JAMBOREE_Chrome_Crawl.json"
+$BurpConfigChrome |set-Content "$env:USERPROFILE\AppData\Roaming\BurpSuite\ConfigLibrary\_JAMBOREE_Crawl_Level_01.json"
 
 }
 
