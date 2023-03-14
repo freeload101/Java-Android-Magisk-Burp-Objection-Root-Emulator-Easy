@@ -49,8 +49,10 @@ https://www.droidwin.com/how-to-hide-root-from-apps-via-magisk-denylist/
 ## Burp Proxy/ZAP Proxy
 ![image](https://user-images.githubusercontent.com/4307863/210654556-88cc1eab-a7d3-448d-891d-1c4c3e9fd14c.png)
 
-## Burp Crawl Config ??
-![image](https://user-images.githubusercontent.com/4307863/219084287-74c5abd3-866a-4930-b8ab-753c321e7b3a.png)
+## Burp Crawl Config
+
+Included `%USERPROFILE%\AppData\Roaming\BurpSuite\ConfigLibrary_JAMBOREE_Crawl_Level_01.json` the "Headed" Browser is no longer supported 
+
 
 ## Example Objection / Frida
 
@@ -63,6 +65,7 @@ https://www.droidwin.com/how-to-hide-root-from-apps-via-magisk-denylist/
 |--|--|
 |Brida, Burp to Frida bridge|❌|
 |SaftyNet+ Bypass|❌|
+|Burp Suite Pro / CloudFlare UserAgent Workaround-ish|✔️|
 |ZAP Using Burp|✔️|
 |Google Play|✔️|
 |Java|✔️|
