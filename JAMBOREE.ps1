@@ -690,6 +690,7 @@ $BurpConfigChrome |set-Content "$env:USERPROFILE\AppData\Roaming\BurpSuite\Confi
 ############# PullCert
 Function PullCert {
     Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
+    Start-Process -FilePath "$env:SYSTEMROOT\System32\certutil.exe" -ArgumentList  " -user -addstore `"Root`"    `"$VARCD\BURP.der`"  "  -NoNewWindow -Wait
 }
 
 
