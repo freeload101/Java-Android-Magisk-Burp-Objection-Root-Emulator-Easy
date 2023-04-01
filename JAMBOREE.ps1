@@ -856,12 +856,13 @@ Function BloodhoundRun {
 	Stop-process -name BloodHound.exe -Force -ErrorAction SilentlyContinue |Out-Null
 	if (-not(Test-Path -Path "$VARCD\BloodHound-win32-x64" )) {
         try {
-            Write-Host "[+] Downloading BloodHound"
-            downloadFile "https://github.com/BloodHoundAD/BloodHound/releases/download/4.2.0/BloodHound-win32-x64.zip" "$VARCD\BloodHound-win32-x64.zip"
-			Write-Host "[+] Extracting BloodHound"
-            Add-Type -AssemblyName System.IO.Compression.FileSystem
-            Add-Type -AssemblyName System.IO.Compression
-            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\BloodHound-win32-x64.zip", "$VARCD")
+		Write-Host "[+] Downloading BloodHound"
+		$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/BloodHoundAD/BloodHound/releases/latest").assets | Where-Object name -like BloodHound-win32-x64*.zip ).browser_download_url
+		downloadFile  $downloadUri "$VARCD\BloodHound-win32-x64.zip"
+		Write-Host "[+] Extracting BloodHound"
+		Add-Type -AssemblyName System.IO.Compression.FileSystem
+		Add-Type -AssemblyName System.IO.Compression
+		[System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\BloodHound-win32-x64.zip", "$VARCD")
             }
                 catch {
                     throw $_.Exception.Message
