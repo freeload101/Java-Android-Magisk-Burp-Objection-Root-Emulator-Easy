@@ -11,6 +11,7 @@ Want to pentest or run Android apps in minutes ? Sick of BlueStacks or NOX malwa
 I would like to make it even easier to use but I don't want to spend more time developing it if nobody is going to use it! Please let me know if you like it and open bugs/suggestions/feature request etc!
 
 
+
 ### Requirements:
 
 - Local admin just to install:
@@ -65,6 +66,7 @@ Included `%USERPROFILE%\AppData\Roaming\BurpSuite\ConfigLibrary_JAMBOREE_Crawl_L
 
 |Core|Status|
 |--|--|
+|Bloodhound|✔️|
 |Brida, Burp to Frida bridge|❌|
 |SaftyNet+ Bypass|❌|
 |Burp Suite Pro / CloudFlare UserAgent Workaround-ish|✔️|
