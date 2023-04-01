@@ -781,11 +781,6 @@ function Retry()
 }
 
 
-
-
-################################# FUNCTIONS END
-
-
 ############# SecListsCheck
 Function SecListsCheck {
     if (-not(Test-Path -Path "$VARCD\SecLists.zip" )) {
@@ -811,16 +806,89 @@ Function SecListsCheck {
    
 } 
 
+############# SharpHoundRun
+Function SharpHoundRun {
+	Write-Host "[+] Example Runas Usage: runas /user:"nr.ad.COMPANY.com\USERNAME" /netonly cmd"
+    if (-not(Test-Path -Path "$VARCD\SharpHound.exe" )) {
+        try {
+            Write-Host "[+] Sharphound Missing Downloading"
+			downloadFile "https://github.com/BloodHoundAD/BloodHound/raw/master/Collectors/DebugBuilds/SharpHound.exe" "$VARCD\SharpHound.exe"
+            }
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+    Write-Host "[+] Starting SharpHound"
+	Start-Process -FilePath "$VARCD\SharpHound.exe" -WorkingDirectory "$VARCD\"  -ArgumentList "  -s --CollectionMethods All --prettyprint true " 
+}
+
+
+############# Neo4jRun
+Function Neo4jRun {
+    CheckJava
+	# Neo4j
+    if (-not(Test-Path -Path "$VARCD\Neo4j.zip" )) {
+        try {
+            Write-Host "[+] Downloading Neo4j"
+            downloadFile "https://dist.neo4j.org/neo4j-community-5.6.0-windows.zip" "$VARCD\Neo4j.zip"
+			Write-Host "[+] Extracting Neo4j"
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            Add-Type -AssemblyName System.IO.Compression
+            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\Neo4j.zip", "$VARCD")
+			Get-ChildItem "$VARCD\neo4j-community*"  | Rename-Item -NewName { $_.Name -replace '-.*','' }
+            }
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+            Write-Host "[+] $VARCD\Neo4j.zip already exists"
+            }
+	Write-Host "[+] Starting Neo4j"
+	Start-Process -FilePath "$VARCD\jdk\bin\java.exe" -WorkingDirectory "$VARCD\neo4j\lib"  -ArgumentList "  -cp `"$VARCD\neo4j/lib/*`" -Dbasedir=`"$VARCD\neo4j`" org.neo4j.server.startup.Neo4jCommand `"console`"  " 
+	Write-Host "[+] Wait for Neo4j You must change password at http://localhost:7474"
+}
+
+############# BloodhoundRun
+Function BloodhoundRun {
+    CheckJava
+	# pull custom searches
+	Stop-process -name BloodHound.exe -Force -ErrorAction SilentlyContinue |Out-Null
+	if (-not(Test-Path -Path "$VARCD\BloodHound-win32-x64" )) {
+        try {
+            Write-Host "[+] Downloading BloodHound"
+            downloadFile "https://github.com/BloodHoundAD/BloodHound/releases/download/4.2.0/BloodHound-win32-x64.zip" "$VARCD\BloodHound-win32-x64.zip"
+			Write-Host "[+] Extracting BloodHound"
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            Add-Type -AssemblyName System.IO.Compression
+            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\BloodHound-win32-x64.zip", "$VARCD")
+            }
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+            Write-Host "[+] $VARCD\BloodHound-win32-x64 already exists"
+            }
+	Write-Host "[+] Starting BloodHound"
+	Start-Process -FilePath "$VARCD\BloodHound-win32-x64\BloodHound.exe" -WorkingDirectory "$VARCD\"
+}
+
+
+######################################################################################################################### FUNCTIONS END
+
+
+
 ############# BUTTON1
 $Button1 = New-Object System.Windows.Forms.Button
 $Button1.AutoSize = $true
-$Button1.Text = "1. Start AVD With Proxy Support" #AVDDownload
-$Button1.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
+$Button1.Text = "Start AVD With Proxy Support" #AVDDownload
+$Button1.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button1.Add_Click({Retry({AVDDownload "Error AVDDownload"})})
 $main_form.Controls.Add($Button1)
+$vShift = $vShift + 30
 
-
-
+############# BUTTON22
 $pname=(Get-WMIObject win32_Processor | Select-Object name)
 if ($pname -like "*AMD*") { 
     Write-host "[+] AMD Processor detected"
@@ -837,54 +905,50 @@ if ($pname -like "*AMD*") {
             $Button22.Enabled = $false
         } else {
 
-        $Button22.Text = "2. Hyper-V Install (Reboot?)" # Install Hyper-V
+        $Button22.Text = "Hyper-V Install (Reboot?)" # Install Hyper-V
         $Button22.Enabled = $true
         }
-    $Button22.Location = New-Object System.Drawing.Point(($hShift),($vShift+30))
+    $Button22.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
     $Button22.Add_Click({HyperVInstall})
     $main_form.Controls.Add($Button22)
+	$vShift = $vShift + 30
 }
 else {
     ############# BUTTON2
     ############# INTEL PROCESSOR DETECTED
     $Button2 = New-Object System.Windows.Forms.Button 
     $Button2.AutoSize = $true
-    $Button2.Text = "2. HAXM Install (Reboot?)" #HAXMInstall
-    $Button2.Location = New-Object System.Drawing.Point(($hShift),($vShift+30))
+    $Button2.Text = "HAXM Install" #HAXMInstall
+    $Button2.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
     $Button2.Add_Click({HAXMInstall})
     $main_form.Controls.Add($Button2)
+	$vShift = $vShift + 30
 }
 
     
 ############# BUTTON3
 $Button3 = New-Object System.Windows.Forms.Button
 $Button3.AutoSize = $true
-$Button3.Text = "3. Start BurpSuite" #StartBurp
-$Button3.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+60))
+$Button3.Text = "Start BurpSuite" #StartBurp
+$Button3.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button3.Add_Click({StartBurp})
 $main_form.Controls.Add($Button3)
-
-############# BUTTON4
-$Button4 = New-Object System.Windows.Forms.Button
-$Button4.AutoSize = $true
-$Button4.Text = "NOT USED" #AVDStart 
-$Button4.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+90))
-$Button4.Add_Click({return})
-$main_form.Controls.Add($Button4)
+$vShift = $vShift + 30
 
 ############# BUTTON5
 $Button5 = New-Object System.Windows.Forms.Button
 $Button5.AutoSize = $true
 $Button5.Text = "5. rootAVD/Install Magisk" #RootAVD
-$Button5.Location = New-Object System.Drawing.Point(($hShift),($vShift+120))
+$Button5.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button5.Add_Click({RootAVD})
 $main_form.Controls.Add($Button5)
+$vShift = $vShift + 30
 
 ############# Button6
 $Button6 = New-Object System.Windows.Forms.Button
 $Button6.AutoSize = $true
 $Button6.Text = "6. Upload BURP.pem as System Cert" #CertPush
-$Button6.Location = New-Object System.Drawing.Point(($hShift),($vShift+150))
+$Button6.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button6.Add_Click({CertPush})
 $main_form.Controls.Add($Button6)
 
@@ -892,66 +956,100 @@ $main_form.Controls.Add($Button6)
 $Button7 = New-Object System.Windows.Forms.Button
 $Button7.AutoSize = $true
 $Button7.Text = "7. Start Frida/Objection" #StartFrida
-$Button7.Location = New-Object System.Drawing.Point(($hShift),($vShift+180))
+$Button7.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button7.Add_Click({StartFrida})
 $main_form.Controls.Add($Button7)
+$vShift = $vShift + 30
 
 ############# Button8
 $Button8 = New-Object System.Windows.Forms.Button
 $Button8.AutoSize = $true
-$Button8.Text = "CMD/ADB Prompt" #CMDPrompt
-$Button8.Location = New-Object System.Drawing.Point(($hShift),($vShift+210))
+$Button8.Text = "CMD/ADB/Java/Python Prompt" #CMDPrompt
+$Button8.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button8.Add_Click({CMDPrompt})
 $main_form.Controls.Add($Button8)
+$vShift = $vShift + 30
 
 ############# Button9
 $Button9 = New-Object System.Windows.Forms.Button
 $Button9.AutoSize = $true
 $Button9.Text = "ADB Logcat" #StartADB
-$Button9.Location = New-Object System.Drawing.Point(($hShift),($vShift+240))
+$Button9.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button9.Add_Click({StartADB})
 $main_form.Controls.Add($Button9)
+$vShift = $vShift + 30
 
 ############# Button10
 $Button10 = New-Object System.Windows.Forms.Button
 $Button10.AutoSize = $true
 $Button10.Text = "Shutdown AVD" #AVDPoweroff
-$Button10.Location = New-Object System.Drawing.Point(($hShift),($vShift+270))
+$Button10.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button10.Add_Click({AVDPoweroff})
 $main_form.Controls.Add($Button10)
+$vShift = $vShift + 30
 
 ############# BUTTON11
 $BUTTON11 = New-Object System.Windows.Forms.Button
 $BUTTON11.AutoSize = $true
 $BUTTON11.Text = "Start AVD -wipe-data (Fix unauthorized adb)" #AVDWipeData
-$BUTTON11.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+300))
+$BUTTON11.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $BUTTON11.Add_Click({AVDWipeData})
 $main_form.Controls.Add($BUTTON11)
+$vShift = $vShift + 30
 
 ############# BUTTON12
 $BUTTON12 = New-Object System.Windows.Forms.Button
 $BUTTON12.AutoSize = $true
 $BUTTON12.Text = "Install Base APKs" #InstallAPKS
-$BUTTON12.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+330))
+$BUTTON12.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $BUTTON12.Add_Click({InstallAPKS})
 $main_form.Controls.Add($BUTTON12)
-
+$vShift = $vShift + 30
 
 ############# BUTTON13
 $Button13 = New-Object System.Windows.Forms.Button
 $Button13.AutoSize = $true
 $Button13.Text = "Start ZAP Using Burp" #StartZAP
-$Button13.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+360))
+$Button13.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button13.Add_Click({StartZAP})
 $main_form.Controls.Add($Button13)
+$vShift = $vShift + 30
 
 ############# BUTTON13
 $Button14 = New-Object System.Windows.Forms.Button
 $Button14.AutoSize = $true
 $Button14.Text = "Start BurpSuite Pro" #StartBurpPro
-$Button14.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+390))
+$Button14.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button14.Add_Click({StartBurpPro})
 $main_form.Controls.Add($Button14)
+$vShift = $vShift + 30
+
+############# BUTTON4
+$Button4 = New-Object System.Windows.Forms.Button
+$Button4.AutoSize = $true
+$Button4.Text = "Start SharpHound" #SharpHoundRun 
+$Button4.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button4.Add_Click({SharpHoundRun})
+$main_form.Controls.Add($Button4)
+$vShift = $vShift + 30
+
+############# BUTTON30
+$Button30 = New-Object System.Windows.Forms.Button
+$Button30.AutoSize = $true
+$Button30.Text = "Start Neo4j" #Neo4jRun 
+$Button30.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button30.Add_Click({Neo4jRun})
+$main_form.Controls.Add($Button30)
+$vShift = $vShift + 30
+
+############# BUTTON31
+$Button31 = New-Object System.Windows.Forms.Button
+$Button31.AutoSize = $true
+$Button31.Text = "Start Bloodhound" #Bloodhound 
+$Button31.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button31.Add_Click({BloodhoundRun})
+$main_form.Controls.Add($Button31)
+$vShift = $vShift + 30
 
 ############# SHOW FORM
 $main_form.ShowDialog()
