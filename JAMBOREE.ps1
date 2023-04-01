@@ -856,13 +856,14 @@ Function BloodhoundRun {
 	Stop-process -name BloodHound.exe -Force -ErrorAction SilentlyContinue |Out-Null
 	if (-not(Test-Path -Path "$VARCD\BloodHound-win32-x64" )) {
         try {
-		Write-Host "[+] Downloading BloodHound"
-		$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/BloodHoundAD/BloodHound/releases/latest").assets | Where-Object name -like BloodHound-win32-x64*.zip ).browser_download_url
-		downloadFile  $downloadUri "$VARCD\BloodHound-win32-x64.zip"
-		Write-Host "[+] Extracting BloodHound"
-		Add-Type -AssemblyName System.IO.Compression.FileSystem
-		Add-Type -AssemblyName System.IO.Compression
-		[System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\BloodHound-win32-x64.zip", "$VARCD")
+            Write-Host "[+] Downloading BloodHound"
+			#downloadFile "https://github.com/BloodHoundAD/BloodHound/releases/download/4.2.0/BloodHound-win32-x64.zip" "$VARCD\BloodHound-win32-x64.zip"
+			$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/BloodHoundAD/BloodHound/releases/latest").assets | Where-Object name -like BloodHound-win32-x64*.zip ).browser_download_url
+			downloadFile  $downloadUri "$VARCD\BloodHound-win32-x64.zip"
+			Write-Host "[+] Extracting BloodHound"
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            Add-Type -AssemblyName System.IO.Compression
+            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\BloodHound-win32-x64.zip", "$VARCD")
             }
                 catch {
                     throw $_.Exception.Message
@@ -883,7 +884,7 @@ Function BloodhoundRun {
 ############# BUTTON1
 $Button1 = New-Object System.Windows.Forms.Button
 $Button1.AutoSize = $true
-$Button1.Text = "Start AVD With Proxy Support" #AVDDownload
+$Button1.Text = "AVD With Proxy Support" #AVDDownload
 $Button1.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button1.Add_Click({Retry({AVDDownload "Error AVDDownload"})})
 $main_form.Controls.Add($Button1)
@@ -930,7 +931,7 @@ else {
 ############# BUTTON3
 $Button3 = New-Object System.Windows.Forms.Button
 $Button3.AutoSize = $true
-$Button3.Text = "Start BurpSuite" #StartBurp
+$Button3.Text = "BurpSuite" #StartBurp
 $Button3.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button3.Add_Click({StartBurp})
 $main_form.Controls.Add($Button3)
@@ -939,7 +940,7 @@ $vShift = $vShift + 30
 ############# BUTTON5
 $Button5 = New-Object System.Windows.Forms.Button
 $Button5.AutoSize = $true
-$Button5.Text = "5. rootAVD/Install Magisk" #RootAVD
+$Button5.Text = "RootAVD/Install Magisk" #RootAVD
 $Button5.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button5.Add_Click({RootAVD})
 $main_form.Controls.Add($Button5)
@@ -948,7 +949,7 @@ $vShift = $vShift + 30
 ############# Button6
 $Button6 = New-Object System.Windows.Forms.Button
 $Button6.AutoSize = $true
-$Button6.Text = "6. Upload BURP.pem as System Cert" #CertPush
+$Button6.Text = "Upload BURP.pem as System Cert" #CertPush
 $Button6.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button6.Add_Click({CertPush})
 $main_form.Controls.Add($Button6)
@@ -956,7 +957,7 @@ $main_form.Controls.Add($Button6)
 ############# Button7
 $Button7 = New-Object System.Windows.Forms.Button
 $Button7.AutoSize = $true
-$Button7.Text = "7. Start Frida/Objection" #StartFrida
+$Button7.Text = "Frida/Objection" #StartFrida
 $Button7.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button7.Add_Click({StartFrida})
 $main_form.Controls.Add($Button7)
@@ -992,7 +993,7 @@ $vShift = $vShift + 30
 ############# BUTTON11
 $BUTTON11 = New-Object System.Windows.Forms.Button
 $BUTTON11.AutoSize = $true
-$BUTTON11.Text = "Start AVD -wipe-data (Fix unauthorized adb)" #AVDWipeData
+$BUTTON11.Text = "AVD -wipe-data (Fix unauthorized adb)" #AVDWipeData
 $BUTTON11.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $BUTTON11.Add_Click({AVDWipeData})
 $main_form.Controls.Add($BUTTON11)
@@ -1010,7 +1011,7 @@ $vShift = $vShift + 30
 ############# BUTTON13
 $Button13 = New-Object System.Windows.Forms.Button
 $Button13.AutoSize = $true
-$Button13.Text = "Start ZAP Using Burp" #StartZAP
+$Button13.Text = "ZAP Using Burp" #StartZAP
 $Button13.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button13.Add_Click({StartZAP})
 $main_form.Controls.Add($Button13)
@@ -1019,7 +1020,7 @@ $vShift = $vShift + 30
 ############# BUTTON13
 $Button14 = New-Object System.Windows.Forms.Button
 $Button14.AutoSize = $true
-$Button14.Text = "Start BurpSuite Pro" #StartBurpPro
+$Button14.Text = "BurpSuite Pro" #StartBurpPro
 $Button14.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button14.Add_Click({StartBurpPro})
 $main_form.Controls.Add($Button14)
@@ -1028,7 +1029,7 @@ $vShift = $vShift + 30
 ############# BUTTON4
 $Button4 = New-Object System.Windows.Forms.Button
 $Button4.AutoSize = $true
-$Button4.Text = "Start SharpHound" #SharpHoundRun 
+$Button4.Text = "SharpHound" #SharpHoundRun 
 $Button4.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button4.Add_Click({SharpHoundRun})
 $main_form.Controls.Add($Button4)
@@ -1037,7 +1038,7 @@ $vShift = $vShift + 30
 ############# BUTTON30
 $Button30 = New-Object System.Windows.Forms.Button
 $Button30.AutoSize = $true
-$Button30.Text = "Start Neo4j" #Neo4jRun 
+$Button30.Text = "Neo4j" #Neo4jRun 
 $Button30.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button30.Add_Click({Neo4jRun})
 $main_form.Controls.Add($Button30)
@@ -1046,7 +1047,7 @@ $vShift = $vShift + 30
 ############# BUTTON31
 $Button31 = New-Object System.Windows.Forms.Button
 $Button31.AutoSize = $true
-$Button31.Text = "Start Bloodhound" #Bloodhound 
+$Button31.Text = "Bloodhound" #Bloodhound 
 $Button31.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button31.Add_Click({BloodhoundRun})
 $main_form.Controls.Add($Button31)
