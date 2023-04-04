@@ -81,7 +81,8 @@ if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 #>
 
 
-# env 
+Write-Host "`n[+] Setting ANDROID ENV Paths $VARCD"
+
 $env:ANDROID_SDK_ROOT="$VARCD"
 $env:ANDROID_AVD_HOME="$VARCD"
 $env:ANDROID_HOME="$VARCD"
@@ -90,10 +91,14 @@ New-Item -Path "$VARCD\avd" -ItemType Directory  -ErrorAction SilentlyContinue |
 $env:ANDROID_SDK_HOME="$VARCD"
 
 #java 
+
+Write-Host "`n[+] Setting JAVA ENV Paths $VARCD"
 $env:JAVA_HOME = "$VARCD\jdk"
 
-# Path rootAVD java python
-$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;$VARCD\jdk\bin;python\tools\Lib\site-packages"
+
+Write-Host "`n[+] Setting rootAVD ENV Paths $VARCD"
+#$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;$VARCD\jdk\bin;python\tools\Lib\site-packages"
+$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages"
 
 # python
 $env:PYTHONHOME="$VARCD\python\tools"
@@ -142,19 +147,46 @@ function downloadFile($url, $targetFile)
     $responseStream.Dispose()
 }
 
+############# CHECK JAVA FOR NEO4J
+Function CheckJavaNeo4j {
+   if (-not(Test-Path -Path "$VARCD\jdk_neo4j" )) { 
+        try {
+            Write-Host "[+] Downloading Java"
+            # does not work for neo4j bloodhound wants java11 ... downloadFile "https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.zip" "$VARCD\openjdk.zip"
+            downloadFile "https://cfdownload.adobe.com/pub/adobe/coldfusion/java/java11/java11018/jdk-11.0.18_windows-x64_bin.zip" "$VARCD\jdk_neo4j.zip"
+			Write-Host "[+] Extracting Java"
+			Add-Type -AssemblyName System.IO.Compression.FileSystem
+            Add-Type -AssemblyName System.IO.Compression
+            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\jdk_neo4j.zip", "$VARCD")
+			Get-ChildItem "$VARCD\jdk-*"  | Rename-Item -NewName "jdk_neo4j"
+			$env:JAVA_HOME = "$VARCD\jdk_neo4j"
+			#$env:Path = "$VARCD\jdk_neo4j;$env:Path"
+            }
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+            Write-Host "[+] $VARCD\jdk_neo4j already exists"
+            $env:JAVA_HOME = "$VARCD\jdk_neo4j"
+			
+			}
+}
+
+
 ############# CHECK JAVA
 Function CheckJava {
    if (-not(Test-Path -Path "$VARCD\jdk" )) { 
         try {
             Write-Host "[+] Downloading Java"
-            downloadFile "https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.zip" "$VARCD\openjdk.zip"
+            downloadFile "https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.zip" "$VARCD\jdk.zip"
             Write-Host "[+] Extracting Java"
 			Add-Type -AssemblyName System.IO.Compression.FileSystem
             Add-Type -AssemblyName System.IO.Compression
-            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\openjdk.zip", "$VARCD")
-			Get-ChildItem "$VARCD\jdk*"  | Rename-Item -NewName { $_.Name -replace '-.*','' }
+            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\jdk.zip", "$VARCD")
+			Get-ChildItem "$VARCD\jdk-*"  | Rename-Item -NewName { $_.Name -replace '-.*','' }
             $env:JAVA_HOME = "$VARCD\jdk"
-            $env:Path = "$VARCD\jdk;$env:Path"
+            #$env:Path = "$VARCD\jdk;$env:Path"
             }
                 catch {
                     throw $_.Exception.Message
@@ -164,6 +196,7 @@ Function CheckJava {
             Write-Host "[+] $VARCD\openjdk.zip already exists"
             }
 }
+
 
 ############# CHECK PYTHON
 Function CheckPython {
@@ -825,12 +858,12 @@ Function SharpHoundRun {
 
 ############# Neo4jRun
 Function Neo4jRun {
-    CheckJava
+    CheckJavaNeo4j
 	# Neo4j
-    if (-not(Test-Path -Path "$VARCD\Neo4j.zip" )) {
+    if (-not(Test-Path -Path "$VARCD\Neo4j" )) {
         try {
             Write-Host "[+] Downloading Neo4j"
-            downloadFile "https://dist.neo4j.org/neo4j-community-5.6.0-windows.zip" "$VARCD\Neo4j.zip"
+            downloadFile "https://dist.neo4j.org/neo4j-community-4.4.19-windows.zip" "$VARCD\Neo4j.zip"
 			Write-Host "[+] Extracting Neo4j"
             Add-Type -AssemblyName System.IO.Compression.FileSystem
             Add-Type -AssemblyName System.IO.Compression
@@ -845,7 +878,7 @@ Function Neo4jRun {
             Write-Host "[+] $VARCD\Neo4j.zip already exists"
             }
 	Write-Host "[+] Starting Neo4j"
-	Start-Process -FilePath "$VARCD\jdk\bin\java.exe" -WorkingDirectory "$VARCD\neo4j\lib"  -ArgumentList "  -cp `"$VARCD\neo4j/lib/*`" -Dbasedir=`"$VARCD\neo4j`" org.neo4j.server.startup.Neo4jCommand `"console`"  " 
+	Start-Process -FilePath "$VARCD\jdk_neo4j\bin\java.exe" -WorkingDirectory "$VARCD\neo4j\lib"  -ArgumentList "  -cp `"$VARCD\neo4j/lib/*`" -Dbasedir=`"$VARCD\neo4j`" org.neo4j.server.startup.Neo4jCommand `"console`"  " 
 	Write-Host "[+] Wait for Neo4j You must change password at http://localhost:7474"
 }
 
