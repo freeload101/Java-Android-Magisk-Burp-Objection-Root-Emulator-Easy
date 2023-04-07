@@ -986,6 +986,7 @@ $Button6.Text = "Upload BURP.pem as System Cert" #CertPush
 $Button6.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button6.Add_Click({CertPush})
 $main_form.Controls.Add($Button6)
+$vShift = $vShift + 30
 
 ############# Button7
 $Button7 = New-Object System.Windows.Forms.Button
