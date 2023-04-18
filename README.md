@@ -98,6 +98,8 @@ Six Degrees of Domain Admin
 
 ## Useful cypher queries and links
 
+[The BloodHound 4.3 Release Get Global Admin More Often.mp4](https://rmccurdy.com/.scripts/videos/The%20BloodHound%204.3%20Release%20Get%20Global%20Admin%20More%20Often.mp4) 20230418
+
 https://www.google.com/search?q=%22shortestPath%22+%22bloodhound%22+site:github.com
 
 https://github.com/drak3hft7/Cheat-Sheet---Active-Directory
