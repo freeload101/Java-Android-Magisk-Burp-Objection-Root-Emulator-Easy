@@ -127,7 +127,7 @@ https://bloodhoundhq.slack.com ( not sure how to get invite )
 4) Click Neo4j to start the database
 5) Change the default Neo4j password. Wait for Neo4j You must change password at http://localhost:7474
 6) Click Bloodhound button to start bloodhound
-7) Import the .zip file from the output of SharpHound.exe -s --CollectionMethods All --prettyprint true
+7) Import the .zip of JSON files from the output of ```SharpHound.exe -s --CollectionMethods All --prettyprint true```
 
 Parse Sharphound Output [Pretty_Bloodhound.py](https://github.com/freeload101/Python/blob/master/Pretty_Bloodhound.py) ( not needed they fixed it )
 
