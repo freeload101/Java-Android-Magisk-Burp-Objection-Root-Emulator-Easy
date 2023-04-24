@@ -122,9 +122,12 @@ https://bloodhoundhq.slack.com ( not sure how to get invite )
 
 ## Usage
 
-1) Download the .bat file
-2) Run as a normal domain user
-3) Alternatively you can use [Runas.exe](https://bloodhound.readthedocs.io/en/latest/data-collection/sharphound.html?highlight=netonly#running-sharphound-from-a-non-domain-joined-system) inside of a VM under domain user context with ```runas /netonly /user:"US.COMPANY.DOMAIN.COM\UESERNAME@COMPANY.COM" cmd``` or try ```/user:"DOMAIN\USERNAME"``` to run SharpHound.exe 
+1) Download the .ps1 script
+2) Click the SharpHound button as a normal domain user Alternatively you can use [Runas.exe](https://bloodhound.readthedocs.io/en/latest/data-collection/sharphound.html?highlight=netonly#running-sharphound-from-a-non-domain-joined-system) inside of a VM under domain user context with ```runas /netonly /user:"US.COMPANY.DOMAIN.COM\UESERNAME@COMPANY.COM" cmd``` or try ```/user:"DOMAIN\USERNAME"``` to run SharpHound.exe 
+4) Click Neo4j to start the database
+5) Change the default Neo4j password. Wait for Neo4j You must change password at http://localhost:7474
+6) Click Bloodhound button to start bloodhound
+7) Import the .zip file from the output of SharpHound.exe -s --CollectionMethods All --prettyprint true
 
 Parse Sharphound Output [Pretty_Bloodhound.py](https://github.com/freeload101/Python/blob/master/Pretty_Bloodhound.py) ( not needed they fixed it )
 
