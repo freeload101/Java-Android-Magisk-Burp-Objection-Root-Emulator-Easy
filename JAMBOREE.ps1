@@ -90,6 +90,8 @@ $env:ANDROID_AVD_HOME="$VARCD\avd"
 New-Item -Path "$VARCD\avd" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 $env:ANDROID_SDK_HOME="$VARCD"
 
+
+
 #java 
 
 Write-Host "`n[+] Setting JAVA ENV Paths $VARCD"
@@ -98,7 +100,7 @@ $env:JAVA_HOME = "$VARCD\jdk"
 
 Write-Host "`n[+] Setting rootAVD ENV Paths $VARCD"
 #$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;$VARCD\jdk\bin;python\tools\Lib\site-packages"
-$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages"
+$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
 
 # python
 $env:PYTHONHOME="$VARCD\python\tools"
@@ -559,6 +561,7 @@ Function AVDPoweroff {
 ############# CMDPrompt
 Function CMDPrompt {
 	CheckJava
+	CheckGit
 	CheckPython
 	Start-Process -FilePath "cmd" -WorkingDirectory "$VARCD"
 	
@@ -909,6 +912,33 @@ Function BloodhoundRun {
 	Start-Process -FilePath "$VARCD\BloodHound-win32-x64\BloodHound.exe" -WorkingDirectory "$VARCD\"
 }
 
+
+
+
+############# CHECK CheckGit
+Function CheckGit {
+   if (-not(Test-Path -Path "$VARCD\PortableGit" )) { 
+        try {
+            Write-Host "[+] Downloading Git" 
+
+            $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/git-for-windows/git/releases/latest").assets | Where-Object name -like *PortableGit*64*.exe ).browser_download_url
+            downloadFile "$downloadUri" "$VARCD\git7zsfx.exe"
+            # https://superuser.com/questions/1104567/how-can-i-find-out-the-command-line-options-for-git-bash-exe
+            # file:///C:/Users/Administrator/SDUI/git/mingw64/share/doc/git-doc/git-bash.html#GIT-WRAPPER
+            Start-Process -FilePath "$VARCD\git7zsfx.exe" -WorkingDirectory "$VARCD\" -ArgumentList " -o`"$VARCD\PortableGit`" -y " -wait -NoNewWindow
+
+           
+            }
+                catch {
+                    throw $_.Exception.Message
+                }
+            }
+        else {
+            Write-Host "[+] $VARCD\Git already exists"
+            }
+} 
+
+ 
 
 ######################################################################################################################### FUNCTIONS END
 
