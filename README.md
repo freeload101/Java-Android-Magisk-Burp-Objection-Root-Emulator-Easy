@@ -4,7 +4,7 @@ Want to pentest or run Android apps in minutes ? Sick of BlueStacks or NOX malwa
 
 - Making it portable as possible
 
-- Setting up and downloading extremely fast environment for Android, Java and Python
+- Setting up and downloading extremely fast environment for Android, Java and Python ( no Anaconda etc. It uses tiny binaries from Nuget.org for python )
 
 - Converting ssl certs to Android without openssl using certutil.exe only
 
