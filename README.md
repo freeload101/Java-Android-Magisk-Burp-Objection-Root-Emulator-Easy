@@ -1,5 +1,9 @@
 ## Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 
+* Now with more YOLO!
+- Added A1111 Stub code (needs older Python WIP)
+- Added AutoGPT
+
 Want to pentest or run Android apps in minutes ? Sick of BlueStacks or NOX malware/adware ? Not a single binary in this script and it's open source and downloads are direct from proper sources. There is lots of great powershell tricks (not great code) in this script. I worked hard on thing's like:
 
 - Making it portable as possible
