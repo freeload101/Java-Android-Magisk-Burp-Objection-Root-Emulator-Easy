@@ -579,6 +579,11 @@ Function AutoGPTEnv {
 	
 	if (-not(Test-Path -Path "$VARCD\Auto-GPT\.env" )) { 
         try {
+
+	Write-Host "`n[+] Running pip install -r requirements.txt"
+	Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -ArgumentList " -m pip install -r requirements.txt  " -wait -NoNewWindow 
+
+
 	Write-Host "[+] Updating AutoGPT .env config for YOLO and Gpt-3 because I'm cheap"
 	$OPENAI_API_KEY = Read-Host 'Enter your OPENAI_API_KEY see: http://www.google.com/cse/ '
 	$CUSTOM_SEARCH_ENGINE_ID = Read-Host 'Enter your CUSTOM_SEARCH_ENGINE_ID see: http://www.google.com/cse/ '
@@ -998,14 +1003,10 @@ AutoGPTEnv
 Write-Host "`n[+] Current Working Directory $VARCD\Auto-GPT"
 Set-Location -Path "$VARCD\Auto-GPT"
 
-Write-Host "`n[+] Running pip install -r requirements.txt"
-Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -ArgumentList " -m pip install -r requirements.txt  " -wait -NoNewWindow 
-
 Write-Host "`n[+] Running  .\run.bat --debug --gpt3only"
 Start-Process -FilePath "cmd.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -ArgumentList " /c .\run.bat --debug --gpt3only "  
 
 Write-Host "`n[+] EXIT"
-Start-Sleep -Seconds 30
 } 
  
 
