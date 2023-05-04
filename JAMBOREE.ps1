@@ -66,21 +66,6 @@ $VARCD = (Get-Location)
 Write-Host "`n[+] Current Working Directory $VARCD"
 Set-Location -Path "$VARCD"
 
-<#
-# Auto elevate
-if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')) {
-    if ([int](Get-CimInstance -Class Win32_OperatingSystem | Select-Object -ExpandProperty BuildNumber) -ge 6000) {
-        $CommandLine = "-NoExit -c cd '$pwd'; & `"" + $MyInvocation.MyCommand.Path + "`""
-        #Write-Host "Starting JAMBOREE as admin with command:"
-        #Write-Host "Start-Process powershell -Verb runas -ArgumentList $CommandLine"
-        #pause
-        Start-Process powershell -Verb runas -ArgumentList $CommandLine
-        Exit
-    }
-}
-#>
-
-
 Write-Host "`n[+] Setting ANDROID ENV Paths $VARCD"
 
 $env:ANDROID_SDK_ROOT="$VARCD"
@@ -90,17 +75,17 @@ $env:ANDROID_AVD_HOME="$VARCD\avd"
 New-Item -Path "$VARCD\avd" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 $env:ANDROID_SDK_HOME="$VARCD"
 
-
-
 #java 
-
 Write-Host "`n[+] Setting JAVA ENV Paths $VARCD"
 $env:JAVA_HOME = "$VARCD\jdk"
 
 
 Write-Host "`n[+] Setting rootAVD ENV Paths $VARCD"
-#$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;$VARCD\jdk\bin;python\tools\Lib\site-packages"
+<#Use this if you want to keep your %PATH% ...
 $env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
+#>
+Write-Host "`n[+] Resetting Path variables to not use local python" 
+$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
 
 # python
 $env:PYTHONHOME="$VARCD\python\tools"
@@ -212,9 +197,12 @@ Function CheckPython {
             Add-Type -AssemblyName System.IO.Compression
             [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\python.zip", "$VARCD\python")
 
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection "
+			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade pip " -wait
+
+            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection " -wait
             # for Frida Android Binary
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait
+			
             }
                 catch {
                     throw $_.Exception.Message
@@ -569,6 +557,53 @@ Function CMDPrompt {
 	$env:ANDROID_SERIAL=$varadb
     Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell  " 
 	
+}
+
+
+############# A1111
+Function A1111 {
+	# THIS IS BROKEN NEEDS OLDER PYTHON OR JUST US BINARY ...
+	Write-Host "`n[+] Cloning stable-diffusion-webui"
+	Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/AUTOMATIC1111/stable-diffusion-webui.git`" " -wait -NoNewWindow 
+
+	CheckPython
+
+	Start-Process -FilePath "$VARCD\stable-diffusion-webui\webui-user.bat" -WorkingDirectory "$VARCD\stable-diffusion-webui"  -ArgumentList " "  -wait -NoNewWindow 
+}
+
+
+
+
+############# AutoGPTEnv
+Function AutoGPTEnv {
+	
+	if (-not(Test-Path -Path "$VARCD\Auto-GPT\.env" )) { 
+        try {
+	Write-Host "[+] Updating AutoGPT .env config for YOLO and Gpt-3 because I'm cheap"
+	$OPENAI_API_KEY = Read-Host 'Enter your OPENAI_API_KEY see: http://www.google.com/cse/ '
+	$CUSTOM_SEARCH_ENGINE_ID = Read-Host 'Enter your CUSTOM_SEARCH_ENGINE_ID see: http://www.google.com/cse/ '
+	$GOOGLE_API_KEY = Read-Host 'Enter your GOOGLE_API_KEY key see https://console.cloud.google.com/apis/credentials click "Create Credentials". Choose "API Key".'
+
+
+	(Get-Content "$VARCD\Auto-GPT\.env.template") `
+	-replace '# EXECUTE_LOCAL_COMMANDS=False', 'EXECUTE_LOCAL_COMMANDS=True' `
+	-replace '# RESTRICT_TO_WORKSPACE=True', 'RESTRICT_TO_WORKSPACE=False' `
+	-replace 'OPENAI_API_KEY=your-openai-api-key', "OPENAI_API_KEY=$OPENAI_API_KEY"`
+	-replace '# CUSTOM_SEARCH_ENGINE_ID=your-custom-search-engine-id', "CUSTOM_SEARCH_ENGINE_ID=$CUSTOM_SEARCH_ENGINE_ID"`
+	-replace '# GOOGLE_API_KEY=your-google-api-key', "GOOGLE_API_KEY=$GOOGLE_API_KEY"`
+	-replace '# SMART_LLM_MODEL=gpt-4', 'SMART_LLM_MODEL=gpt-3.5-turbo' `
+	-replace '# FAST_LLM_MODEL=gpt-3.5-turbo', 'FAST_LLM_MODEL=gpt-3.5-turbo'`
+	-replace '# FAST_TOKEN_LIMIT=4000', 'FAST_TOKEN_LIMIT=4000'`
+	-replace '# SMART_TOKEN_LIMIT=8000', 'SMART_TOKEN_LIMIT=4000'`	|
+	Out-File -Encoding Ascii "$VARCD\Auto-GPT\.env"			
+            }
+                catch {
+                    throw $_.Exception.Message
+                }
+            }
+        else {
+            Write-Host "[+] $VARCD\Auto-GPT\.env already exists"
+            }
 }
 
 ############# RootAVD
@@ -938,6 +973,40 @@ Function CheckGit {
             }
 } 
 
+
+
+
+
+############# CHECK CheckGit
+Function StartAutoGPT {
+CheckPython
+CheckGit
+
+
+<#
+ Weather2
+Role:  tell me the weather for atlanta georgia using google.com website and no docker or APIs
+Goals: ['tell me the weather for atlanta georgia using google.com website and no docker or APIs', 'output the results to a file called weather1']
+
+#>
+
+Write-Host "`n[+] Cloning https://github.com/Torantulino/Auto-GPT.git"
+Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/Significant-Gravitas/Auto-GPT.git`" " -wait -NoNewWindow 
+$env:SystemRoot
+AutoGPTEnv
+
+Write-Host "`n[+] Current Working Directory $VARCD\Auto-GPT"
+Set-Location -Path "$VARCD\Auto-GPT"
+
+Write-Host "`n[+] Running pip install -r requirements.txt"
+Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -ArgumentList " -m pip install -r requirements.txt  " -wait -NoNewWindow 
+
+Write-Host "`n[+] Running  .\run.bat --debug --gpt3only"
+Start-Process -FilePath "cmd.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -ArgumentList " /c .\run.bat --debug --gpt3only "  
+
+Write-Host "`n[+] EXIT"
+Start-Sleep -Seconds 30
+} 
  
 
 ######################################################################################################################### FUNCTIONS END
@@ -1116,6 +1185,26 @@ $Button31.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button31.Add_Click({BloodhoundRun})
 $main_form.Controls.Add($Button31)
 $vShift = $vShift + 30
+
+############# BUTTON32
+$Button32 = New-Object System.Windows.Forms.Button
+$Button32.AutoSize = $true
+$Button32.Text = "StartAutoGPT" #StartAutoGPT 
+$Button32.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button32.Add_Click({StartAutoGPT})
+$main_form.Controls.Add($Button32)
+$vShift = $vShift + 30
+
+<#
+############# BUTTON33
+$Button33 = New-Object System.Windows.Forms.Button
+$Button33.AutoSize = $true
+$Button33.Text = "AUTOMATIC1111" #A1111 
+$Button33.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button33.Add_Click({A1111})
+$main_form.Controls.Add($Button33)
+$vShift = $vShift + 30
+#>
 
 ############# SHOW FORM
 $main_form.ShowDialog()
