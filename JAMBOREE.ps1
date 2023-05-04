@@ -1189,7 +1189,7 @@ $vShift = $vShift + 30
 ############# BUTTON32
 $Button32 = New-Object System.Windows.Forms.Button
 $Button32.AutoSize = $true
-$Button32.Text = "StartAutoGPT" #StartAutoGPT 
+$Button32.Text = "AutoGPT" #StartAutoGPT 
 $Button32.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button32.Add_Click({StartAutoGPT})
 $main_form.Controls.Add($Button32)
