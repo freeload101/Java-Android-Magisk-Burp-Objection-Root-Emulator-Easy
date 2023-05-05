@@ -1,6 +1,7 @@
 ## Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 
 * Now with more YOLO!
+- Added BloodHound  
 - Added A1111  
 - Added AutoGPT ( Setup for Pay as you go gpt3-turbo https://platform.openai.com/account/usage ) 
 
