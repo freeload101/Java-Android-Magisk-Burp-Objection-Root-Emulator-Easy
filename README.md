@@ -14,8 +14,7 @@ Want to pentest or run Android apps in minutes ? Sick of BlueStacks or NOX malwa
 
 I would like to make it even easier to use but I don't want to spend more time developing it if nobody is going to use it! Please let me know if you like it and open bugs/suggestions/feature request etc!
 
-![image](https://user-images.githubusercontent.com/4307863/230629378-9d31dfa2-b842-4ac5-8b49-66abf37ccd17.png)
-
+![image](https://user-images.githubusercontent.com/4307863/236506844-b2f3583e-496e-4775-81e6-2e4f2d558988.png)
 
 ### Requirements:
 
