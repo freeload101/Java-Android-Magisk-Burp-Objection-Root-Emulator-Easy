@@ -70,7 +70,7 @@ Included `%USERPROFILE%\AppData\Roaming\BurpSuite\ConfigLibrary_JAMBOREE_Crawl_L
 
 |Core|Status|
 |--|--|
-|AUTOMATIC1111|❌|
+|AUTOMATIC1111|✔️|
 |AutoGPT|✔️|
 |Bloodhound|✔️|
 |Brida, Burp to Frida bridge|❌|
