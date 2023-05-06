@@ -584,7 +584,7 @@ Function AutoGPTEnv {
 	if (-not(Test-Path -Path "$VARCD\Auto-GPT\.env" )) { 
         try {
 
-	Write-Host "`n[+] Running pip install -r requirements.txt"
+																																						Write-Host "`n[+] Running pip install -r requirements.txt"
 	Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -ArgumentList " -m pip install -r requirements.txt  " -wait -NoNewWindow 
 
 
@@ -1001,7 +1001,6 @@ Goals: ['tell me the weather for atlanta georgia using google.com website and no
 
 Write-Host "`n[+] Cloning https://github.com/Torantulino/Auto-GPT.git"
 Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/Significant-Gravitas/Auto-GPT.git`" " -wait -NoNewWindow 
-$env:SystemRoot
 AutoGPTEnv
 
 Write-Host "`n[+] Current Working Directory $VARCD\Auto-GPT"
