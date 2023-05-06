@@ -569,7 +569,7 @@ Function CMDPrompt {
 ############# AUTOMATIC1111
 Function AUTOMATIC1111 {
 	#  --xformers --deepdanbooru --disable-safe-unpickle --listen --theme dark
-	# stable-diffusion-webui\scripts\prompts_from_file.py
+	# stable-diffusion-webui\modules\processing.py
 	CheckPythonA1111
 	
 	# set env for A111 python
