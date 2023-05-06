@@ -217,6 +217,8 @@ Function CheckPython {
             }
 }
 
+
+
 ############# CHECK BURP
 Function CheckBurp {
 CheckJava
@@ -564,16 +566,51 @@ Function CMDPrompt {
 }
 
 
-############# A1111
-Function A1111 {
-	# THIS IS BROKEN NEEDS OLDER PYTHON OR JUST US BINARY ...
+############# AUTOMATIC1111
+Function AUTOMATIC1111 {
+	
+	CheckPythonA1111
+	
+	# set env for A111 python
+	Write-Host "`n[+] Resetting env for A111 python $VARCD"
+	 
+	# env 
+	# Path python
+	Write-Host "`n[+] Resetting Path variables to not use local python" 
+	$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\pythonA111\tools\Scripts;$VARCD\pythonA111\tools;pythonA111\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
+
+	# python
+	$env:PYTHONHOME="$VARCD\pythonA111\tools"
+	$env:PYTHONPATH="$VARCD\pythonA111\tools\Lib\site-packages"
+	
 	Write-Host "`n[+] Cloning stable-diffusion-webui"
-	Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/AUTOMATIC1111/stable-diffusion-webui.git`" " -wait -NoNewWindow 
-
-	CheckPython
-
-	Start-Process -FilePath "$VARCD\stable-diffusion-webui\webui-user.bat" -WorkingDirectory "$VARCD\stable-diffusion-webui"  -ArgumentList " "  -wait -NoNewWindow 
+	Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/AUTOMATIC1111/stable-diffusion-webui.git`" " -wait -NoNewWindow
+	
+	Start-Process -FilePath "$VARCD\stable-diffusion-webui\webui-user.bat" -WorkingDirectory "$VARCD\stable-diffusion-webui"  -ArgumentList " "  -wait -NoNewWindow
+	Write-Host "`n[+] Suggest creating hard links to your models with mklink /d "
 }
+
+############# CHECK PYTHONA111
+Function CheckPythonA1111 {
+   if (-not(Test-Path -Path "$VARCD\pythonA111" )) { 
+        try {
+            Write-Host "[+] Downloading Python nuget package for AUTOMATIC1111" 
+            downloadFile "https://www.nuget.org/api/v2/package/python/3.10.6" "$VARCD\python.zip"
+            New-Item -Path "$VARCD\pythonA111" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+            Write-Host "[+] Extracting Python nuget package for AUTOMATIC1111" 
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            Add-Type -AssemblyName System.IO.Compression
+            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\python.zip", "$VARCD\pythonA111")
+                    
+            }
+                catch {
+                    throw $_.Exception.Message
+                }
+            }
+        else {
+            Write-Host "[+] $VARCD\pythonA111 already exists"
+            }
+} 
 
 
 
@@ -584,7 +621,7 @@ Function AutoGPTEnv {
 	if (-not(Test-Path -Path "$VARCD\Auto-GPT\.env" )) { 
         try {
 
-																																						Write-Host "`n[+] Running pip install -r requirements.txt"
+	Write-Host "`n[+] Running pip install -r requirements.txt"
 	Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -ArgumentList " -m pip install -r requirements.txt  " -wait -NoNewWindow 
 
 
@@ -1001,6 +1038,7 @@ Goals: ['tell me the weather for atlanta georgia using google.com website and no
 
 Write-Host "`n[+] Cloning https://github.com/Torantulino/Auto-GPT.git"
 Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/Significant-Gravitas/Auto-GPT.git`" " -wait -NoNewWindow 
+$env:SystemRoot
 AutoGPTEnv
 
 Write-Host "`n[+] Current Working Directory $VARCD\Auto-GPT"
@@ -1199,16 +1237,15 @@ $Button32.Add_Click({StartAutoGPT})
 $main_form.Controls.Add($Button32)
 $vShift = $vShift + 30
 
-<#
+
 ############# BUTTON33
 $Button33 = New-Object System.Windows.Forms.Button
 $Button33.AutoSize = $true
-$Button33.Text = "AUTOMATIC1111" #A1111 
+$Button33.Text = "AUTOMATIC1111" #AUTOMATIC1111 
 $Button33.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button33.Add_Click({A1111})
+$Button33.Add_Click({AUTOMATIC1111})
 $main_form.Controls.Add($Button33)
 $vShift = $vShift + 30
-#>
 
 ############# SHOW FORM
 $main_form.ShowDialog()
