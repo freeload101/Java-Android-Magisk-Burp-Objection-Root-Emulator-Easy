@@ -640,8 +640,9 @@ Function AutoGPTEnv {
 	-replace '# GOOGLE_API_KEY=your-google-api-key', "GOOGLE_API_KEY=$GOOGLE_API_KEY"`
 	-replace '# SMART_LLM_MODEL=gpt-4', 'SMART_LLM_MODEL=gpt-3.5-turbo' `
 	-replace '# FAST_LLM_MODEL=gpt-3.5-turbo', 'FAST_LLM_MODEL=gpt-3.5-turbo'`
-	-replace '# FAST_TOKEN_LIMIT=4000', 'FAST_TOKEN_LIMIT=4000'`
-	-replace '# SMART_TOKEN_LIMIT=8000', 'SMART_TOKEN_LIMIT=4000'`	|
+	-replace '# BROWSE_CHUNK_MAX_LENGTH=3000', 'BROWSE_CHUNK_MAX_LENGTH=2500'`
+	-replace '# FAST_TOKEN_LIMIT=4000', 'FAST_TOKEN_LIMIT=3500'`
+	-replace '# SMART_TOKEN_LIMIT=8000', 'SMART_TOKEN_LIMIT=3500'`	|
 	Out-File -Encoding Ascii "$VARCD\Auto-GPT\.env"			
             }
                 catch {
