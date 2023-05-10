@@ -81,9 +81,9 @@ $env:JAVA_HOME = "$VARCD\jdk"
 
 
 Write-Host "`n[+] Setting rootAVD ENV Paths $VARCD"
-<#Use this if you want to keep your %PATH% ...
-$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
-#>
+#Use this if you want to keep your %PATH% ...
+#$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
+
 Write-Host "`n[+] Resetting Path variables to not use local python" 
 $env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
 
@@ -103,6 +103,19 @@ $vShift = 0
 ### MAIN ###
 
 ################################# FUNCTIONS
+
+############# CheckADB
+function CheckADB {
+    $varadb = (adb devices)
+    Write-Host "[+] $varadb"
+    $varadb = $varadb -match 'device\b' -replace 'device','' -replace '\s',''
+    Write-Host "[+] Online Device: $varadb"
+        if (($varadb.length -lt 1 )) {
+            Write-Host "[+] ADB Failed! Check for unauthorized devices listed in ADB!"
+			adb devices
+        }
+	return $varadb
+}
 
 
 ############# downloadFile
@@ -289,18 +302,7 @@ Write-Host "[+] Installing Base APKS"
 Write-Host "[+] Complete Installing Base APKS"
 }
 
-############# CheckADB
-function CheckADB {
-    $varadb = (adb devices)
-    Write-Host "[+] $varadb"
-    $varadb = $varadb -match 'device\b' -replace 'device','' -replace '\s',''
-    Write-Host "[+] Online Device: $varadb"
-        if (($varadb.length -lt 1 )) {
-            Write-Host "[+] ADB Failed! Check for unauthorized devices listed in ADB!"
-			adb devices
-        }
-	return $varadb
-}
+
 
 ############# CertPush
 function CertPush {
@@ -445,6 +447,7 @@ function StartADB {
 
 ############# AVDDownload
 Function AVDDownload {
+
     if (-not(Test-Path -Path "$VARCD\cmdline-tools" )) {
         try {
             Write-Host "[+] Downloading Android Command Line Tools"
@@ -483,6 +486,8 @@ Function AVDDownload {
             }
         else {
             Write-Host "[+] $VARCD\cmdline-tools already exists remove everything but this script to perform full reinstall/setup"
+            Write-Host "`n[+] Current Working Directory $VARCD"
+            Start-Sleep -Seconds 10
 			AVDStart
             }
   
@@ -512,7 +517,7 @@ Function HAXMInstall {
 	downloadFile "$downloadUri" "$VARCD\haxm-windows.zip"
 	
 	Write-Host "[+] Extracting haxm-windows.zip"
-    	Expand-Archive -Path  "$VARCD\haxm-windows.zip" -DestinationPath "$VARCD\haxm-windows" -Force
+    Expand-Archive -Path  "$VARCD\haxm-windows.zip" -DestinationPath "$VARCD\haxm-windows" -Force
 	Start-Process -FilePath "$VARCD\haxm-windows\silent_install.bat" -WorkingDirectory "$VARCD\haxm-windows" -Wait
 }
 
@@ -619,7 +624,36 @@ Function CheckPythonA1111 {
             }
 } 
 
+############# CHECK PYTHON
+Function CheckPython {
+   if (-not(Test-Path -Path "$VARCD\python" )) { 
+        try {
+            Write-Host "[+] Downloading Python nuget package" 
+            downloadFile "https://www.nuget.org/api/v2/package/python" "$VARCD\python.zip"
+            New-Item -Path "$VARCD\python" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+            Write-Host "[+] Extracting Python nuget package" 
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            Add-Type -AssemblyName System.IO.Compression
+            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\python.zip", "$VARCD\python")
 
+            Write-Host "`n[+] Running pip install --upgrade pip"
+	        Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow 
+            
+            Write-Host "`n[+] Running pip install objection"
+            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection " -wait -NoNewWindow 
+            
+            # for Frida Android Binary
+            Write-Host "`n[+] Running pip install python-xz"
+            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait -NoNewWindow 
+            }
+                catch {
+                    throw $_.Exception.Message
+                }
+            }
+        else {
+            Write-Host "[+] $VARCD\python already exists"
+            }
+}
 
 
 ############# AutoGPTEnv
