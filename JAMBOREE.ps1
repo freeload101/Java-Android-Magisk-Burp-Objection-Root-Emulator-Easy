@@ -507,7 +507,13 @@ Function HyperVInstall {
 ############# HAXMInstall
 Function HAXMInstall {
 	Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
-	Start-Process -FilePath "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager\silent_install.bat" -WorkingDirectory "$VARCD\extras\intel\Hardware_Accelerated_Execution_Manager" -Wait
+	Write-Host "[+] Downloading intel/haxm"
+	$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/intel/haxm/releases/latest").assets | Where-Object name -like *windows*.zip ).browser_download_url
+	downloadFile "$downloadUri" "$VARCD\haxm-windows.zip"
+	
+	Write-Host "[+] Extracting haxm-windows.zip"
+    	Expand-Archive -Path  "$VARCD\haxm-windows.zip" -DestinationPath "$VARCD\haxm-windows" -Force
+	Start-Process -FilePath "$VARCD\haxm-windows\silent_install.bat" -WorkingDirectory "$VARCD\haxm-windows" -Wait
 }
 
 ############# AVDStart
