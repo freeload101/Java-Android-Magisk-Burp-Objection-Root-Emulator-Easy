@@ -553,10 +553,10 @@ Function AVDPoweroff {
 	$env:ANDROID_SERIAL=$varadb
 	
 	$wshell = New-Object -ComObject Wscript.Shell
-	$pause = $wshell.Popup("Are you sure you want to shutdown ?!?", 0, "Wait!", 48+1)
+	$pause = $wshell.Popup("Are you sure you want to shutdown?", 0, "Wait!", 48+1)
 
 	if ($pause -eq '1') {
-		Write-Host "[+] Wiping data you will need to rerun Magisk and push cert"
+		Write-Host "[+] Powering Off AVD"
 		Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell -t  `"reboot -p`"" -Wait
 	}
 	Elseif ($pause = '2') {
