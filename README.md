@@ -1,25 +1,19 @@
 ## Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
+ 
+Get a working portable Python/Git/Java environment on Windows in **SECONDS** without having local administrator, regardless of your broken Python environment. Our open-source script downloads directly from proper sources without any binaries. While the code may not be perfect, it includes many useful PowerShell tricks.
 
-* Now with more YOLO!
-- Added BloodHound  
-- Added A1111  
-- Added AutoGPT ( Setup for Pay as you go gpt3-turbo https://platform.openai.com/account/usage ) 
-
-Want to pentest or run Android apps in minutes ? Sick of BlueStacks or NOX malware/adware ? Not a single binary in this script and it's open source and downloads are direct from proper sources. There is lots of great powershell tricks (not great code) in this script. I worked hard on thing's like:
-
-- Making it portable as possible
-
-- Setting up and downloading extremely fast environment for Android, Java and Python ( no Anaconda etc. It uses tiny binaries from Nuget.org for python )
-
-- Converting ssl certs to Android without openssl using certutil.exe only
-
+* Run Android apps and pentest in without the adware and malware of BlueStacks or NOX. 
+* Run BloodHound Active Directory auditing tool
+* AUTOMATIC1111  Stable Diffusion web UI A browser interface based on Gradio library for Stable Diffusion
+* AutoGPT  ( Setup for Pay as you go gpt3-turbo https://platform.openai.com/account/usage ) 
+   
 I would like to make it even easier to use but I don't want to spend more time developing it if nobody is going to use it! Please let me know if you like it and open bugs/suggestions/feature request etc!
 
 ![image](https://user-images.githubusercontent.com/4307863/236506844-b2f3583e-496e-4775-81e6-2e4f2d558988.png)
 
 ### Requirements:
 
-- Local admin just to install:
+- Local admin just to install Android AVD Driver:
 
 HAXM Intel driver ( https://github.com/intel/haxm )
 
