@@ -2,14 +2,21 @@
  
 Get a working portable Python/Git/Java environment on Windows in **SECONDS** without having local administrator, regardless of your broken Python environment. Our open-source script downloads directly from proper sources without any binaries. While the code may not be perfect, it includes many useful PowerShell tricks.
 
-* Run Android apps and pentest in without the adware and malware of BlueStacks or NOX. 
+* Run Android apps and pentest without the adware and malware of BlueStacks or NOX. 
 * Run BloodHound Active Directory auditing tool
 * AUTOMATIC1111  Stable Diffusion web UI A browser interface based on Gradio library for Stable Diffusion
 * AutoGPT  ( Setup for Pay as you go gpt3-turbo https://platform.openai.com/account/usage ) 
-   
+
+### How it works:
+
+* Temporarily resets your windows $PATH environment variable to fix any issues with existing python/java installation
+* Build a working Python environment in seconds using a tiny 16 meg nuget.org Python binary and portable PortableGit. Our solution doesn't require a package manager like Anaconda.
+
 I would like to make it even easier to use but I don't want to spend more time developing it if nobody is going to use it! Please let me know if you like it and open bugs/suggestions/feature request etc!
 
 ![image](https://user-images.githubusercontent.com/4307863/236506844-b2f3583e-496e-4775-81e6-2e4f2d558988.png)
+
+
 
 ### Requirements:
 
