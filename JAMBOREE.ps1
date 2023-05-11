@@ -215,10 +215,12 @@ Function CheckPython {
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection " -wait
             # for Frida Android Binary
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait
-			# Wack patch for missing pip binary
-			$PipBatch = @'
-			python -m pip %*
-			'@ 
+# DO NOT INDENT THIS PART
+$PipBatch = @'
+python -m pip %*
+'@ 
+$PythonXZ | Out-File -FilePath `"$VARCD\python\tools\Scripts\pip.bat`" 
+# DO NOT INDENT THIS PART
 			$PythonXZ | Out-File -FilePath `"$VARCD\python\tools\Scripts\pip.bat`" 
             }
                 catch {
