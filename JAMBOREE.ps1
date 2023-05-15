@@ -597,6 +597,10 @@ Function AUTOMATIC1111 {
 	$env:PYTHONHOME="$VARCD\pythonA111\tools"
 	$env:PYTHONPATH="$VARCD\pythonA111\tools\Lib\site-packages"
 	
+	Write-Host "`n[+] Running pip install --upgrade pip"
+	Start-Process -FilePath "$VARCD\pythonA111\tools\python.exe" -WorkingDirectory "$VARCD\pythonA111\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow 
+            
+	    
 	Write-Host "`n[+] Cloning stable-diffusion-webui"
 	Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/AUTOMATIC1111/stable-diffusion-webui.git`" " -wait -NoNewWindow
 	
