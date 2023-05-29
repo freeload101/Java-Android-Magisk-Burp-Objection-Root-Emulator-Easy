@@ -520,7 +520,9 @@ Function HAXMInstall {
 	
 	Write-Host "[+] Extracting haxm-windows.zip"
     Expand-Archive -Path  "$VARCD\haxm-windows.zip" -DestinationPath "$VARCD\haxm-windows" -Force
+    	Write-Host "[+] Running $VARCD\haxm-windows\silent_install.bat"
 	Start-Process -FilePath "$VARCD\haxm-windows\silent_install.bat" -WorkingDirectory "$VARCD\haxm-windows" -Wait
+	
 }
 
 ############# AVDStart
