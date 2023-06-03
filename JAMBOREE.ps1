@@ -489,7 +489,7 @@ Function AVDDownload {
         else {
             Write-Host "[+] $VARCD\cmdline-tools already exists remove everything but this script to perform full reinstall/setup"
             Write-Host "`n[+] Current Working Directory $VARCD"
-            Start-Sleep -Seconds 10
+            Start-Sleep -Seconds 1
 			AVDStart
             }
   
@@ -515,13 +515,13 @@ Function HyperVInstall {
 Function HAXMInstall {
 	Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
 	Write-Host "[+] Downloading intel/haxm"
-	$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/intel/haxm/releases/latest").assets | Where-Object name -like *windows*.zip ).browser_download_url
-	downloadFile "$downloadUri" "$VARCD\haxm-windows.zip"
+	# Upgrade to AEHD !?!?  https://github.com/intel/haxm/releases/download/v7.6.5/haxm-windows_v7_6_5.zip must be used $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/intel/haxm/releases/latest").assets | Where-Object name -like *windows*.zip ).browser_download_url
+	downloadFile "https://github.com/intel/haxm/releases/download/v7.6.5/haxm-windows_v7_6_5.zip" "$VARCD\haxm-windows.zip"
 	
 	Write-Host "[+] Extracting haxm-windows.zip"
     Expand-Archive -Path  "$VARCD\haxm-windows.zip" -DestinationPath "$VARCD\haxm-windows" -Force
     	Write-Host "[+] Running $VARCD\haxm-windows\silent_install.bat"
-	Start-Process -FilePath "$VARCD\haxm-windows\silent_install.bat" -WorkingDirectory "$VARCD\haxm-windows" -Wait
+	Start-Process -FilePath "$VARCD\haxm-windows\silent_install.bat" -WorkingDirectory "$VARCD\haxm-windows" -Wait -NoNewWindow
 	
 }
 
@@ -533,7 +533,7 @@ Function AVDStart {
 			Write-Host "[+] $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup"
 			Write-Host "[+] Starting AVD emulator"
 			Start-Sleep -Seconds 2
-			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080"
+			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow 
             }
                 catch {
                     throw $_.Exception.Message
@@ -544,7 +544,7 @@ Function AVDStart {
             Write-Host "[+] $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup"
 			Write-Host "[+] Starting AVD emulator"
 			Start-Sleep -Seconds 2
-			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080"
+			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
 			
             }
 }
