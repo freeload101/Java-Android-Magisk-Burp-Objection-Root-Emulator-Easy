@@ -12,7 +12,7 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 * Temporarily resets your windows $PATH environment variable to fix any issues with existing python/java installation
 * Build a working Python environment in seconds using a tiny 16 meg nuget.org Python binary and portable PortableGit. Our solution doesn't require a package manager like Anaconda.
 
-I would like to make it even easier to use but I don't want to spend more time developing it if nobody is going to use it! Please let me know if you like it and open bugs/suggestions/feature request etc!
+I would like to make it even easier to use but I don't want to spend more time developing it if nobody is going to use it! Please let me know if you like it and open bugs/suggestions/feature request etc! you can contact me at ( https://rmccurdy.com ) !
 
 ![image](https://user-images.githubusercontent.com/4307863/236506844-b2f3583e-496e-4775-81e6-2e4f2d558988.png)
 
