@@ -85,7 +85,7 @@ Write-Host "`n[+] Setting rootAVD ENV Paths $VARCD"
 #$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
 
 Write-Host "`n[+] Resetting Path variables to not use local python" 
-$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
+$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin"
 
 # python
 $env:PYTHONHOME="$VARCD\python\tools"
@@ -160,7 +160,7 @@ Function CheckJavaNeo4j {
             [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\jdk_neo4j.zip", "$VARCD")
 			Get-ChildItem "$VARCD\jdk-*"  | Rename-Item -NewName "jdk_neo4j"
 			$env:JAVA_HOME = "$VARCD\jdk_neo4j"
-			#$env:Path = "$VARCD\jdk_neo4j;$env:Path"
+			$env:Path = "$VARCD\jdk_neo4j;$env:Path"
             }
                 catch {
                     throw $_.Exception.Message
@@ -285,7 +285,7 @@ Write-Host "[+] Downloading Gameguardian"
 downloadFile "https://gameguardian.net/forum/files/file/2-gameguardian/?do=download&r=50314&confirm=1&t=1" "$VARCD\APKS\gameguardian.apk"
 
 Write-Host "[+] Downloading Lucky Patcher"
-downloadFile "https://chelpus.com/download/LuckyPatchers.com_Official_Installer_10.6.5.apk" "$VARCD\APKS\LP_Downloader.apk"
+downloadFile "https://chelpus.com/download/LuckyPatchers.com_Official_Installer_10.8.1.apk" "$VARCD\APKS\LP_Downloader.apk"
 
 Write-Host "[+] Downloading YASNAC"
 $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/RikkaW/YASNAC/releases/latest").assets | Where-Object name -like *.apk ).browser_download_url
@@ -453,7 +453,7 @@ Function AVDDownload {
     if (-not(Test-Path -Path "$VARCD\cmdline-tools" )) {
         try {
             Write-Host "[+] Downloading Android Command Line Tools"
-            downloadFile "https://dl.google.com/android/repository/commandlinetools-win-8512546_latest.zip" "$VARCD\commandlinetools-win.zip"
+            downloadFile "https://dl.google.com/android/repository/commandlinetools-win-9477386_latest.zip" "$VARCD\commandlinetools-win.zip"
             Write-Host "[+] Extracting AVD"
             Expand-Archive -Path  "$VARCD\commandlinetools-win.zip" -DestinationPath "$VARCD" -Force 
             Write-Host "[+] Setting path to latest that AVD wants ..."
@@ -763,7 +763,6 @@ Function StartBurp {
 ############# StartBurpPro
 Function StartBurpPro {
     CheckBurp
-    SecListsCheck
 	$BurpProLatest = Get-ChildItem -Force -Recurse -File -Path "$VARCD" -Depth 0 -Filter *pro*.jar -ErrorAction SilentlyContinue | Sort-Object LastwriteTime -Descending | select -first 1
 	Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\$BurpProLatest`" --use-defaults  && "
 	# wait for burp to setup env paths for config
