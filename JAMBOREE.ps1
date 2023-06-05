@@ -91,8 +91,7 @@ $env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\W
 $env:PYTHONHOME="$VARCD\python\tools"
 
 #init stuff 
-Write-Host "[+] Killing stray adb.exe "
-Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
+KillADB
 
 # Setup Form
 Add-Type -assembly System.Windows.Forms
@@ -123,7 +122,7 @@ function CheckADB {
 ############# KillADB
 function KillADB {
     Write-Host "[+] Killing ADB.exe "
-    Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
+    Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 }
 
 ############# downloadFile
@@ -514,7 +513,7 @@ Function HyperVInstall {
         Write-Host "[!] Hyper-V is already enabled."
     } else {
         Write-Host "[+] Hyper-V not found, installing ..."        
-        Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
+        KillADB
         Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart
     }
 }
@@ -522,7 +521,7 @@ Function HyperVInstall {
 ############# HAXMInstall
 Function HAXMInstall {
 	Write-Host "[+] Killing ADB processes"
-	Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
+	KillADB
 	Write-Host "[+] Downloading intel/haxm"
 	# Upgrade to AEHD !?!?  https://github.com/intel/haxm/releases/download/v7.6.5/haxm-windows_v7_6_5.zip must be used $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/intel/haxm/releases/latest").assets | Where-Object name -like *windows*.zip ).browser_download_url
 	downloadFile "https://github.com/intel/haxm/releases/download/v7.6.5/haxm-windows_v7_6_5.zip" "$VARCD\haxm-windows.zip"
@@ -1028,7 +1027,7 @@ Function Neo4jRun {
 Function BloodhoundRun {
     CheckJava
 	# pull custom searches
-	Stop-process -name BloodHound.exe -Force -ErrorAction SilentlyContinue |Out-Null
+	Stop-process -name BloodHound -Force -ErrorAction SilentlyContinue |Out-Null
 	if (-not(Test-Path -Path "$VARCD\BloodHound-win32-x64" )) {
         try {
             Write-Host "[+] Downloading BloodHound"
