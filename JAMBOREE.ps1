@@ -91,7 +91,7 @@ $env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\W
 $env:PYTHONHOME="$VARCD\python\tools"
 
 #init stuff 
-KillADB
+Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 
 # Setup Form
 Add-Type -assembly System.Windows.Forms
