@@ -66,7 +66,7 @@ $VARCD = (Get-Location)
 Write-Host "`n[+] Current Working Directory $VARCD"
 Set-Location -Path "$VARCD"
 
-Write-Host "`n[+] Setting ANDROID ENV Paths $VARCD"
+Write-Host "[+] Setting ANDROID ENV Paths $VARCD"
 
 $env:ANDROID_SDK_ROOT="$VARCD"
 $env:ANDROID_AVD_HOME="$VARCD"
@@ -76,20 +76,23 @@ New-Item -Path "$VARCD\avd" -ItemType Directory  -ErrorAction SilentlyContinue |
 $env:ANDROID_SDK_HOME="$VARCD"
 
 #java 
-Write-Host "`n[+] Setting JAVA ENV Paths $VARCD"
+Write-Host "[+] Setting JAVA ENV Paths $VARCD"
 $env:JAVA_HOME = "$VARCD\jdk"
 
 
-Write-Host "`n[+] Setting rootAVD ENV Paths $VARCD"
+Write-Host "[+] Setting rootAVD ENV Paths $VARCD"
 #Use this if you want to keep your %PATH% ...
 #$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
 
-Write-Host "`n[+] Resetting Path variables to not use local python" 
+Write-Host "[+] Resetting Path variables to not use local python" 
 $env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin"
 
 # python
 $env:PYTHONHOME="$VARCD\python\tools"
- 
+
+#init stuff 
+Write-Host "[+] Killing stray adb.exe "
+Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
 
 # Setup Form
 Add-Type -assembly System.Windows.Forms
@@ -117,6 +120,11 @@ function CheckADB {
 	return $varadb
 }
 
+############# KillADB
+function KillADB {
+    Write-Host "[+] Killing ADB.exe "
+    Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
+}
 
 ############# downloadFile
 function downloadFile($url, $targetFile)
@@ -135,7 +143,7 @@ function downloadFile($url, $targetFile)
     while ($count -gt 0)
     {
         #[System.Console]::CursorLeft = 0
-        #[System.Console]::Write("`nDownloaded {0}K of {1}K", [System.Math]::Floor($downloadedBytes/1024), $totalLength)
+        #[System.Console]::Write("Downloaded {0}K of {1}K", [System.Math]::Floor($downloadedBytes/1024), $totalLength)
         $targetStream.Write($buffer, 0, $count)
         $count = $responseStream.Read($buffer,0,$buffer.length)
         $downloadedBytes = $downloadedBytes + $count
@@ -488,7 +496,7 @@ Function AVDDownload {
             }
         else {
             Write-Host "[+] $VARCD\cmdline-tools already exists remove everything but this script to perform full reinstall/setup"
-            Write-Host "`n[+] Current Working Directory $VARCD"
+            Write-Host "[+] Current Working Directory $VARCD"
             Start-Sleep -Seconds 1
 			AVDStart
             }
@@ -513,6 +521,7 @@ Function HyperVInstall {
 
 ############# HAXMInstall
 Function HAXMInstall {
+	Write-Host "[+] Killing ADB processes"
 	Stop-process -name adb.exe -Force -ErrorAction SilentlyContinue |Out-Null
 	Write-Host "[+] Downloading intel/haxm"
 	# Upgrade to AEHD !?!?  https://github.com/intel/haxm/releases/download/v7.6.5/haxm-windows_v7_6_5.zip must be used $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/intel/haxm/releases/latest").assets | Where-Object name -like *windows*.zip ).browser_download_url
@@ -560,6 +569,7 @@ Function AVDPoweroff {
 	if ($pause -eq '1') {
 		Write-Host "[+] Powering Off AVD"
 		Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell -t  `"reboot -p`"" -Wait
+		KillADB
 	}
 	Elseif ($pause = '2') {
 		Write-Host "[+] Not rebooting..."
@@ -588,26 +598,26 @@ Function AUTOMATIC1111 {
 	CheckPythonA1111
 	
 	# set env for A111 python
-	Write-Host "`n[+] Resetting env for A111 python $VARCD"
+	Write-Host "[+] Resetting env for A111 python $VARCD"
 	 
 	# env 
 	# Path python
-	Write-Host "`n[+] Resetting Path variables to not use local python" 
+	Write-Host "[+] Resetting Path variables to not use local python" 
 	$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\pythonA111\tools\Scripts;$VARCD\pythonA111\tools;pythonA111\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
 
 	# python
 	$env:PYTHONHOME="$VARCD\pythonA111\tools"
 	$env:PYTHONPATH="$VARCD\pythonA111\tools\Lib\site-packages"
 	
-	Write-Host "`n[+] Running pip install --upgrade pip"
+	Write-Host "[+] Running pip install --upgrade pip"
 	Start-Process -FilePath "$VARCD\pythonA111\tools\python.exe" -WorkingDirectory "$VARCD\pythonA111\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow 
             
 	    
-	Write-Host "`n[+] Cloning stable-diffusion-webui"
+	Write-Host "[+] Cloning stable-diffusion-webui"
 	Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/AUTOMATIC1111/stable-diffusion-webui.git`" " -wait -NoNewWindow
 	
 	Start-Process -FilePath "$VARCD\stable-diffusion-webui\webui-user.bat" -WorkingDirectory "$VARCD\stable-diffusion-webui"  -ArgumentList " "  -wait -NoNewWindow
-	Write-Host "`n[+] Suggest creating hard links to your models with mklink /d "
+	Write-Host "[+] Suggest creating hard links to your models with mklink /d "
 }
 
 ############# CHECK PYTHONA111
@@ -644,14 +654,14 @@ Function CheckPython {
             Add-Type -AssemblyName System.IO.Compression
             [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\python.zip", "$VARCD\python")
 
-            Write-Host "`n[+] Running pip install --upgrade pip"
+            Write-Host "[+] Running pip install --upgrade pip"
 	        Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow 
             
-            Write-Host "`n[+] Running pip install objection"
+            Write-Host "[+] Running pip install objection"
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection " -wait -NoNewWindow 
             
             # for Frida Android Binary
-            Write-Host "`n[+] Running pip install python-xz"
+            Write-Host "[+] Running pip install python-xz"
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait -NoNewWindow 
             }
                 catch {
@@ -670,7 +680,7 @@ Function AutoGPTEnv {
 	if (-not(Test-Path -Path "$VARCD\Auto-GPT\.env" )) { 
         try {
 
-	Write-Host "`n[+] Running pip install -r requirements.txt"
+	Write-Host "[+] Running pip install -r requirements.txt"
 	Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -ArgumentList " -m pip install -r requirements.txt  " -wait -NoNewWindow 
 
 
@@ -731,7 +741,8 @@ if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
 
 	cd "$VARCD\rootAVD-master"
 	Write-Host "[+] Running installing magisk via rootAVD to ramdisk.img"
-	Start-Process -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "$VARCD\system-images\android-30\google_apis_playstore\x86\ramdisk.img" -WorkingDirectory "$VARCD\rootAVD-master\" 
+	Start-Process -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "$VARCD\system-images\android-30\google_apis_playstore\x86\ramdisk.img" -WorkingDirectory "$VARCD\rootAVD-master\"  -NoNewWindow 
+
     Write-Host "[+] rootAVD Finished if the emulator did not close/poweroff try again"
 }
 
@@ -754,7 +765,6 @@ Function AVDWipeData {
 ############# StartBurp
 Function StartBurp {
     CheckBurp
-    SecListsCheck
     Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   
 	Write-Host "[+] Waiting for Burp Suite to download cert"
 	Retry{PullCert "Error PullCert"} # -maxAttempts 10
@@ -897,7 +907,6 @@ Function ZAPCheck {
 Function StartZAP {
 	StartBurp
     ZAPCheck
-    SecListsCheck
 	Write-Host "[+] Starting ZAP"
     # https://www.zaproxy.org/faq/how-do-you-find-out-what-key-to-use-to-set-a-config-value-on-the-command-line/
     $ZAPJarPath = (Get-ChildItem "$VARCD\ZAP\*.jar")
@@ -1085,18 +1094,18 @@ Goals: ['tell me the weather for atlanta georgia using google.com website and no
 
 #>
 
-Write-Host "`n[+] Cloning https://github.com/Torantulino/Auto-GPT.git"
+Write-Host "[+] Cloning https://github.com/Torantulino/Auto-GPT.git"
 Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/Significant-Gravitas/Auto-GPT.git`" " -wait -NoNewWindow 
 $env:SystemRoot
 AutoGPTEnv
 
-Write-Host "`n[+] Current Working Directory $VARCD\Auto-GPT"
+Write-Host "[+] Current Working Directory $VARCD\Auto-GPT"
 Set-Location -Path "$VARCD\Auto-GPT"
 
-Write-Host "`n[+] Running  .\run.bat --debug --gpt3only"
+Write-Host "[+] Running  .\run.bat --debug --gpt3only"
 Start-Process -FilePath "cmd.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -ArgumentList " /c .\run.bat --debug --gpt3only "  
 
-Write-Host "`n[+] EXIT"
+Write-Host "[+] EXIT"
 } 
  
 
@@ -1249,6 +1258,16 @@ $Button14.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button14.Add_Click({StartBurpPro})
 $main_form.Controls.Add($Button14)
 $vShift = $vShift + 30
+
+############ BUTTON34
+$Button34 = New-Object System.Windows.Forms.Button
+$Button34.AutoSize = $true
+$Button34.Text = "Kill adb.exe" #KillADB
+$Button34.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button34.Add_Click({KillADB})
+$main_form.Controls.Add($Button34)
+$vShift = $vShift + 30
+
 
 ############# BUTTON4
 $Button4 = New-Object System.Windows.Forms.Button
