@@ -1,6 +1,6 @@
-<# 
+<#
 -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
-start RedirectStandardOutput.txt 
+start RedirectStandardOutput.txt
 start RedirectStandardError.txt
 #>
 $splashArt = @"
@@ -18,8 +18,8 @@ $splashArt = @"
       ||   ||                |[___]|
       ||___||                |[:::]|
       |[:::]|                '-----'
-      '-----'   
- 
+      '-----'  
+
 "@
 
 
@@ -50,7 +50,7 @@ function Draw-Splash{
             }
             " "{Write-Host " " -NoNewline}
 
-        } 
+        }
     }
 }
 
@@ -75,7 +75,7 @@ $env:ANDROID_AVD_HOME="$VARCD\avd"
 New-Item -Path "$VARCD\avd" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 $env:ANDROID_SDK_HOME="$VARCD"
 
-#java 
+#java
 Write-Host "[+] Setting JAVA ENV Paths $VARCD"
 $env:JAVA_HOME = "$VARCD\jdk"
 
@@ -84,13 +84,13 @@ Write-Host "[+] Setting rootAVD ENV Paths $VARCD"
 #Use this if you want to keep your %PATH% ...
 #$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
 
-Write-Host "[+] Resetting Path variables to not use local python" 
+Write-Host "[+] Resetting Path variables to not use local python"
 $env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin"
 
 # python
 $env:PYTHONHOME="$VARCD\python\tools"
 
-#init stuff 
+#init stuff
 Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 
 # Setup Form
@@ -156,7 +156,7 @@ function downloadFile($url, $targetFile)
 
 ############# CHECK JAVA FOR NEO4J
 Function CheckJavaNeo4j {
-   if (-not(Test-Path -Path "$VARCD\jdk_neo4j" )) { 
+   if (-not(Test-Path -Path "$VARCD\jdk_neo4j" )) {
         try {
             Write-Host "[+] Downloading Java"
             # does not work for neo4j bloodhound wants java11 ... downloadFile "https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.zip" "$VARCD\openjdk.zip"
@@ -183,7 +183,7 @@ Function CheckJavaNeo4j {
 
 ############# CHECK JAVA
 Function CheckJava {
-   if (-not(Test-Path -Path "$VARCD\jdk" )) { 
+   if (-not(Test-Path -Path "$VARCD\jdk" )) {
         try {
             Write-Host "[+] Downloading Java"
             downloadFile "https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.zip" "$VARCD\jdk.zip"
@@ -207,12 +207,12 @@ Function CheckJava {
 
 ############# CHECK PYTHON
 Function CheckPython {
-   if (-not(Test-Path -Path "$VARCD\python" )) { 
+   if (-not(Test-Path -Path "$VARCD\python" )) {
         try {
-            Write-Host "[+] Downloading Python nuget package" 
+            Write-Host "[+] Downloading Python nuget package"
             downloadFile "https://www.nuget.org/api/v2/package/python" "$VARCD\python.zip"
             New-Item -Path "$VARCD\python" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
-            Write-Host "[+] Extracting Python nuget package" 
+            Write-Host "[+] Extracting Python nuget package"
             Add-Type -AssemblyName System.IO.Compression.FileSystem
             Add-Type -AssemblyName System.IO.Compression
             [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\python.zip", "$VARCD\python")
@@ -225,10 +225,10 @@ Function CheckPython {
 # DO NOT INDENT THIS PART
 $PipBatch = @'
 python -m pip %*
-'@ 
-$PythonXZ | Out-File -FilePath `"$VARCD\python\tools\Scripts\pip.bat`" 
+'@
+$PythonXZ | Out-File -FilePath `"$VARCD\python\tools\Scripts\pip.bat`"
 # DO NOT INDENT THIS PART
-			$PythonXZ | Out-File -FilePath `"$VARCD\python\tools\Scripts\pip.bat`" 
+			$PythonXZ | Out-File -FilePath `"$VARCD\python\tools\Scripts\pip.bat`"
             }
                 catch {
                     throw $_.Exception.Message
@@ -244,9 +244,9 @@ $PythonXZ | Out-File -FilePath `"$VARCD\python\tools\Scripts\pip.bat`"
 ############# CHECK BURP
 Function CheckBurp {
 CheckJava
-   if (-not(Test-Path -Path "$VARCD\burpsuite_community.jar" )) { 
+   if (-not(Test-Path -Path "$VARCD\burpsuite_community.jar" )) {
         try {
-            Write-Host "[+] Downloading Burpsuite Community" 
+            Write-Host "[+] Downloading Burpsuite Community"
             downloadFile "https://portswigger-cdn.net/burp/releases/download?product=community&type=Jar" "$VARCD\burpsuite_community.jar"
            }
                 catch {
@@ -257,9 +257,9 @@ CheckJava
             Write-Host "[+] $VARCD\Burpsuite already exists"
             }
 			
-			   if (-not(Test-Path -Path "$VARCD\burpsuite_pro.jar" )) { 
+			   if (-not(Test-Path -Path "$VARCD\burpsuite_pro.jar" )) {
         try {
-            Write-Host "[+] Downloading Burpsuite Pro" 
+            Write-Host "[+] Downloading Burpsuite Pro"
             downloadFile "https://portswigger-cdn.net/burp/releases/download?product=pro&type=Jar" "$VARCD\burpsuite_pro.jar"
            }
                 catch {
@@ -352,7 +352,7 @@ Write-Host "[+] Reboot for changes to take effect!"
 ############# AlwaysTrustUserCerts
 Function AlwaysTrustUserCerts {
 Write-Host "[+] Checking for AlwaysTrustUserCerts.zip"
-   if (-not(Test-Path -Path "$VARCD\AlwaysTrustUserCerts.zip" )) { 
+   if (-not(Test-Path -Path "$VARCD\AlwaysTrustUserCerts.zip" )) {
         try {
             Write-Host "[+] Downloading Magisk Module AlwaysTrustUserCerts.zip"
             $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/NVISOsecurity/MagiskTrustUserCerts/releases/latest").assets | Where-Object name -like *.zip ).browser_download_url
@@ -379,7 +379,7 @@ Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `
 }
 Function StartFrida {
 CheckPython
-   if (-not(Test-Path -Path "$VARCD\frida-server" )) { 
+   if (-not(Test-Path -Path "$VARCD\frida-server" )) {
         try {
             Write-Host "[+] Downloading Latest frida-server-*android-x86.xz "
             $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/frida/frida/releases/latest").assets | Where-Object name -like frida-server-*-android-x86.xz ).browser_download_url
@@ -393,11 +393,11 @@ import shutil
 with xz.open('frida-server-android-x86.xz') as f:
     with open('frida-server', 'wb') as fout:
         shutil.copyfileobj(f, fout)
-'@ 
+'@
 # don't mess with spaces for these lines for python ...
 
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\frida-server-extract.py`" "
-            $PythonXZ | Out-File -FilePath frida-server-extract.py 
+            $PythonXZ | Out-File -FilePath frida-server-extract.py
             # change endoding from Windows-1252 to UTF-8
             Set-Content -Path "$VARCD\frida-server-extract.py" -Value $PythonXZ -Encoding UTF8 -PassThru -Force
 
@@ -422,20 +422,20 @@ Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp -R /sdcard/frida-server /data/local/tmp`" " -NoNewWindow -Wait
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chmod 777 /data/local/tmp/frida-server`" "  -NoNewWindow -Wait
 Write-Host "[+] Starting /data/local/tmp/frida-server"
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c /data/local/tmp/frida-server &`" "  -NoNewWindow  
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c /data/local/tmp/frida-server &`" "  -NoNewWindow 
 
 Write-Host "[+] Running Frida-ps select package to run Objection on:"
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c pm list packages  `" "  -NoNewWindow -RedirectStandardOutput "$VARCDRedirectStandardOutput.txt"
 Start-Sleep -Seconds 2
 $PackageName = (Get-Content -Path "$VARCDRedirectStandardOutput.txt") -replace 'package:',''    | Out-GridView -Title "Select Package to Run Objection" -OutputMode Single
 
- 
+
 
 Write-Host "[+] Starting Objection"
-Start-Process -FilePath "$VARCD\python\tools\Scripts\objection.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " --gadget $PackageName explore " 
+Start-Process -FilePath "$VARCD\python\tools\Scripts\objection.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " --gadget $PackageName explore "
 
 start-sleep -Seconds 5
-# wscript may not work as good ? 
+# wscript may not work as good ?
 #$SendWait = New-Object -ComObject wscript.shell;
 #$SendWait.SendKeys('android sslpinning disable')
 
@@ -451,7 +451,7 @@ start-sleep -Seconds 1
 function StartADB {
     $varadb=CheckADB
 	$env:ANDROID_SERIAL=$varadb
-    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " logcat *:W  " 
+    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " logcat *:W  "
 }
 
 ############# AVDDownload
@@ -462,10 +462,10 @@ Function AVDDownload {
             Write-Host "[+] Downloading Android Command Line Tools"
             downloadFile "https://dl.google.com/android/repository/commandlinetools-win-9477386_latest.zip" "$VARCD\commandlinetools-win.zip"
             Write-Host "[+] Extracting AVD"
-            Expand-Archive -Path  "$VARCD\commandlinetools-win.zip" -DestinationPath "$VARCD" -Force 
+            Expand-Archive -Path  "$VARCD\commandlinetools-win.zip" -DestinationPath "$VARCD" -Force
             Write-Host "[+] Setting path to latest that AVD wants ..."
             Rename-Item -Path "$VARCD\cmdline-tools" -NewName "$VARCD\latest"
-            New-Item -Path "$VARCD\cmdline-tools" -ItemType Directory 
+            New-Item -Path "$VARCD\cmdline-tools" -ItemType Directory
             Move-Item "$VARCD\latest" "$VARCD\cmdline-tools\"
 			
 			CheckJava
@@ -478,11 +478,11 @@ Function AVDDownload {
 			Write-Host "[+] Running sdkmanager/Installing"
 			
 			# now we are using latest cmdline-tools ...!?
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platform-tools" -Verbose -Wait -NoNewWindow 
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "extras;intel;Hardware_Accelerated_Execution_Manager" -Verbose -Wait -NoNewWindow 
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platforms;android-30" -Verbose -Wait -NoNewWindow 
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "emulator" -Verbose -Wait -NoNewWindow 
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "system-images;android-30;google_apis_playstore;x86" -Verbose -Wait -NoNewWindow 
+			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platform-tools" -Verbose -Wait -NoNewWindow
+			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "extras;intel;Hardware_Accelerated_Execution_Manager" -Verbose -Wait -NoNewWindow
+			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platforms;android-30" -Verbose -Wait -NoNewWindow
+			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "emulator" -Verbose -Wait -NoNewWindow
+			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "system-images;android-30;google_apis_playstore;x86" -Verbose -Wait -NoNewWindow
 			Write-Host "[+] AVD Install Complete Creating AVD Device"
 			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-30;google_apis_playstore;x86`"  -d `"pixel_2`" --force" -Wait -Verbose
 			Start-Sleep -Seconds 2
@@ -499,9 +499,9 @@ Function AVDDownload {
             Start-Sleep -Seconds 1
 			AVDStart
             }
-  
-    
+ 
    
+  
 }
 
 
@@ -512,7 +512,7 @@ Function HyperVInstall {
     if($hyperv.State -eq "Enabled") {
         Write-Host "[!] Hyper-V is already enabled."
     } else {
-        Write-Host "[+] Hyper-V not found, installing ..."        
+        Write-Host "[+] Hyper-V not found, installing ..."       
         KillADB
         Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart
     }
@@ -541,7 +541,7 @@ Function AVDStart {
 			Write-Host "[+] $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup"
 			Write-Host "[+] Starting AVD emulator"
 			Start-Sleep -Seconds 2
-			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow 
+			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
             }
                 catch {
                     throw $_.Exception.Message
@@ -585,7 +585,7 @@ Function CMDPrompt {
 	
 	$varadb=CheckADB
 	$env:ANDROID_SERIAL=$varadb
-    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell  " 
+    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell  "
 	
 }
 
@@ -598,10 +598,10 @@ Function AUTOMATIC1111 {
 	
 	# set env for A111 python
 	Write-Host "[+] Resetting env for A111 python $VARCD"
-	 
-	# env 
+	
+	# env
 	# Path python
-	Write-Host "[+] Resetting Path variables to not use local python" 
+	Write-Host "[+] Resetting Path variables to not use local python"
 	$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\pythonA111\tools\Scripts;$VARCD\pythonA111\tools;pythonA111\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
 
 	# python
@@ -609,9 +609,9 @@ Function AUTOMATIC1111 {
 	$env:PYTHONPATH="$VARCD\pythonA111\tools\Lib\site-packages"
 	
 	Write-Host "[+] Running pip install --upgrade pip"
-	Start-Process -FilePath "$VARCD\pythonA111\tools\python.exe" -WorkingDirectory "$VARCD\pythonA111\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow 
-            
-	    
+	Start-Process -FilePath "$VARCD\pythonA111\tools\python.exe" -WorkingDirectory "$VARCD\pythonA111\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow
+           
+	   
 	Write-Host "[+] Cloning stable-diffusion-webui"
 	Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/AUTOMATIC1111/stable-diffusion-webui.git`" " -wait -NoNewWindow
 	
@@ -621,16 +621,16 @@ Function AUTOMATIC1111 {
 
 ############# CHECK PYTHONA111
 Function CheckPythonA1111 {
-   if (-not(Test-Path -Path "$VARCD\pythonA111" )) { 
+   if (-not(Test-Path -Path "$VARCD\pythonA111" )) {
         try {
-            Write-Host "[+] Downloading Python nuget package for AUTOMATIC1111" 
+            Write-Host "[+] Downloading Python nuget package for AUTOMATIC1111"
             downloadFile "https://www.nuget.org/api/v2/package/python/3.10.6" "$VARCD\python.zip"
             New-Item -Path "$VARCD\pythonA111" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
-            Write-Host "[+] Extracting Python nuget package for AUTOMATIC1111" 
+            Write-Host "[+] Extracting Python nuget package for AUTOMATIC1111"
             Add-Type -AssemblyName System.IO.Compression.FileSystem
             Add-Type -AssemblyName System.IO.Compression
             [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\python.zip", "$VARCD\pythonA111")
-                    
+                   
             }
                 catch {
                     throw $_.Exception.Message
@@ -639,29 +639,29 @@ Function CheckPythonA1111 {
         else {
             Write-Host "[+] $VARCD\pythonA111 already exists"
             }
-} 
+}
 
 ############# CHECK PYTHON
 Function CheckPython {
-   if (-not(Test-Path -Path "$VARCD\python" )) { 
+   if (-not(Test-Path -Path "$VARCD\python" )) {
         try {
-            Write-Host "[+] Downloading Python nuget package" 
+            Write-Host "[+] Downloading Python nuget package"
             downloadFile "https://www.nuget.org/api/v2/package/python" "$VARCD\python.zip"
             New-Item -Path "$VARCD\python" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
-            Write-Host "[+] Extracting Python nuget package" 
+            Write-Host "[+] Extracting Python nuget package"
             Add-Type -AssemblyName System.IO.Compression.FileSystem
             Add-Type -AssemblyName System.IO.Compression
             [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\python.zip", "$VARCD\python")
 
             Write-Host "[+] Running pip install --upgrade pip"
-	        Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow 
-            
+	        Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow
+           
             Write-Host "[+] Running pip install objection"
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection " -wait -NoNewWindow 
-            
+            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection " -wait -NoNewWindow
+           
             # for Frida Android Binary
             Write-Host "[+] Running pip install python-xz"
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait -NoNewWindow 
+            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait -NoNewWindow
             }
                 catch {
                     throw $_.Exception.Message
@@ -676,11 +676,11 @@ Function CheckPython {
 ############# AutoGPTEnv
 Function AutoGPTEnv {
 	
-	if (-not(Test-Path -Path "$VARCD\Auto-GPT\.env" )) { 
+	if (-not(Test-Path -Path "$VARCD\Auto-GPT\.env" )) {
         try {
 
 	Write-Host "[+] Running pip install -r requirements.txt"
-	Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -ArgumentList " -m pip install -r requirements.txt  " -wait -NoNewWindow 
+	Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -ArgumentList " -m pip install -r requirements.txt  " -wait -NoNewWindow
 
 
 	Write-Host "[+] Updating AutoGPT .env config for YOLO and Gpt-3 because I'm cheap"
@@ -724,7 +724,7 @@ if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
     try {
             Write-Host "[+] Downloading rootAVD"
             downloadFile "https://github.com/newbit1/rootAVD/archive/refs/heads/master.zip" "$VARCD\rootAVD-master.zip"
-            Write-Host "[+] Extracting rootAVD (Turn On AVD 1st" 
+            Write-Host "[+] Extracting rootAVD (Turn On AVD 1st"
             Expand-Archive -Path  "$VARCD\rootAVD-master.zip" -DestinationPath "$VARCD" -Force
         }
             catch {
@@ -734,13 +734,13 @@ if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
         else {
             Write-Host "[+] $VARCD\rootAVD-master already exists"
         }
-    
+   
 	$varadb=CheckADB
 	$env:ANDROID_SERIAL=$varadb
 
 	cd "$VARCD\rootAVD-master"
 	Write-Host "[+] Running installing magisk via rootAVD to ramdisk.img"
-	Start-Process -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "$VARCD\system-images\android-30\google_apis_playstore\x86\ramdisk.img" -WorkingDirectory "$VARCD\rootAVD-master\"  -NoNewWindow 
+	Start-Process -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "$VARCD\system-images\android-30\google_apis_playstore\x86\ramdisk.img" -WorkingDirectory "$VARCD\rootAVD-master\"  -NoNewWindow
 
     Write-Host "[+] rootAVD Finished if the emulator did not close/poweroff try again"
 }
@@ -753,7 +753,7 @@ Function AVDWipeData {
 
 	if ($pause -eq '1') {
 		Write-Host "[+] Wiping data you will need to rerun Magisk and push cert"
-		Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -wipe-data" 
+		Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -wipe-data"
 	}
 	Elseif ($pause = '2') {
 		Write-Host "[+] Not wiping data..."
@@ -764,7 +764,7 @@ Function AVDWipeData {
 ############# StartBurp
 Function StartBurp {
     CheckBurp
-    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "   
+    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "  
 	Write-Host "[+] Waiting for Burp Suite to download cert"
 	Retry{PullCert "Error PullCert"} # -maxAttempts 10
 }
@@ -854,7 +854,7 @@ $BurpConfigChrome = @'
         }
     }
 }
- 
+
 '@
 $BurpConfigChrome |set-Content "$env:USERPROFILE\AppData\Roaming\BurpSuite\ConfigLibrary\_JAMBOREE_Crawl_Level_01.json"
 
@@ -879,7 +879,7 @@ Function ZAPCheck {
             [xml]$xmlAttr = Get-Content -Path ZapVersions.xml
             Write-Host ([xml]$xmlAttr).ZAP.core.daily.url
             downloadFile ([xml]$xmlAttr).ZAP.core.daily.url "$VARCD\ZAP.zip"
-	   
+	  
             Write-Host "[+] Extracting ZAP"
             Add-Type -AssemblyName System.IO.Compression.FileSystem
             Add-Type -AssemblyName System.IO.Compression
@@ -897,9 +897,9 @@ Function ZAPCheck {
         else {
             Write-Host "[+] $VARCD\ZAP.zip already exists"
             }
-  
-    
+ 
    
+  
 }
 
 ############# StartZAP
@@ -909,7 +909,7 @@ Function StartZAP {
 	Write-Host "[+] Starting ZAP"
     # https://www.zaproxy.org/faq/how-do-you-find-out-what-key-to-use-to-set-a-config-value-on-the-command-line/
     $ZAPJarPath = (Get-ChildItem "$VARCD\ZAP\*.jar")
-    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$ZAPJarPath`" -config network.localServers.mainProxy.address=localhost -config network.localServers.mainProxy.port=8081 -config network.connection.httpProxy.host=localhost -config network.connection.httpProxy.port=8080 -config network.connection.httpProxy.enabled=true" 
+    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$ZAPJarPath`" -config network.localServers.mainProxy.address=localhost -config network.localServers.mainProxy.port=8081 -config network.connection.httpProxy.host=localhost -config network.connection.httpProxy.port=8080 -config network.connection.httpProxy.enabled=true"
 }
 
 
@@ -922,7 +922,7 @@ function Retry()
         [Parameter(Mandatory=$false)][int]$maxAttempts = 10
     )
 
-    $attempts=1    
+    $attempts=1   
     $ErrorActionPreferenceToRestore = $ErrorActionPreference
     $ErrorActionPreference = "Stop"
 
@@ -944,7 +944,7 @@ function Retry()
             $retryDelaySeconds = [math]::Pow(2, $attempts)
             $retryDelaySeconds = $retryDelaySeconds - 1  # Exponential Backoff Max == (2^n)-1
             Write-Host("Action failed. Waiting " + $retryDelaySeconds + " seconds before attempt " + $attempts + " of " + $maxAttempts + ".")
-            Start-Sleep $retryDelaySeconds 
+            Start-Sleep $retryDelaySeconds
         }
         else {
             $ErrorActionPreference = $ErrorActionPreferenceToRestore
@@ -975,10 +975,10 @@ Function SecListsCheck {
         else {
             Write-Host "[+] $VARCD\SecLists.zip already exists"
             }
-  
-    
+ 
    
-} 
+  
+}
 
 ############# SharpHoundRun
 Function SharpHoundRun {
@@ -993,7 +993,7 @@ Function SharpHoundRun {
             }
             }
     Write-Host "[+] Starting SharpHound"
-	Start-Process -FilePath "$VARCD\SharpHound.exe" -WorkingDirectory "$VARCD\"  -ArgumentList "  -s --CollectionMethods All --prettyprint true " 
+	Start-Process -FilePath "$VARCD\SharpHound.exe" -WorkingDirectory "$VARCD\"  -ArgumentList "  -s --CollectionMethods All --prettyprint true "
 }
 
 
@@ -1019,7 +1019,7 @@ Function Neo4jRun {
             Write-Host "[+] $VARCD\Neo4j.zip already exists"
             }
 	Write-Host "[+] Starting Neo4j"
-	Start-Process -FilePath "$VARCD\jdk_neo4j\bin\java.exe" -WorkingDirectory "$VARCD\neo4j\lib"  -ArgumentList "  -cp `"$VARCD\neo4j/lib/*`" -Dbasedir=`"$VARCD\neo4j`" org.neo4j.server.startup.Neo4jCommand `"console`"  " 
+	Start-Process -FilePath "$VARCD\jdk_neo4j\bin\java.exe" -WorkingDirectory "$VARCD\neo4j\lib"  -ArgumentList "  -cp `"$VARCD\neo4j/lib/*`" -Dbasedir=`"$VARCD\neo4j`" org.neo4j.server.startup.Neo4jCommand `"console`"  "
 	Write-Host "[+] Wait for Neo4j You must change password at http://localhost:7474"
 }
 
@@ -1055,9 +1055,9 @@ Function BloodhoundRun {
 
 ############# CHECK CheckGit
 Function CheckGit {
-   if (-not(Test-Path -Path "$VARCD\PortableGit" )) { 
+   if (-not(Test-Path -Path "$VARCD\PortableGit" )) {
         try {
-            Write-Host "[+] Downloading Git" 
+            Write-Host "[+] Downloading Git"
 
             $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/git-for-windows/git/releases/latest").assets | Where-Object name -like *PortableGit*64*.exe ).browser_download_url
             downloadFile "$downloadUri" "$VARCD\git7zsfx.exe"
@@ -1065,7 +1065,7 @@ Function CheckGit {
             # file:///C:/Users/Administrator/SDUI/git/mingw64/share/doc/git-doc/git-bash.html#GIT-WRAPPER
             Start-Process -FilePath "$VARCD\git7zsfx.exe" -WorkingDirectory "$VARCD\" -ArgumentList " -o`"$VARCD\PortableGit`" -y " -wait -NoNewWindow
 
-           
+          
             }
                 catch {
                     throw $_.Exception.Message
@@ -1074,7 +1074,7 @@ Function CheckGit {
         else {
             Write-Host "[+] $VARCD\Git already exists"
             }
-} 
+}
 
 
 
@@ -1094,7 +1094,7 @@ Goals: ['tell me the weather for atlanta georgia using google.com website and no
 #>
 
 Write-Host "[+] Cloning https://github.com/Torantulino/Auto-GPT.git"
-Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/Significant-Gravitas/Auto-GPT.git`" " -wait -NoNewWindow 
+Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/Significant-Gravitas/Auto-GPT.git`" " -wait -NoNewWindow
 $env:SystemRoot
 AutoGPTEnv
 
@@ -1102,216 +1102,216 @@ Write-Host "[+] Current Working Directory $VARCD\Auto-GPT"
 Set-Location -Path "$VARCD\Auto-GPT"
 
 Write-Host "[+] Running  .\run.bat --debug --gpt3only"
-Start-Process -FilePath "cmd.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -ArgumentList " /c .\run.bat --debug --gpt3only "  
+Start-Process -FilePath "cmd.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -ArgumentList " /c .\run.bat --debug --gpt3only " 
 
 Write-Host "[+] EXIT"
-} 
- 
+}
+
 
 ######################################################################################################################### FUNCTIONS END
 
 
 
-############# BUTTON1
-$Button1 = New-Object System.Windows.Forms.Button
-$Button1.AutoSize = $true
-$Button1.Text = "AVD With Proxy Support" #AVDDownload
-$Button1.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button1.Add_Click({Retry({AVDDownload "Error AVDDownload"})})
-$main_form.Controls.Add($Button1)
+############# AVDDownload
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "AVD With Proxy Support" #AVDDownload
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({Retry({AVDDownload "Error AVDDownload"})})
+$main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# BUTTON22
+############# accel
 $pname=(Get-WMIObject win32_Processor | Select-Object name)
-if ($pname -like "*AMD*") { 
+if ($pname -like "*AMD*") {
     Write-host "[+] AMD Processor detected"
-    ############# BUTTON22
+    ############# Button
     ############# AMD PROCESSOR DETECTED
-    $Button22 = New-Object System.Windows.Forms.Button 
-    $Button22.AutoSize = $true
+    $Button = New-Object System.Windows.Forms.Button
+    $Button.AutoSize = $true
     $hyperv = Get-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V-All -Online
     # Check if Hyper-V is enabled
         if($hyperv.State -eq "Enabled") {
             Write-Host "[!] Hyper-V is already enabled."
-            # Already installed, disable button    
-            $Button22.Text = "2. Hyper-V Already Installed"
-            $Button22.Enabled = $false
+            # Already installed, disable button   
+            $Button.Text = "2. Hyper-V Already Installed"
+            $Button.Enabled = $false
         } else {
 
-        $Button22.Text = "Hyper-V Install (Reboot?)" # Install Hyper-V
-        $Button22.Enabled = $true
+        $Button.Text = "Hyper-V Install (Reboot?)" # Install Hyper-V
+        $Button.Enabled = $true
         }
-    $Button22.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-    $Button22.Add_Click({HyperVInstall})
-    $main_form.Controls.Add($Button22)
+    $Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
+    $Button.Add_Click({HyperVInstall})
+    $main_form.Controls.Add($Button)
 	$vShift = $vShift + 30
 }
 else {
-    ############# BUTTON2
+    ############# Button
     ############# INTEL PROCESSOR DETECTED
-    $Button2 = New-Object System.Windows.Forms.Button 
-    $Button2.AutoSize = $true
-    $Button2.Text = "HAXM Install" #HAXMInstall
-    $Button2.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-    $Button2.Add_Click({HAXMInstall})
-    $main_form.Controls.Add($Button2)
+    $Button = New-Object System.Windows.Forms.Button
+    $Button.AutoSize = $true
+    $Button.Text = "HAXM Install" #HAXMInstall
+    $Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
+    $Button.Add_Click({HAXMInstall})
+    $main_form.Controls.Add($Button)
 	$vShift = $vShift + 30
 }
 
-    
-############# BUTTON3
-$Button3 = New-Object System.Windows.Forms.Button
-$Button3.AutoSize = $true
-$Button3.Text = "BurpSuite" #StartBurp
-$Button3.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button3.Add_Click({StartBurp})
-$main_form.Controls.Add($Button3)
+   
+############# StartBurp
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "BurpSuite"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({StartBurp})
+$main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# BUTTON5
-$Button5 = New-Object System.Windows.Forms.Button
-$Button5.AutoSize = $true
-$Button5.Text = "RootAVD/Install Magisk" #RootAVD
-$Button5.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button5.Add_Click({RootAVD})
-$main_form.Controls.Add($Button5)
+############# RootAVD
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "RootAVD/Install Magisk"
+$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
+$Button.Add_Click({RootAVD})
+$main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# Button6
-$Button6 = New-Object System.Windows.Forms.Button
-$Button6.AutoSize = $true
-$Button6.Text = "Upload BURP.pem as System Cert" #CertPush
-$Button6.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button6.Add_Click({CertPush})
-$main_form.Controls.Add($Button6)
+############# #CertPush
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Upload BURP.pem as System Cert"
+$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
+$Button.Add_Click({CertPush})
+$main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# Button7
-$Button7 = New-Object System.Windows.Forms.Button
-$Button7.AutoSize = $true
-$Button7.Text = "Frida/Objection" #StartFrida
-$Button7.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button7.Add_Click({StartFrida})
-$main_form.Controls.Add($Button7)
+############# StartFrida
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Frida/Objection"
+$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
+$Button.Add_Click({StartFrida})
+$main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# Button8
-$Button8 = New-Object System.Windows.Forms.Button
-$Button8.AutoSize = $true
-$Button8.Text = "CMD/ADB/Java/Python Prompt" #CMDPrompt
-$Button8.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button8.Add_Click({CMDPrompt})
-$main_form.Controls.Add($Button8)
+############# CMDPrompt
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "CMD/ADB/Java/Python Prompt"
+$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
+$Button.Add_Click({CMDPrompt})
+$main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# Button9
-$Button9 = New-Object System.Windows.Forms.Button
-$Button9.AutoSize = $true
-$Button9.Text = "ADB Logcat" #StartADB
-$Button9.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button9.Add_Click({StartADB})
-$main_form.Controls.Add($Button9)
+############# StartADB
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "ADB Logcat"
+$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
+$Button.Add_Click({StartADB})
+$main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# Button10
-$Button10 = New-Object System.Windows.Forms.Button
-$Button10.AutoSize = $true
-$Button10.Text = "Shutdown AVD" #AVDPoweroff
-$Button10.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button10.Add_Click({AVDPoweroff})
-$main_form.Controls.Add($Button10)
+############# AVDPoweroff
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Shutdown AVD"
+$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
+$Button.Add_Click({AVDPoweroff})
+$main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# BUTTON11
-$BUTTON11 = New-Object System.Windows.Forms.Button
-$BUTTON11.AutoSize = $true
-$BUTTON11.Text = "AVD -wipe-data (Fix unauthorized adb)" #AVDWipeData
-$BUTTON11.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$BUTTON11.Add_Click({AVDWipeData})
-$main_form.Controls.Add($BUTTON11)
+############# AVDWipeData
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "AVD -wipe-data (Fix unauthorized adb)"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({AVDWipeData})
+$main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# BUTTON12
-$BUTTON12 = New-Object System.Windows.Forms.Button
-$BUTTON12.AutoSize = $true
-$BUTTON12.Text = "Install Base APKs" #InstallAPKS
-$BUTTON12.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$BUTTON12.Add_Click({InstallAPKS})
-$main_form.Controls.Add($BUTTON12)
+############# InstallAPKS
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Install Base APKs"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({InstallAPKS})
+$main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# BUTTON13
-$Button13 = New-Object System.Windows.Forms.Button
-$Button13.AutoSize = $true
-$Button13.Text = "ZAP Using Burp" #StartZAP
-$Button13.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button13.Add_Click({StartZAP})
-$main_form.Controls.Add($Button13)
+############# StartZAP
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "ZAP Using Burp"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({StartZAP})
+$main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# BUTTON13
-$Button14 = New-Object System.Windows.Forms.Button
-$Button14.AutoSize = $true
-$Button14.Text = "BurpSuite Pro" #StartBurpPro
-$Button14.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button14.Add_Click({StartBurpPro})
-$main_form.Controls.Add($Button14)
+############# StartBurpPro
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "BurpSuite Pro"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({StartBurpPro})
+$main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############ BUTTON34
-$Button34 = New-Object System.Windows.Forms.Button
-$Button34.AutoSize = $true
-$Button34.Text = "Kill adb.exe" #KillADB
-$Button34.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button34.Add_Click({KillADB})
-$main_form.Controls.Add($Button34)
-$vShift = $vShift + 30
-
-
-############# BUTTON4
-$Button4 = New-Object System.Windows.Forms.Button
-$Button4.AutoSize = $true
-$Button4.Text = "SharpHound" #SharpHoundRun 
-$Button4.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button4.Add_Click({SharpHoundRun})
-$main_form.Controls.Add($Button4)
-$vShift = $vShift + 30
-
-############# BUTTON30
-$Button30 = New-Object System.Windows.Forms.Button
-$Button30.AutoSize = $true
-$Button30.Text = "Neo4j" #Neo4jRun 
-$Button30.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button30.Add_Click({Neo4jRun})
-$main_form.Controls.Add($Button30)
-$vShift = $vShift + 30
-
-############# BUTTON31
-$Button31 = New-Object System.Windows.Forms.Button
-$Button31.AutoSize = $true
-$Button31.Text = "Bloodhound" #Bloodhound 
-$Button31.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button31.Add_Click({BloodhoundRun})
-$main_form.Controls.Add($Button31)
-$vShift = $vShift + 30
-
-############# BUTTON32
-$Button32 = New-Object System.Windows.Forms.Button
-$Button32.AutoSize = $true
-$Button32.Text = "AutoGPT" #StartAutoGPT 
-$Button32.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button32.Add_Click({StartAutoGPT})
-$main_form.Controls.Add($Button32)
+############ KillADB
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Kill adb.exe"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({KillADB})
+$main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
 
-############# BUTTON33
-$Button33 = New-Object System.Windows.Forms.Button
-$Button33.AutoSize = $true
-$Button33.Text = "AUTOMATIC1111" #AUTOMATIC1111 
-$Button33.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button33.Add_Click({AUTOMATIC1111})
-$main_form.Controls.Add($Button33)
+############# SharpHoundRun
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "SharpHound"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({SharpHoundRun})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# Neo4jRun
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Neo4j"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({Neo4jRun})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# Bloodhound
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Bloodhound"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({BloodhoundRun})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# StartAutoGPT
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "AutoGPT"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({StartAutoGPT})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+
+############# AUTOMATIC1111
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "AUTOMATIC1111"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({AUTOMATIC1111})
+$main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
 ############# SHOW FORM
