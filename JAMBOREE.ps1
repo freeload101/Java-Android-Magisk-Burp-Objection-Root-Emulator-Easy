@@ -592,7 +592,7 @@ Function CMDPrompt {
 
 ############# AUTOMATIC1111
 Function AUTOMATIC1111 {
-	#  --xformers --deepdanbooru --disable-safe-unpickle --listen --theme dark
+	#  --xformers --deepdanbooru --disable-safe-unpickle --listen --theme dark --enable-insecure-extension-access
 	# stable-diffusion-webui\modules\processing.py
 	CheckPythonA1111
 	
