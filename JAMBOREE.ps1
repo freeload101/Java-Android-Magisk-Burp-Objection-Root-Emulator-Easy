@@ -753,7 +753,7 @@ Function AVDWipeData {
 
 	if ($pause -eq '1') {
 		Write-Host "[+] Wiping data you will need to rerun Magisk and push cert"
-		Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -wipe-data"
+		Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -wipe-data" -NoNewWindow
 	}
 	Elseif ($pause = '2') {
 		Write-Host "[+] Not wiping data..."
