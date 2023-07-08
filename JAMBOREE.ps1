@@ -226,7 +226,7 @@ Function CheckPython {
 $PipBatch = @'
 python -m pip %*
 '@
-$PythonXZ | Out-File -FilePath `"$VARCD\python\tools\Scripts\pip.bat`"
+$PipBatch | Out-File -Encoding Ascii -FilePath "$VARCD\python\tools\Scripts\pip.bat"
 # DO NOT INDENT THIS PART
 			$PythonXZ | Out-File -FilePath `"$VARCD\python\tools\Scripts\pip.bat`"
             }
