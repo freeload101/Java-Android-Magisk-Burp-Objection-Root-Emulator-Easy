@@ -66,6 +66,23 @@ $VARCD = (Get-Location)
 Write-Host "`n[+] Current Working Directory $VARCD"
 Set-Location -Path "$VARCD"
 
+# for pycharm and any other 
+Write-Host "[+] Setting base path for HOMEPATH,USERPROFILE,APPDATA,LOCALAPPDATA,TEMP and TMP to $VARCD"
+$env:HOMEPATH="$VARCD"
+$env:USERPROFILE="$VARCD"
+ 
+
+New-Item -Path "$VARCD\AppData\Roaming" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+$env:APPDATA="$VARCD\AppData\Roaming"
+
+New-Item -Path "$VARCD\AppData\Local" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+$env:LOCALAPPDATA="$VARCD\AppData\Local"
+
+New-Item -Path "$VARCD\AppData\Local\Temp" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+$env:TEMP="$VARCD\AppData\Local\Temp"
+$env:TMP="$VARCD\AppData\Local\Temp"
+
+
 Write-Host "[+] Setting ANDROID ENV Paths $VARCD"
 
 $env:ANDROID_SDK_ROOT="$VARCD"
@@ -216,12 +233,14 @@ Function CheckPython {
             Add-Type -AssemblyName System.IO.Compression.FileSystem
             Add-Type -AssemblyName System.IO.Compression
             [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\python.zip", "$VARCD\python")
-
+			
+			# for frida/AVD
+			Write-Host "[+] Installing objection and python-xz needed for AVD"
 			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade pip " -wait
-
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection " -wait
             # for Frida Android Binary
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait
+			
 # DO NOT INDENT THIS PART
 $PipBatch = @'
 python -m pip %*
@@ -354,8 +373,8 @@ Function AlwaysTrustUserCerts {
 Write-Host "[+] Checking for AlwaysTrustUserCerts.zip"
    if (-not(Test-Path -Path "$VARCD\AlwaysTrustUserCerts.zip" )) {
         try {
-            Write-Host "[+] Downloading Magisk Module AlwaysTrustUserCerts.zip"
             $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/NVISOsecurity/MagiskTrustUserCerts/releases/latest").assets | Where-Object name -like *.zip ).browser_download_url
+            Write-Host "[+] Downloading Magisk Module AlwaysTrustUserCerts.zip"
             Invoke-WebRequest -Uri $downloadUri -Out "$VARCD\AlwaysTrustUserCerts.zip"
             Write-Host "[+] Extracting AlwaysTrustUserCerts.zip"
             Expand-Archive -Path  "$VARCD\AlwaysTrustUserCerts.zip" -DestinationPath "$VARCD\trustusercerts" -Force
@@ -1108,6 +1127,57 @@ Write-Host "[+] EXIT"
 }
 
 
+
+############# CHECK pycharm
+Function CheckPyCharm {
+	Check7zip
+	CheckGit
+	CheckPython
+   if (-not(Test-Path -Path "$VARCD\pycharm-community" )) {
+        try {
+            Write-Host "[+] Downloading latest PyCharm Community"
+			$downloadUri = (Invoke-RestMethod -Method GET -Uri "https://data.services.jetbrains.com/products?code=PCP%2CPCC&release.type=release").releases.downloads.windows.link -match 'pycharm-community'| select -first 1
+            downloadFile "$downloadUri" "$VARCD\pycharm-community.exe"
+			Write-Host "[+] Extracting PyCharm"
+			Start-Process -FilePath "$VARCD\7zip\7z.exe" -ArgumentList "x pycharm-community.exe -o$VARCD\pycharm-community" -NoNewWindow -Wait
+			Start-Process -FilePath "$VARCD\pycharm-community\bin\pycharm64.exe" -WorkingDirectory "$VARCD\pycharm-community"   -NoNewWindow 
+            }
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+            Write-Host "[+] $VARCD\pycharm-community already exists starting PyCharm"
+			Start-Process -FilePath "$VARCD\pycharm-community\bin\pycharm64.exe" -WorkingDirectory "$VARCD\pycharm-community"   -NoNewWindow 
+			}
+}
+
+
+############# CHECK 7zip
+Function Check7zip {
+   if (-not(Test-Path -Path "$VARCD\7zip" )) {
+        try {
+            Write-Host "[+] Downloading latest 7zip"
+			$downloadUri = (Invoke-RestMethod -Method GET -Uri "https://www.7-zip.org/download.html")    -split '\n' -match '.*exe.*' | ForEach-Object {$_ -ireplace '.* href="','https://www.7-zip.org/' -ireplace  '".*',''}| select -first 1
+            downloadFile "$downloadUri" "$VARCD\7zip.exe"
+			$Env:__COMPAT_LAYER='RunAsInvoker'
+			Start-Process -FilePath "$VARCD\7zip.exe" -ArgumentList "/S /D=$VARCD\7zip" -WindowStyle hidden
+			}
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+            Write-Host "[+] $VARCD\7zip already exists "
+			
+			}
+}
+
+
+
+
+
+
 ######################################################################################################################### FUNCTIONS END
 
 
@@ -1313,6 +1383,16 @@ $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({AUTOMATIC1111})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
+
+############# CheckPyCharm
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "PyCharm"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({CheckPyCharm})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
 
 ############# SHOW FORM
 $main_form.ShowDialog()
