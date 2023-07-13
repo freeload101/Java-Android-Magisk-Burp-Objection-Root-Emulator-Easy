@@ -2,6 +2,39 @@
 -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
 start RedirectStandardOutput.txt
 start RedirectStandardError.txt
+
+https://github.com/Displax/safetynet-fix/releases/download/v2.4.0-MOD_1.3/safetynet-fix-v2.4.0-MOD_1.3-Zygisk.zip
+Changelog: v2.4.0-MOD_1.3
+
+Fix "stat /sys/fs/selinux" access time reading. Also removed archaic MIUI cross-region shenanigans. Thanks to PR by aviraxp!
+Ignore props changing on Xiaomi.eu. This fixes randomly attestation failings. So strange ROM...
+Added Riru version back. Remember that is need old MagiskHide support (and adding com.google.android.gms/com.google.android.gms.unstable to HideList) !
+Added microG version. Note there is some strange behavior that GMS can crash while run SN attest more than 2 times in one session. Just do not do this. This behavior should not affect applications in real life.
+
+https://github.com/kdrag0n/safetynet-fix/releases
+
+https://github.com/LSPosed/LSPosed.github.io/releases/download/shamiko-174/Shamiko-v0.7.3-174-release.zip
+
+
+https://github.com/Magisk-Modules-Repo/MagiskHidePropsConf/releases/download/v6.1.2/MagiskHidePropsConf-v6.1.2.zip
+
+
+all I want is 30 with google play and saftynet on real AVD not NOX Bluestacks etc .. see my project https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy
+
+* using this image / googls AVD system-images;android-30;google_apis_playstore;x86
+* running  RootAVD.bat" system-images\android-30\google_apis_playstore\x86\ramdisk.img FAKEBOOTIMG
+* no microG
+
+* I have tried with props config of Plxel 2 MagiskHide Props Config (MHPC)
+
+* tried with props https://forum.xda-developers.com/t/passing-safetynet-on-android-emulator.4469211/post-88345137
+
+*Tried: 
+	safetynet-fix-v2.3.1-MOD_3.0.zip
+	safetynet-fix-v2.4.0-MOD_1.3-Zygisk.zip
+	safetynet-fix-v2.4.0.zip
+
+
 #>
 $splashArt = @"
  "                                  .
@@ -316,6 +349,11 @@ downloadFile "https://chelpus.com/download/LuckyPatchers.com_Official_Installer_
 Write-Host "[+] Downloading YASNAC"
 $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/RikkaW/YASNAC/releases/latest").assets | Where-Object name -like *.apk ).browser_download_url
 downloadFile "$downloadUri" "$VARCD\APKS\yasnac.apk"
+
+Write-Host "[+] Downloading App Manager - Android package manager"
+$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/MuntashirAkon/AppManager/releases/latest").assets | Where-Object name -like *.apk ).browser_download_url
+downloadFile "$downloadUri" "$VARCD\APKS\AppManager.apk"
+
 
 $varadb=CheckADB
 $env:ANDROID_SERIAL=$varadb
@@ -759,7 +797,7 @@ if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
 
 	cd "$VARCD\rootAVD-master"
 	Write-Host "[+] Running installing magisk via rootAVD to ramdisk.img"
-	Start-Process -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "$VARCD\system-images\android-30\google_apis_playstore\x86\ramdisk.img" -WorkingDirectory "$VARCD\rootAVD-master\"  -NoNewWindow
+	Start-Process -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "system-images\android-30\google_apis_playstore\x86\ramdisk.img FAKEBOOTIMG" -WorkingDirectory "$VARCD\rootAVD-master\"  -NoNewWindow
 
     Write-Host "[+] rootAVD Finished if the emulator did not close/poweroff try again"
 }
