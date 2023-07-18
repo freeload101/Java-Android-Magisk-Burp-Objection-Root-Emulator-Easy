@@ -1,5 +1,6 @@
 <#
 -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+Start-Sleep -Seconds 2
 start RedirectStandardOutput.txt
 start RedirectStandardError.txt
 
@@ -93,17 +94,30 @@ function Draw-Splash{
 # splash art
 Draw-Splash $splashArt
 
+#backup USERPROFILE for BurpSuite Open Dialog Fix
+$USERPROFILE_BACKUP="$env:USERPROFILE"
+
 # set current directory
 $VARCD = (Get-Location)
 
 Write-Host "`n[+] Current Working Directory $VARCD"
 Set-Location -Path "$VARCD"
 
+ 
 # for pycharm and any other 
 Write-Host "[+] Setting base path for HOMEPATH,USERPROFILE,APPDATA,LOCALAPPDATA,TEMP and TMP to $VARCD"
 $env:HOMEPATH="$VARCD"
 $env:USERPROFILE="$VARCD"
- 
+
+<#
+# fix for burp suite open dialog broken when changing %USERPROFILE% but not working tho ...
+Write-Host "[+] Setting Share Folder Documents fix for Burp Suite Open Dialog"
+New-Item -Path "$VARCD\Documents" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+Start-Process -FilePath "$env:SystemRoot\System32\reg.exe" -WorkingDirectory "$VARCD" -ArgumentList " add `"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders`" /v Personal /t REG_SZ /d `"$VARCD\Documents`" /f " -wait			
+Start-Sleep -Seconds 2
+reg query "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"			
+Start-Sleep -Seconds 10
+#>
 
 New-Item -Path "$VARCD\AppData\Roaming" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 $env:APPDATA="$VARCD\AppData\Roaming"
@@ -115,7 +129,10 @@ New-Item -Path "$VARCD\AppData\Local\Temp" -ItemType Directory  -ErrorAction Sil
 $env:TEMP="$VARCD\AppData\Local\Temp"
 $env:TMP="$VARCD\AppData\Local\Temp"
 
+# fix for burp suite Documents Path
+New-Item -Path "$VARCD\Documents" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 
+ 
 Write-Host "[+] Setting ANDROID ENV Paths $VARCD"
 
 $env:ANDROID_SDK_ROOT="$VARCD"
@@ -821,6 +838,8 @@ Function AVDWipeData {
 ############# StartBurp
 Function StartBurp {
     CheckBurp
+	Write-Host "[+] Setting $env:USERPROFILE back to $USERPROFILE_BACKUP to fix open dialog for Burp Suite"
+	$env:USERPROFILE="$USERPROFILE_BACKUP"
     Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "  
 	Write-Host "[+] Waiting for Burp Suite to download cert"
 	Retry{PullCert "Error PullCert"} # -maxAttempts 10
@@ -829,6 +848,8 @@ Function StartBurp {
 ############# StartBurpPro
 Function StartBurpPro {
     CheckBurp
+	Write-Host "[+] Setting $env:USERPROFILE back to $USERPROFILE_BACKUP to fix open dialog for Burp Suite"
+	$env:USERPROFILE="$USERPROFILE_BACKUP"
 	$BurpProLatest = Get-ChildItem -Force -Recurse -File -Path "$VARCD" -Depth 0 -Filter *pro*.jar -ErrorAction SilentlyContinue | Sort-Object LastwriteTime -Descending | select -first 1
 	Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\$BurpProLatest`" --use-defaults  && "
 	# wait for burp to setup env paths for config
@@ -1434,3 +1455,5 @@ $vShift = $vShift + 30
 
 ############# SHOW FORM
 $main_form.ShowDialog()
+
+
