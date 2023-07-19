@@ -73,6 +73,7 @@ Included `%USERPROFILE%\AppData\Roaming\BurpSuite\ConfigLibrary_JAMBOREE_Crawl_L
 
 |Core|Status|
 |--|--|
+|PyCharm|✔️|
 |AUTOMATIC1111|✔️|
 |AutoGPT|✔️|
 |Bloodhound|✔️|
