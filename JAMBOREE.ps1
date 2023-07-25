@@ -164,7 +164,7 @@ Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 Add-Type -assembly System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
-$main_form.Text = "JAMBOREE 2.0"
+$main_form.Text = "JAMBOREE 2.1"
 
 $hShift = 0
 $vShift = 0
@@ -1232,6 +1232,61 @@ Function Check7zip {
 			}
 }
 
+############# DEBLOAD TOOL
+Function Debloat {
+    # check for ADB
+	# check for adb devices
+	# use warnings and code from .bat to make sure adb works
+	# check pkg csv for lenth to match list ? if not ask if they want to run again ?
+	
+	Write-Host "[+] Dumping package list"
+	Write-Host "[+] THIS TAKES A LONG TIME TO DO BECAUSE EACH APK HAS TO BE DECOMPRESSED TO GET THE APP LABEL"
+
+	Start-Process -WindowStyle hidden -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm list packages`" "  -RedirectStandardOutput pkglist.txt 
+	Start-Sleep -Seconds 5
+
+	$PkgList = (Get-Content "$VARCD\pkglist.txt")  -replace 'package:', ''
+
+	# SO SLOW check for file first ...
+	$PkgList |select -first 10 | ForEach-Object{
+    Start-Process -WindowStyle hidden -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm path $_ `" "  -RedirectStandardOutput "$VARCD\Output.txt"    -Wait  
+    $PkgPath=(Get-Content "$VARCD\Output.txt") -replace 'package:', ''
+    $PkgLabel = (Start-Process -WindowStyle hidden -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"/data/local/tmp/aapt2 dump badging $PkgPath  `" "  -RedirectStandardOutput "Output.txt" -Wait)
+    $PkgLabel=(Get-Content "$VARCD\Output.txt") -replace 'package:', '' -match 'application-label' -replace 'application-label:', '' -replace '''', ''|select -first 1
+    Write-Host "[+] $_,$PkgPath,$PkgLabel"
+
+    $report = New-Object psobject
+    $report | Add-Member -MemberType NoteProperty -name PkgLabel -Value $PkgLabel
+    $report | Add-Member -MemberType NoteProperty -name PkgName -Value $_
+    $report | Add-Member -MemberType NoteProperty -name PkgPath -Value $PkgPath
+    $report | export-csv "$VARCD\PkgInfo.csv"   -Append
+
+	} 
+
+	$PkgListTarget = (import-csv "$VARCD\PkgInfo.csv") |  Out-GridView -Title "Select Package to try to Disable or Uninstall"  -OutputMode Multiple
+
+	Write-Host "[+] PkgListTarget us $PkgListTarget"
+
+	$PkgListTarget = $PkgListTarget.PkgName
+
+	Write-Host "[+] Stopping $PkgListTarget "
+	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"am force-stop $PkgListTarget `" " -NoNewWindow  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+
+	Write-Host "[+] Wiping data for $PkgListTarget "
+	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c `"rm -rf /data/data/$PkgListTarget/cache/*`" `" " -NoNewWindow  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"run-as $PkgListTarget -c `"rm -rf cache/* `" " -NoNewWindow  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm clear $PkgListTarget `" " -NoNewWindow  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+
+	Write-Host "[+] Setting battery restricted  for $PkgListTarget "
+	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"appops set $PkgListTarget RUN_ANY_IN_BACKGROUND ignore `" `" " -NoNewWindow  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+	 
+	Write-Host "[+] Disabling for $PkgListTarget "
+	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm disable --user 0 $PkgListTarget `" `" " -NoNewWindow  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+
+	Write-Host "[+] Uninstall  for $PkgListTarget "
+	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm uninstall -k --user 0 $PkgListTarget `" `" " -NoNewWindow  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+}
+
 
 
 
@@ -1449,6 +1504,15 @@ $Button.AutoSize = $true
 $Button.Text = "PyCharm"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({CheckPyCharm})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# Debloat
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Debloat UI Tool"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({Debloat})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
