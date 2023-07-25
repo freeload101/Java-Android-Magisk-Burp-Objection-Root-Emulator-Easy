@@ -1242,13 +1242,13 @@ Function Debloat {
 	Write-Host "[+] Dumping package list"
 	Write-Host "[+] THIS TAKES A LONG TIME TO DO BECAUSE EACH APK HAS TO BE DECOMPRESSED TO GET THE APP LABEL"
 
-	Start-Process -WindowStyle hidden -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm list packages`" "  -RedirectStandardOutput pkglist.txt 
+	Start-Process -WindowStyle hidden -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm list packages`" "  -RedirectStandardOutput "$VARCD\pkglist.txt"  
 	Start-Sleep -Seconds 5
 
 	$PkgList = (Get-Content "$VARCD\pkglist.txt")  -replace 'package:', ''
 
 	# SO SLOW check for file first ...
-	$PkgList |select -first 10 | ForEach-Object{
+	$PkgList | ForEach-Object{
     Start-Process -WindowStyle hidden -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm path $_ `" "  -RedirectStandardOutput "$VARCD\Output.txt"    -Wait  
     $PkgPath=(Get-Content "$VARCD\Output.txt") -replace 'package:', ''
     $PkgLabel = (Start-Process -WindowStyle hidden -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"/data/local/tmp/aapt2 dump badging $PkgPath  `" "  -RedirectStandardOutput "Output.txt" -Wait)
