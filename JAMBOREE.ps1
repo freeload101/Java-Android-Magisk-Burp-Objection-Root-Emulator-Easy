@@ -1232,13 +1232,36 @@ Function Check7zip {
 			}
 }
 
-############# DEBLOAD TOOL
+############# CHECK aapt2
+Function Checkaapt2 {
+   if (-not(Test-Path -Path "$VARCD\aapt2" )) {
+        try {
+            Write-Host "[+] Downloading aapt2"
+            downloadFile "https://github.com/JonForShort/android-tools/raw/master/build/android-11.0.0_r33/aapt2/armeabi-v7a/bin/aapt2" "$VARCD\aapt2"
+			}
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+            Write-Host "[+] aapt2 already exists "
+			
+			}
+}
+
+############# Debloat TOOL
 Function Debloat {
+	Checkaapt2
+	
     # check for ADB
 	# check for adb devices
 	# use warnings and code from .bat to make sure adb works
 	# check pkg csv for lenth to match list ? if not ask if they want to run again ?
 	
+	Write-Host "[+] Pushing aapt2 to /data/local/tmp/ please wait ..."
+	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push aapt2 `"/data/local/tmp/`" " -NoNewWindow -Wait
+	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"chmod 777 /data/local/tmp/aapt2`" " -NoNewWindow -Wait
+
 	Write-Host "[+] Dumping package list"
 	Write-Host "[+] THIS TAKES A LONG TIME TO DO BECAUSE EACH APK HAS TO BE DECOMPRESSED TO GET THE APP LABEL"
 
