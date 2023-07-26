@@ -1247,22 +1247,32 @@ Function Debloat {
 
 	$PkgList = (Get-Content "$VARCD\pkglist.txt")  -replace 'package:', ''
 
-	# SO SLOW check for file first ...
-	$PkgList | ForEach-Object{
-    Start-Process -WindowStyle hidden -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm path $_ `" "  -RedirectStandardOutput "$VARCD\Output.txt"    -Wait  
-    $PkgPath=(Get-Content "$VARCD\Output.txt") -replace 'package:', ''
-    $PkgLabel = (Start-Process -WindowStyle hidden -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"/data/local/tmp/aapt2 dump badging $PkgPath  `" "  -RedirectStandardOutput "Output.txt" -Wait)
-    $PkgLabel=(Get-Content "$VARCD\Output.txt") -replace 'package:', '' -match 'application-label' -replace 'application-label:', '' -replace '''', ''|select -first 1
-    Write-Host "[+] $_,$PkgPath,$PkgLabel"
+	if (-not(Test-Path -Path "$VARCD\PkgInfo.csv" )) {
+	try {
+		# SO SLOW check for file first ...
+			$PkgList | ForEach-Object{
+			Start-Process -WindowStyle hidden -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm path $_ `" "  -RedirectStandardOutput "$VARCD\Output.txt"    -Wait  
+			$PkgPath=(Get-Content "$VARCD\Output.txt") -replace 'package:', ''
+			$PkgLabel = (Start-Process -WindowStyle hidden -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"/data/local/tmp/aapt2 dump badging $PkgPath  `" "  -RedirectStandardOutput "Output.txt" -Wait)
+			$PkgLabel=(Get-Content "$VARCD\Output.txt") -replace 'package:', '' -match 'application-label' -replace 'application-label:', '' -replace '''', ''|select -first 1
+			Write-Host "[+] $_,$PkgPath,$PkgLabel"
 
-    $report = New-Object psobject
-    $report | Add-Member -MemberType NoteProperty -name PkgLabel -Value $PkgLabel
-    $report | Add-Member -MemberType NoteProperty -name PkgName -Value $_
-    $report | Add-Member -MemberType NoteProperty -name PkgPath -Value $PkgPath
-    $report | export-csv "$VARCD\PkgInfo.csv"   -Append
-
-	} 
-
+			$report = New-Object psobject
+			$report | Add-Member -MemberType NoteProperty -name PkgLabel -Value $PkgLabel
+			$report | Add-Member -MemberType NoteProperty -name PkgName -Value $_
+			$report | Add-Member -MemberType NoteProperty -name PkgPath -Value $PkgPath
+			$report | export-csv "$VARCD\PkgInfo.csv"   -Append
+			} 
+		}
+			catch {
+				throw $_.Exception.Message
+		}
+	}
+	else {
+		Write-Host "[+] $VARCD\PkgInfo.csv already exists delete it to refresh"
+		
+	}
+	
 	$PkgListTarget = (import-csv "$VARCD\PkgInfo.csv") |  Out-GridView -Title "Select Package to try to Disable or Uninstall"  -OutputMode Multiple
 
 	Write-Host "[+] PkgListTarget us $PkgListTarget"
