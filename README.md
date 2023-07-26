@@ -14,8 +14,9 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 
 I would like to make it even easier to use but I don't want to spend more time developing it if nobody is going to use it! Please let me know if you like it and open bugs/suggestions/feature request etc! you can contact me at https://rmccurdy.com !
 
-![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/91647e68-b968-415b-96fc-105bbf374246)
+![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/defdb8d1-5464-4d9e-93b3-bf78b2771008)
 
+![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/febfce57-3087-4595-b240-272d68637215)
 
 
 
