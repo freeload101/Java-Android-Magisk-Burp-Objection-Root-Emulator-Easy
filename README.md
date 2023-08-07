@@ -5,7 +5,9 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 * Run Android apps and pentest without the adware and malware of BlueStacks or NOX. 
 * Run BloodHound Active Directory auditing tool
 * AUTOMATIC1111  Stable Diffusion web UI A browser interface based on Gradio library for Stable Diffusion
-* AutoGPT  ( Setup for Pay as you go gpt3-turbo https://platform.openai.com/account/usage ) 
+* AutoGPT  ( Setup for Pay as you go gpt3-turbo https://platform.openai.com/account/usage )
+* PyCharm
+* Android Debloat Tools
 
 ### How it works:
 
