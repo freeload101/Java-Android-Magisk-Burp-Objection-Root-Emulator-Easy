@@ -1,5 +1,9 @@
 ## Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
- 
+
+## DO NOT USE -PROXY IN EMULATOR YOU MUST SET PROXY TO 10.0.2.2 IN UI -PROXY MAKES EVERYTHING UNSTABLE ## 
+
+## NEW VIDEO TUTORIAL SHOULD BE OUT BY 10/16/2023 ##
+
 Get a working portable Python/Git/Java environment on Windows in **SECONDS** without having local administrator, regardless of your broken Python environment. Our open-source script downloads directly from proper sources without any binaries. While the code may not be perfect, it includes many useful PowerShell tricks.
 
 * Run Android apps and pentest without the adware and malware of BlueStacks or NOX. 
@@ -50,7 +54,7 @@ From command prompt (NO SPACES IN THE PATH)
 
     powershell -ExecutionPolicy Bypass -Command "[scriptblock]::Create((Invoke-WebRequest "https://raw.githubusercontent.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/main/JAMBOREE.ps1").Content).Invoke();"
 
- 
+
 
 More infomation on bypass Root Detection and SafeNet
 https://www.droidwin.com/how-to-hide-root-from-apps-via-magisk-denylist/
