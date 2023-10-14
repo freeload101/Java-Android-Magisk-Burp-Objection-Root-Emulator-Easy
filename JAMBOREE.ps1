@@ -288,6 +288,8 @@ Function CheckPython {
 			Write-Host "[+] Installing objection and python-xz needed for AVD"
 			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade pip " -wait
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection " -wait
+			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade setuptools " -wait
+
             # for Frida Android Binary
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait
 			
@@ -714,38 +716,6 @@ Function CheckPythonA1111 {
             Write-Host "[+] $VARCD\pythonA111 already exists"
             }
 }
-
-############# CHECK PYTHON
-Function CheckPython {
-   if (-not(Test-Path -Path "$VARCD\python" )) {
-        try {
-            Write-Host "[+] Downloading Python nuget package"
-            downloadFile "https://www.nuget.org/api/v2/package/python" "$VARCD\python.zip"
-            New-Item -Path "$VARCD\python" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
-            Write-Host "[+] Extracting Python nuget package"
-            Add-Type -AssemblyName System.IO.Compression.FileSystem
-            Add-Type -AssemblyName System.IO.Compression
-            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\python.zip", "$VARCD\python")
-
-            Write-Host "[+] Running pip install --upgrade pip"
-	        Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow
-           
-            Write-Host "[+] Running pip install objection"
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection " -wait -NoNewWindow
-           
-            # for Frida Android Binary
-            Write-Host "[+] Running pip install python-xz"
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait -NoNewWindow
-            }
-                catch {
-                    throw $_.Exception.Message
-                }
-            }
-        else {
-            Write-Host "[+] $VARCD\python already exists"
-            }
-}
-
 
 ############# AutoGPTEnv
 Function AutoGPTEnv {
@@ -1552,5 +1522,3 @@ $vShift = $vShift + 30
 
 ############# SHOW FORM
 $main_form.ShowDialog()
-
-
