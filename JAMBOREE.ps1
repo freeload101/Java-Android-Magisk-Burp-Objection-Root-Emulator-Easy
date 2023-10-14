@@ -164,7 +164,7 @@ Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 Add-Type -assembly System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
-$main_form.Text = "JAMBOREE 2.1"
+$main_form.Text = "JAMBOREE 3.0"
 
 $hShift = 0
 $vShift = 0
@@ -288,8 +288,6 @@ Function CheckPython {
 			Write-Host "[+] Installing objection and python-xz needed for AVD"
 			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade pip " -wait
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection " -wait
-			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade setuptools " -wait
-
             # for Frida Android Binary
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait
 			
@@ -373,6 +371,11 @@ Write-Host "[+] Downloading App Manager - Android package manager"
 $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/MuntashirAkon/AppManager/releases/latest").assets | Where-Object name -like *.apk ).browser_download_url
 downloadFile "$downloadUri" "$VARCD\APKS\AppManager.apk"
 
+Write-Host "[+] Downloading AndroGoat.apk"
+downloadFile "https://github.com/satishpatnayak/MyTest/raw/master/AndroGoat.apk" "$VARCD\APKS\AndroGoat.apk"
+
+
+
 
 $varadb=CheckADB
 $env:ANDROID_SERIAL=$varadb
@@ -411,6 +414,10 @@ Copy-Item -Path "$VARCD\BURP.pem" -Destination "$VARCD\$CertSubjectHash" -Force
 
 Write-Host "[+] Pushing $VARCD\$CertSubjectHash to /sdcard "
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push $VARCD\$CertSubjectHash   /sdcard"  -NoNewWindow -Wait
+
+Write-Host "[+] Pushing "$VARCD\BURP.der" to  /data/local/tmp/cert-der.crt "
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\BURP.der`"   /data/local/tmp/cert-der.crt"  -NoNewWindow -Wait
+
 
 Write-Host "[+] Pushing Copying /scard/$CertSubjectHash /data/misc/user/0/cacerts-added "
 
@@ -506,9 +513,14 @@ Start-Sleep -Seconds 2
 $PackageName = (Get-Content -Path "$VARCDRedirectStandardOutput.txt") -replace 'package:',''    | Out-GridView -Title "Select Package to Run Objection" -OutputMode Single
 
 
+#Write-Host "[+] Starting Objection"
+#Start-Process -FilePath "$VARCD\python\tools\Scripts\objection.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " --gadget $PackageName explore "
 
-Write-Host "[+] Starting Objection"
-Start-Process -FilePath "$VARCD\python\tools\Scripts\objection.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " --gadget $PackageName explore "
+Write-Host "[+] Downloading Frida Root/SSL Depinning JAMBOREE_SSL_N_ANTIROOT.JS"
+downloadFile "https://raw.githubusercontent.com/freeload101/SCRIPTS/master/JS/JAMBOREE_SSL_N_ANTIROOT.JS" "$VARCD\JAMBOREE_SSL_N_ANTIROOT.JS"
+
+Write-Host "[+] Starting Frida with JAMBOREE_SSL_N_ANTIROOT.JS"
+Start-Process -FilePath "$VARCD\python\tools\Scripts\frida.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " -l `"$VARCD\JAMBOREE_SSL_N_ANTIROOT.JS`" -f $PackageName -U "
 
 start-sleep -Seconds 5
 # wscript may not work as good ?
@@ -617,7 +629,9 @@ Function AVDStart {
 			Write-Host "[+] $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup"
 			Write-Host "[+] Starting AVD emulator"
 			Start-Sleep -Seconds 2
-			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
+			Write-Host "[+] Do not run emulator with  -http-proxy 127.0.0.1:8080 it is not stable"
+			#Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
+            Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system " -NoNewWindow
             }
                 catch {
                     throw $_.Exception.Message
@@ -716,6 +730,7 @@ Function CheckPythonA1111 {
             Write-Host "[+] $VARCD\pythonA111 already exists"
             }
 }
+ 
 
 ############# AutoGPTEnv
 Function AutoGPTEnv {
@@ -1302,7 +1317,7 @@ Function Debloat {
 ############# AVDDownload
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "AVD With Proxy Support" #AVDDownload
+$Button.Text = "Start AVD" #AVDDownload
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({Retry({AVDDownload "Error AVDDownload"})})
 $main_form.Controls.Add($Button)
@@ -1376,7 +1391,7 @@ $vShift = $vShift + 30
 ############# StartFrida
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "Frida/Objection"
+$Button.Text = "Frida/AntiRoot/SSLDepinning"
 $Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button.Add_Click({StartFrida})
 $main_form.Controls.Add($Button)
