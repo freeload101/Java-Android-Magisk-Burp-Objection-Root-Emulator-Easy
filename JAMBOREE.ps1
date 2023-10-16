@@ -692,7 +692,7 @@ Function AVDStart {
 			Write-Host "[+] Starting AVD emulator"
 			Start-Sleep -Seconds 2
 			Write-Host "[+] Do not run emulator with  -http-proxy 127.0.0.1:8080 it is not stable"
-			#Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
+			# DO NOT USE THIS IT IS BUGGY ... Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
             Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system " -NoNewWindow
             }
                 catch {
@@ -704,7 +704,7 @@ Function AVDStart {
             Write-Host "[+] AVDStart $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup"
 			Write-Host "[+] Starting AVD emulator"
 			Start-Sleep -Seconds 2
-			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
+			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system " -NoNewWindow
 			
             }
 }
@@ -1431,12 +1431,12 @@ $Button.Add_Click({StartBurp})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# AVDDownload
+############# AVDStart
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "Start AVD" #AVDDownload
+$Button.Text = "Start AVD" #AVDStart
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({Retry({AVDDownload "Error AVDDownload"})})
+$Button.Add_Click({AVDStart})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
