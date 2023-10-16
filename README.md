@@ -1,7 +1,4 @@
 ## Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
-
-## DO NOT USE -PROXY IN EMULATOR YOU MUST SET PROXY TO 10.0.2.2 IN UI -PROXY MAKES EVERYTHING UNSTABLE ## 
-
  
 Get a working portable Python/Git/Java environment on Windows in **SECONDS** without having local administrator, regardless of your broken Python environment. Our open-source script downloads directly from proper sources without any binaries. While the code may not be perfect, it includes many useful PowerShell tricks.
 
