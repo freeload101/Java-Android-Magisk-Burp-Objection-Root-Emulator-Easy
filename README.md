@@ -2,8 +2,7 @@
 
 ## DO NOT USE -PROXY IN EMULATOR YOU MUST SET PROXY TO 10.0.2.2 IN UI -PROXY MAKES EVERYTHING UNSTABLE ## 
 
-## NEW VIDEO TUTORIAL SHOULD BE OUT BY 10/16/2023 ##
-
+ 
 Get a working portable Python/Git/Java environment on Windows in **SECONDS** without having local administrator, regardless of your broken Python environment. Our open-source script downloads directly from proper sources without any binaries. While the code may not be perfect, it includes many useful PowerShell tricks.
 
 * Run Android apps and pentest without the adware and malware of BlueStacks or NOX. 
@@ -22,9 +21,9 @@ I would like to make it even easier to use but I don't want to spend more time d
 
 ## Burp/Android Emulator (Video Tutorial )
 
-https://youtu.be/G1Iv-OoacpQ
+[https://youtu.be/G1Iv-OoacpQ](https://youtu.be/vfWmSwTOPR4)
 
-[![name](https://user-images.githubusercontent.com/4307863/225742029-c7090555-049f-422d-bb61-59852bc35cda.png)](https://youtu.be/G1Iv-OoacpQ)
+[![name](https://user-images.githubusercontent.com/4307863/225742029-c7090555-049f-422d-bb61-59852bc35cda.png)](https://youtu.be/vfWmSwTOPR4)
 
 
 ![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/defdb8d1-5464-4d9e-93b3-bf78b2771008)
