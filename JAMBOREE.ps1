@@ -180,7 +180,11 @@ function CheckADB {
     $varadb = $varadb -match 'device\b' -replace 'device','' -replace '\s',''
     Write-Host "[+] Online Device: $varadb"
         if (($varadb.length -lt 1 )) {
-            Write-Host "[+] ADB Failed! Check for unauthorized devices listed in ADB!"
+            Write-Host "[+] ADB Failed! Check for unauthorized devices listed in ADB UI or use ! AVD Wipe Button"
+			$wshShell = New-Object -ComObject Wscript.Shell
+			$message = "Check for unauthorized devices listed in ADB UI or use ! AVD Wipe Button"
+			$wshShell.Popup($message, 0, "ADB Failed!", 48)
+			
 			adb devices
         }
 	return $varadb
@@ -396,6 +400,10 @@ Write-Host "[+] Complete Installing Base APKS"
 function CertPush {
 Write-Host "[+] Starting CertPush"
 
+$wshShell = New-Object -ComObject Wscript.Shell
+$message = "Be sure to go to WiFi settings and set proxy to 10.0.2.2:8080"
+$wshShell.Popup($message, 0, "Proxy Configuration Warning", 48)
+
 AlwaysTrustUserCerts
 
 $varadb=CheckADB
@@ -511,11 +519,7 @@ Write-Host "[+] Running Frida-ps select package to run Objection on:"
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c pm list packages  `" "  -NoNewWindow -RedirectStandardOutput "$VARCDRedirectStandardOutput.txt"
 Start-Sleep -Seconds 2
 $PackageName = (Get-Content -Path "$VARCDRedirectStandardOutput.txt") -replace 'package:',''    | Out-GridView -Title "Select Package to Run Objection" -OutputMode Single
-
-
-#Write-Host "[+] Starting Objection"
-#Start-Process -FilePath "$VARCD\python\tools\Scripts\objection.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " --gadget $PackageName explore "
-
+ 
 Write-Host "[+] Downloading Frida Root/SSL Depinning JAMBOREE_SSL_N_ANTIROOT.JS"
 downloadFile "https://raw.githubusercontent.com/freeload101/SCRIPTS/master/JS/JAMBOREE_SSL_N_ANTIROOT.JS" "$VARCD\JAMBOREE_SSL_N_ANTIROOT.JS"
 
@@ -523,17 +527,76 @@ Write-Host "[+] Starting Frida with JAMBOREE_SSL_N_ANTIROOT.JS"
 Start-Process -FilePath "$VARCD\python\tools\Scripts\frida.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " -l `"$VARCD\JAMBOREE_SSL_N_ANTIROOT.JS`" -f $PackageName -U "
 
 start-sleep -Seconds 5
-# wscript may not work as good ?
-#$SendWait = New-Object -ComObject wscript.shell;
-#$SendWait.SendKeys('android sslpinning disable')
-
-Add-Type -AssemblyName System.Windows.Forms
-[System.Windows.Forms.SendKeys]::SendWait("android sslpinning disable")
-start-sleep -Seconds 1
-[System.Windows.Forms.SendKeys]::SendWait("{enter}")
-[System.Windows.Forms.SendKeys]::SendWait("{enter}")
 
 }
+
+
+Function StartObjection {
+CheckPython
+   if (-not(Test-Path -Path "$VARCD\frida-server" )) {
+        try {
+            Write-Host "[+] Downloading Latest frida-server-*android-x86.xz "
+            $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/frida/frida/releases/latest").assets | Where-Object name -like frida-server-*-android-x86.xz ).browser_download_url
+            downloadFile  $downloadUri "$VARCD\frida-server-android-x86.xz"
+            Write-Host "[+] Extracting frida-server-android-x86.xz"
+# don't mess with spaces for these lines for python ...
+$PythonXZ = @'
+import xz
+import shutil
+
+with xz.open('frida-server-android-x86.xz') as f:
+    with open('frida-server', 'wb') as fout:
+        shutil.copyfileobj(f, fout)
+'@
+# don't mess with spaces for these lines for python ...
+
+            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\frida-server-extract.py`" "
+            $PythonXZ | Out-File -FilePath frida-server-extract.py
+            # change endoding from Windows-1252 to UTF-8
+            Set-Content -Path "$VARCD\frida-server-extract.py" -Value $PythonXZ -Encoding UTF8 -PassThru -Force
+
+            }
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+            Write-Host "[+] $VARCD\frida-server already exists"
+            }
+
+
+
+
+$varadb=CheckADB
+$env:ANDROID_SERIAL=$varadb
+
+Write-Host "[+] Pushing $VARCD\frida-server"
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c killall frida-server;sleep 1`" "  -NoNewWindow -Wait -ErrorAction SilentlyContinue |Out-Null
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\frida-server`"   /sdcard"  -NoNewWindow -Wait
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp -R /sdcard/frida-server /data/local/tmp`" " -NoNewWindow -Wait
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chmod 777 /data/local/tmp/frida-server`" "  -NoNewWindow -Wait
+Write-Host "[+] Starting /data/local/tmp/frida-server"
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c /data/local/tmp/frida-server &`" "  -NoNewWindow 
+
+Write-Host "[+] Running Frida-ps select package to run Objection on:"
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c pm list packages  `" "  -NoNewWindow -RedirectStandardOutput "$VARCDRedirectStandardOutput.txt"
+Start-Sleep -Seconds 2
+$PackageName = (Get-Content -Path "$VARCDRedirectStandardOutput.txt") -replace 'package:',''    | Out-GridView -Title "Select Package to Run Objection" -OutputMode Single
+
+Write-Host "[+] Starting Objection"
+Start-Process -FilePath "$VARCD\python\tools\Scripts\objection.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " --gadget $PackageName explore "
+
+#Send keys needd for objection or whatever...
+#Add-Type -AssemblyName System.Windows.Forms
+#[System.Windows.Forms.SendKeys]::SendWait("android sslpinning disable")
+#start-sleep -Seconds 1
+#[System.Windows.Forms.SendKeys]::SendWait("{enter}")
+#[System.Windows.Forms.SendKeys]::SendWait("{enter}")
+
+Start-sleep -Seconds 5
+ 
+}
+
 
 ############# StartADB
 function StartADB {
@@ -545,7 +608,7 @@ function StartADB {
 ############# AVDDownload
 Function AVDDownload {
 
-    if (-not(Test-Path -Path "$VARCD\cmdline-tools" )) {
+    if (-not(Test-Path -Path "$VARCD\emulator" )) {
         try {
             Write-Host "[+] Downloading Android Command Line Tools"
             downloadFile "https://dl.google.com/android/repository/commandlinetools-win-9477386_latest.zip" "$VARCD\commandlinetools-win.zip"
@@ -574,7 +637,6 @@ Function AVDDownload {
 			Write-Host "[+] AVD Install Complete Creating AVD Device"
 			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-30;google_apis_playstore;x86`"  -d `"pixel_2`" --force" -Wait -Verbose
 			Start-Sleep -Seconds 2
-			AVDStart
             }
                 catch {
                     throw $_.Exception.Message
@@ -582,10 +644,9 @@ Function AVDDownload {
 			
             }
         else {
-            Write-Host "[+] $VARCD\cmdline-tools already exists remove everything but this script to perform full reinstall/setup"
+            Write-Host "[+] AVDDownload: $VARCD\cmdline-tools already exists remove everything but this script to perform full reinstall/setup"
             Write-Host "[+] Current Working Directory $VARCD"
             Start-Sleep -Seconds 1
-			AVDStart
             }
  
    
@@ -623,6 +684,7 @@ Function HAXMInstall {
 
 ############# AVDStart
 Function AVDStart {
+	CheckProcess "Burp" "StartBurp"
 	if (-not(Test-Path -Path "$VARCD\emulator" )) {
         try {
 			AVDDownload
@@ -639,7 +701,7 @@ Function AVDStart {
 			
             }
     else {
-            Write-Host "[+] $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup"
+            Write-Host "[+] AVDStart $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup"
 			Write-Host "[+] Starting AVD emulator"
 			Start-Sleep -Seconds 2
 			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
@@ -1143,7 +1205,7 @@ Function CheckGit {
 
 
 
-############# CHECK CheckGit
+############# CHECK StartAutoGPT
 Function StartAutoGPT {
 CheckPython
 CheckGit
@@ -1306,22 +1368,22 @@ Function Debloat {
 }
 
 
+############# CheckProcess
+function CheckProcess($windowTitle, $ProcessName) {
 
+	if (Get-Process | Where-Object { $_.MainWindowTitle -like "*$windowTitle*" }) {
+		Write-Host "Window with title '$windowTitle' is running."
+	} else {
+		Write-Host "Starting $ProcessName"
+		$ProcessName
+}
+}
 
 
 
 ######################################################################################################################### FUNCTIONS END
 
 
-
-############# AVDDownload
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Start AVD" #AVDDownload
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({Retry({AVDDownload "Error AVDDownload"})})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
 
 ############# accel
 $pname=(Get-WMIObject win32_Processor | Select-Object name)
@@ -1360,13 +1422,21 @@ else {
 	$vShift = $vShift + 30
 }
 
-   
 ############# StartBurp
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
 $Button.Text = "BurpSuite"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({StartBurp})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# AVDDownload
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Start AVD" #AVDDownload
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({Retry({AVDDownload "Error AVDDownload"})})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
@@ -1394,6 +1464,15 @@ $Button.AutoSize = $true
 $Button.Text = "Frida/AntiRoot/SSLDepinning"
 $Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button.Add_Click({StartFrida})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# StartObjection
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "StartObjection"
+$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
+$Button.Add_Click({StartObjection})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
@@ -1533,7 +1612,6 @@ $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({Debloat})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
-
 
 ############# SHOW FORM
 $main_form.ShowDialog()
