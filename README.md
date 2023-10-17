@@ -18,9 +18,9 @@ I would like to make it even easier to use but I don't want to spend more time d
 
 ## Burp/Android Emulator (Video Tutorial )
 
-[https://youtu.be/qD73hpfyqZs](https://youtu.be/qD73hpfyqZs)
+[https://youtu.be/TqFbkylWPcI](https://youtu.be/TqFbkylWPcI)
 
-[![name](https://user-images.githubusercontent.com/4307863/225742029-c7090555-049f-422d-bb61-59852bc35cda.png)](https://youtu.be/qD73hpfyqZs)
+[![name](https://user-images.githubusercontent.com/4307863/225742029-c7090555-049f-422d-bb61-59852bc35cda.png)](https://youtu.be/TqFbkylWPcI)
 
 
 ![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/defdb8d1-5464-4d9e-93b3-bf78b2771008)
