@@ -23,7 +23,8 @@ I would like to make it even easier to use but I don't want to spend more time d
 [![name](https://user-images.githubusercontent.com/4307863/225742029-c7090555-049f-422d-bb61-59852bc35cda.png)](https://youtu.be/TqFbkylWPcI)
 
 
-![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/defdb8d1-5464-4d9e-93b3-bf78b2771008)
+![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/5158c1b1-7465-445b-bcac-e5be4bd93110)
+
 
 ![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/febfce57-3087-4595-b240-272d68637215)
 
