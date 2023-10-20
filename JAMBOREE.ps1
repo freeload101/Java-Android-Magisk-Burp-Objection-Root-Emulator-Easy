@@ -164,7 +164,7 @@ Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 Add-Type -assembly System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
-$main_form.Text = "JAMBOREE 3.0"
+$main_form.Text = "JAMBOREE 2.1"
 
 $hShift = 0
 $vShift = 0
@@ -180,11 +180,7 @@ function CheckADB {
     $varadb = $varadb -match 'device\b' -replace 'device','' -replace '\s',''
     Write-Host "[+] Online Device: $varadb"
         if (($varadb.length -lt 1 )) {
-            Write-Host "[+] ADB Failed! Check for unauthorized devices listed in ADB UI or use ! AVD Wipe Button"
-			$wshShell = New-Object -ComObject Wscript.Shell
-			$message = "Check for unauthorized devices listed in ADB UI or use ! AVD Wipe Button"
-			$wshShell.Popup($message, 0, "ADB Failed!", 48)
-			
+            Write-Host "[+] ADB Failed! Check for unauthorized devices listed in ADB!"
 			adb devices
         }
 	return $varadb
@@ -375,11 +371,6 @@ Write-Host "[+] Downloading App Manager - Android package manager"
 $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/MuntashirAkon/AppManager/releases/latest").assets | Where-Object name -like *.apk ).browser_download_url
 downloadFile "$downloadUri" "$VARCD\APKS\AppManager.apk"
 
-Write-Host "[+] Downloading AndroGoat.apk"
-downloadFile "https://github.com/satishpatnayak/MyTest/raw/master/AndroGoat.apk" "$VARCD\APKS\AndroGoat.apk"
-
-
-
 
 $varadb=CheckADB
 $env:ANDROID_SERIAL=$varadb
@@ -400,10 +391,6 @@ Write-Host "[+] Complete Installing Base APKS"
 function CertPush {
 Write-Host "[+] Starting CertPush"
 
-$wshShell = New-Object -ComObject Wscript.Shell
-$message = "Be sure to go to WiFi settings and set proxy to 10.0.2.2:8080"
-$wshShell.Popup($message, 0, "Proxy Configuration Warning", 48)
-
 AlwaysTrustUserCerts
 
 $varadb=CheckADB
@@ -422,10 +409,6 @@ Copy-Item -Path "$VARCD\BURP.pem" -Destination "$VARCD\$CertSubjectHash" -Force
 
 Write-Host "[+] Pushing $VARCD\$CertSubjectHash to /sdcard "
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push $VARCD\$CertSubjectHash   /sdcard"  -NoNewWindow -Wait
-
-Write-Host "[+] Pushing "$VARCD\BURP.der" to  /data/local/tmp/cert-der.crt "
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\BURP.der`"   /data/local/tmp/cert-der.crt"  -NoNewWindow -Wait
-
 
 Write-Host "[+] Pushing Copying /scard/$CertSubjectHash /data/misc/user/0/cacerts-added "
 
@@ -519,84 +502,24 @@ Write-Host "[+] Running Frida-ps select package to run Objection on:"
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c pm list packages  `" "  -NoNewWindow -RedirectStandardOutput "$VARCDRedirectStandardOutput.txt"
 Start-Sleep -Seconds 2
 $PackageName = (Get-Content -Path "$VARCDRedirectStandardOutput.txt") -replace 'package:',''    | Out-GridView -Title "Select Package to Run Objection" -OutputMode Single
- 
-Write-Host "[+] Downloading Frida Root/SSL Depinning JAMBOREE_SSL_N_ANTIROOT.JS"
-downloadFile "https://raw.githubusercontent.com/freeload101/SCRIPTS/master/JS/JAMBOREE_SSL_N_ANTIROOT.JS" "$VARCD\JAMBOREE_SSL_N_ANTIROOT.JS"
-
-Write-Host "[+] Starting Frida with JAMBOREE_SSL_N_ANTIROOT.JS"
-Start-Process -FilePath "$VARCD\python\tools\Scripts\frida.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " -l `"$VARCD\JAMBOREE_SSL_N_ANTIROOT.JS`" -f $PackageName -U "
-
-start-sleep -Seconds 5
-
-}
 
 
-Function StartObjection {
-CheckPython
-   if (-not(Test-Path -Path "$VARCD\frida-server" )) {
-        try {
-            Write-Host "[+] Downloading Latest frida-server-*android-x86.xz "
-            $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/frida/frida/releases/latest").assets | Where-Object name -like frida-server-*-android-x86.xz ).browser_download_url
-            downloadFile  $downloadUri "$VARCD\frida-server-android-x86.xz"
-            Write-Host "[+] Extracting frida-server-android-x86.xz"
-# don't mess with spaces for these lines for python ...
-$PythonXZ = @'
-import xz
-import shutil
-
-with xz.open('frida-server-android-x86.xz') as f:
-    with open('frida-server', 'wb') as fout:
-        shutil.copyfileobj(f, fout)
-'@
-# don't mess with spaces for these lines for python ...
-
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\frida-server-extract.py`" "
-            $PythonXZ | Out-File -FilePath frida-server-extract.py
-            # change endoding from Windows-1252 to UTF-8
-            Set-Content -Path "$VARCD\frida-server-extract.py" -Value $PythonXZ -Encoding UTF8 -PassThru -Force
-
-            }
-                catch {
-                    throw $_.Exception.Message
-            }
-            }
-        else {
-            Write-Host "[+] $VARCD\frida-server already exists"
-            }
-
-
-
-
-$varadb=CheckADB
-$env:ANDROID_SERIAL=$varadb
-
-Write-Host "[+] Pushing $VARCD\frida-server"
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c killall frida-server;sleep 1`" "  -NoNewWindow -Wait -ErrorAction SilentlyContinue |Out-Null
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\frida-server`"   /sdcard"  -NoNewWindow -Wait
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp -R /sdcard/frida-server /data/local/tmp`" " -NoNewWindow -Wait
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chmod 777 /data/local/tmp/frida-server`" "  -NoNewWindow -Wait
-Write-Host "[+] Starting /data/local/tmp/frida-server"
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c /data/local/tmp/frida-server &`" "  -NoNewWindow 
-
-Write-Host "[+] Running Frida-ps select package to run Objection on:"
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c pm list packages  `" "  -NoNewWindow -RedirectStandardOutput "$VARCDRedirectStandardOutput.txt"
-Start-Sleep -Seconds 2
-$PackageName = (Get-Content -Path "$VARCDRedirectStandardOutput.txt") -replace 'package:',''    | Out-GridView -Title "Select Package to Run Objection" -OutputMode Single
 
 Write-Host "[+] Starting Objection"
 Start-Process -FilePath "$VARCD\python\tools\Scripts\objection.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " --gadget $PackageName explore "
 
-#Send keys needd for objection or whatever...
-#Add-Type -AssemblyName System.Windows.Forms
-#[System.Windows.Forms.SendKeys]::SendWait("android sslpinning disable")
-#start-sleep -Seconds 1
-#[System.Windows.Forms.SendKeys]::SendWait("{enter}")
-#[System.Windows.Forms.SendKeys]::SendWait("{enter}")
+start-sleep -Seconds 5
+# wscript may not work as good ?
+#$SendWait = New-Object -ComObject wscript.shell;
+#$SendWait.SendKeys('android sslpinning disable')
 
-Start-sleep -Seconds 5
- 
+Add-Type -AssemblyName System.Windows.Forms
+[System.Windows.Forms.SendKeys]::SendWait("android sslpinning disable")
+start-sleep -Seconds 1
+[System.Windows.Forms.SendKeys]::SendWait("{enter}")
+[System.Windows.Forms.SendKeys]::SendWait("{enter}")
+
 }
-
 
 ############# StartADB
 function StartADB {
@@ -608,7 +531,7 @@ function StartADB {
 ############# AVDDownload
 Function AVDDownload {
 
-    if (-not(Test-Path -Path "$VARCD\emulator" )) {
+    if (-not(Test-Path -Path "$VARCD\cmdline-tools" )) {
         try {
             Write-Host "[+] Downloading Android Command Line Tools"
             downloadFile "https://dl.google.com/android/repository/commandlinetools-win-9477386_latest.zip" "$VARCD\commandlinetools-win.zip"
@@ -637,6 +560,7 @@ Function AVDDownload {
 			Write-Host "[+] AVD Install Complete Creating AVD Device"
 			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-30;google_apis_playstore;x86`"  -d `"pixel_2`" --force" -Wait -Verbose
 			Start-Sleep -Seconds 2
+			AVDStart
             }
                 catch {
                     throw $_.Exception.Message
@@ -644,9 +568,10 @@ Function AVDDownload {
 			
             }
         else {
-            Write-Host "[+] AVDDownload: $VARCD\cmdline-tools already exists remove everything but this script to perform full reinstall/setup"
+            Write-Host "[+] $VARCD\cmdline-tools already exists remove everything but this script to perform full reinstall/setup"
             Write-Host "[+] Current Working Directory $VARCD"
             Start-Sleep -Seconds 1
+			AVDStart
             }
  
    
@@ -684,16 +609,13 @@ Function HAXMInstall {
 
 ############# AVDStart
 Function AVDStart {
-	CheckProcess "Burp" "StartBurp"
 	if (-not(Test-Path -Path "$VARCD\emulator" )) {
         try {
 			AVDDownload
 			Write-Host "[+] $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup"
 			Write-Host "[+] Starting AVD emulator"
 			Start-Sleep -Seconds 2
-			Write-Host "[+] Do not run emulator with  -http-proxy 127.0.0.1:8080 it is not stable"
-			# DO NOT USE THIS IT IS BUGGY ... Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
-            Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system " -NoNewWindow
+			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
             }
                 catch {
                     throw $_.Exception.Message
@@ -701,10 +623,10 @@ Function AVDStart {
 			
             }
     else {
-            Write-Host "[+] AVDStart $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup"
+            Write-Host "[+] $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup"
 			Write-Host "[+] Starting AVD emulator"
 			Start-Sleep -Seconds 2
-			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system " -NoNewWindow
+			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
 			
             }
 }
@@ -792,7 +714,38 @@ Function CheckPythonA1111 {
             Write-Host "[+] $VARCD\pythonA111 already exists"
             }
 }
- 
+
+############# CHECK PYTHON
+Function CheckPython {
+   if (-not(Test-Path -Path "$VARCD\python" )) {
+        try {
+            Write-Host "[+] Downloading Python nuget package"
+            downloadFile "https://www.nuget.org/api/v2/package/python" "$VARCD\python.zip"
+            New-Item -Path "$VARCD\python" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+            Write-Host "[+] Extracting Python nuget package"
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            Add-Type -AssemblyName System.IO.Compression
+            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\python.zip", "$VARCD\python")
+
+            Write-Host "[+] Running pip install --upgrade pip"
+	        Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow
+           
+            Write-Host "[+] Running pip install objection"
+            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection " -wait -NoNewWindow
+           
+            # for Frida Android Binary
+            Write-Host "[+] Running pip install python-xz"
+            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait -NoNewWindow
+            }
+                catch {
+                    throw $_.Exception.Message
+                }
+            }
+        else {
+            Write-Host "[+] $VARCD\python already exists"
+            }
+}
+
 
 ############# AutoGPTEnv
 Function AutoGPTEnv {
@@ -891,6 +844,16 @@ Function StartBurp {
 	Write-Host "[+] Waiting for Burp Suite to download cert"
 	Retry{PullCert "Error PullCert"} # -maxAttempts 10
 }
+ 
+############# StartBurpSocks
+Function StartBurpSocks {
+    CheckBurp
+	Write-Host "[+] Setting $env:USERPROFILE back to $USERPROFILE_BACKUP to fix open dialog for Burp Suite"
+	$env:USERPROFILE="$USERPROFILE_BACKUP"
+	Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -Dhttp.proxyHost=localhost -Dhttp.proxyPort=8081 -Dhttps.proxyHost=localhost -Dhttps.proxyPort=8081  -jar `"$VARCD\$BurpProLatest`"    && " 
+	Write-Host "[+] Waiting for Burp Suite to download cert"
+	Retry{PullCert "Error PullCert"} # -maxAttempts 10
+}
 
 ############# StartBurpPro
 Function StartBurpPro {
@@ -904,6 +867,43 @@ Function StartBurpPro {
 	BurpConfigPush	
 	Write-Host "[+] Waiting for Burp Suite to download cert"
 	Retry{PullCert "Error PullCert"} # -maxAttempts 10
+}
+
+############# StartBurpProSocks
+Function StartBurpProSocks {
+    CheckBurp
+	Write-Host "[+] Setting $env:USERPROFILE back to $USERPROFILE_BACKUP to fix open dialog for Burp Suite"
+	$env:USERPROFILE="$USERPROFILE_BACKUP"
+	$BurpProLatest = Get-ChildItem -Force -Recurse -File -Path "$VARCD" -Depth 0 -Filter *pro*.jar -ErrorAction SilentlyContinue | Sort-Object LastwriteTime -Descending | select -first 1
+	#Does not work right ??? Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\$BurpProLatest`" -DsocksProxyHost=localhost -DsocksProxyPort=8081 --use-defaults  && "
+	Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -Dhttp.proxyHost=localhost -Dhttp.proxyPort=8081 -Dhttps.proxyHost=localhost -Dhttps.proxyPort=8081  -jar `"$VARCD\$BurpProLatest`"    && "
+	# wait for burp to setup env paths for config
+	Start-Sleep -Seconds 2
+	BurpConfigPush	
+	Write-Host "[+] Waiting for Burp Suite to download cert"
+	Retry{PullCert "Error PullCert"} # -maxAttempts 10
+}
+
+############# StartZAP
+Function StartZAP {
+    ZAPCheck
+	Write-Host "[+] Starting ZAP"
+    # https://www.zaproxy.org/faq/how-do-you-find-out-what-key-to-use-to-set-a-config-value-on-the-command-line/
+    $ZAPJarPath = (Get-ChildItem "$VARCD\ZAP\*.jar")
+    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$ZAPJarPath`" -config network.localServers.mainProxy.address=localhost -config network.localServers.mainProxy.port=8081 "
+	#Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$ZAPJarPath`" -config network.localServers.mainProxy.address=localhost -config network.localServers.mainProxy.port=8081 -config network.connection.httpProxy.host=localhost -config network.connection.httpProxy.port=8080 -config network.connection.httpProxy.enabled=true"
+}
+
+############# BurpWithZap
+Function BurpWithZap {
+	StartBurpSocks
+	StartZAP
+}
+
+############# BurpProWithZap
+Function BurpProWithZap {
+	StartBurpProSocks
+	StartZAP
 }
 
 ############# BurpConfigPush
@@ -1026,17 +1026,6 @@ Function ZAPCheck {
    
   
 }
-
-############# StartZAP
-Function StartZAP {
-	StartBurp
-    ZAPCheck
-	Write-Host "[+] Starting ZAP"
-    # https://www.zaproxy.org/faq/how-do-you-find-out-what-key-to-use-to-set-a-config-value-on-the-command-line/
-    $ZAPJarPath = (Get-ChildItem "$VARCD\ZAP\*.jar")
-    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$ZAPJarPath`" -config network.localServers.mainProxy.address=localhost -config network.localServers.mainProxy.port=8081 -config network.connection.httpProxy.host=localhost -config network.connection.httpProxy.port=8080 -config network.connection.httpProxy.enabled=true"
-}
-
 
 
 ############# Retry
@@ -1205,7 +1194,7 @@ Function CheckGit {
 
 
 
-############# CHECK StartAutoGPT
+############# CHECK CheckGit
 Function StartAutoGPT {
 CheckPython
 CheckGit
@@ -1306,26 +1295,26 @@ Function Debloat {
 	# check pkg csv for lenth to match list ? if not ask if they want to run again ?
 	
 	Write-Host "[+] Pushing aapt2 to /data/local/tmp/ please wait ..."
-	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push aapt2 `"/data/local/tmp/`" " -NoNewWindow -Wait
-	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"chmod 777 /data/local/tmp/aapt2`" " -NoNewWindow -Wait
-
-	Write-Host "[+] Dumping package list"
-	Write-Host "[+] THIS TAKES A LONG TIME TO DO BECAUSE EACH APK HAS TO BE DECOMPRESSED TO GET THE APP LABEL"
-
+	Start-Process -WindowStyle hidden  -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push aapt2 `"/data/local/tmp/`" " 
+	Start-Sleep -Seconds 2
+	Start-Process -WindowStyle hidden -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"chmod 777 /data/local/tmp/aapt2 `" " 
+	Start-Sleep -Seconds 2
 	Start-Process -WindowStyle hidden -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm list packages`" "  -RedirectStandardOutput "$VARCD\pkglist.txt"  
-	Start-Sleep -Seconds 5
+	Start-Sleep -Seconds 2
 
 	$PkgList = (Get-Content "$VARCD\pkglist.txt")  -replace 'package:', ''
 
 	if (-not(Test-Path -Path "$VARCD\PkgInfo.csv" )) {
 	try {
 		# SO SLOW check for file first ...
+			Write-Host "[+] Dumping package list"
+			Write-Host "[+] THIS TAKES A LONG TIME TO DO BECAUSE EACH APK HAS TO BE DECOMPRESSED TO GET THE APP LABEL"
 			$PkgList | ForEach-Object{
 			Start-Process -WindowStyle hidden -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm path $_ `" "  -RedirectStandardOutput "$VARCD\Output.txt"    -Wait  
 			$PkgPath=(Get-Content "$VARCD\Output.txt") -replace 'package:', ''
 			$PkgLabel = (Start-Process -WindowStyle hidden -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"/data/local/tmp/aapt2 dump badging $PkgPath  `" "  -RedirectStandardOutput "Output.txt" -Wait)
 			$PkgLabel=(Get-Content "$VARCD\Output.txt") -replace 'package:', '' -match 'application-label' -replace 'application-label:', '' -replace '''', ''|select -first 1
-			Write-Host "[+] $_,$PkgPath,$PkgLabel"
+			Write-Host "[+] $PkgLabel,$_,$PkgPath"
 
 			$report = New-Object psobject
 			$report | Add-Member -MemberType NoteProperty -name PkgLabel -Value $PkgLabel
@@ -1343,47 +1332,45 @@ Function Debloat {
 		
 	}
 	
-	$PkgListTarget = (import-csv "$VARCD\PkgInfo.csv") |  Out-GridView -Title "Select Package to try to Disable or Uninstall"  -OutputMode Multiple
+	$PkgListTarget = (import-csv "$VARCD\PkgInfo.csv") |  Out-GridView -Title "Select Package to try to Disable or Uninstall"  -OutputMode Single
+	
+		$PkgListTarget = $PkgListTarget.PkgName
 
-	Write-Host "[+] PkgListTarget us $PkgListTarget"
+		Write-Host "[+] Stopping $PkgListTarget "
+		Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"am force-stop $PkgListTarget `" " -NoNewWindow 
 
-	$PkgListTarget = $PkgListTarget.PkgName
+		Write-Host "[+] Wiping data for $PkgListTarget "
+		Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c `"rm -rf /data/data/$PkgListTarget/cache/*`" `" " -NoNewWindow
+		Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"run-as $PkgListTarget -c `"rm -rf cache/* `" " -NoNewWindow 
+		Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm clear $PkgListTarget `" " -NoNewWindow 
 
-	Write-Host "[+] Stopping $PkgListTarget "
-	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"am force-stop $PkgListTarget `" " -NoNewWindow  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+		Write-Host "[+] Setting battery restricted  for $PkgListTarget "
+		Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"appops set $PkgListTarget RUN_ANY_IN_BACKGROUND ignore `" `" " -NoNewWindow 
+		Write-Host "[+] Disabling for $PkgListTarget "
+		Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm disable --user 0 $PkgListTarget `" `" " -NoNewWindow 
 
-	Write-Host "[+] Wiping data for $PkgListTarget "
-	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c `"rm -rf /data/data/$PkgListTarget/cache/*`" `" " -NoNewWindow  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
-	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"run-as $PkgListTarget -c `"rm -rf cache/* `" " -NoNewWindow  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
-	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm clear $PkgListTarget `" " -NoNewWindow  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
-
-	Write-Host "[+] Setting battery restricted  for $PkgListTarget "
-	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"appops set $PkgListTarget RUN_ANY_IN_BACKGROUND ignore `" `" " -NoNewWindow  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
-	 
-	Write-Host "[+] Disabling for $PkgListTarget "
-	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm disable --user 0 $PkgListTarget `" `" " -NoNewWindow  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
-
-	Write-Host "[+] Uninstall  for $PkgListTarget "
-	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm uninstall -k --user 0 $PkgListTarget `" `" " -NoNewWindow  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
-}
+		Write-Host "[+] Uninstall  for $PkgListTarget "
+		Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm uninstall -k --user 0 $PkgListTarget `" `" " -NoNewWindow 
+		#>
+	}
 
 
-############# CheckProcess
-function CheckProcess($windowTitle, $ProcessName) {
 
-	if (Get-Process | Where-Object { $_.MainWindowTitle -like "*$windowTitle*" }) {
-		Write-Host "Window with title '$windowTitle' is running."
-	} else {
-		Write-Host "Starting $ProcessName"
-		$ProcessName
-}
-}
 
 
 
 ######################################################################################################################### FUNCTIONS END
 
 
+
+############# AVDDownload
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "AVD With Proxy Support" #AVDDownload
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({Retry({AVDDownload "Error AVDDownload"})})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
 
 ############# accel
 $pname=(Get-WMIObject win32_Processor | Select-Object name)
@@ -1422,21 +1409,13 @@ else {
 	$vShift = $vShift + 30
 }
 
+   
 ############# StartBurp
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "BurpSuite"
+$Button.Text = "Burp Suite Community"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({StartBurp})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# AVDStart
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Start AVD" #AVDStart
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({AVDStart})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
@@ -1461,18 +1440,9 @@ $vShift = $vShift + 30
 ############# StartFrida
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "Frida/AntiRoot/SSLDepinning"
+$Button.Text = "Frida/Objection"
 $Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button.Add_Click({StartFrida})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# StartObjection
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "StartObjection"
-$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button.Add_Click({StartObjection})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
@@ -1482,6 +1452,42 @@ $Button.AutoSize = $true
 $Button.Text = "CMD/ADB/Java/Python Prompt"
 $Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button.Add_Click({CMDPrompt})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# StartBurpPro
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Burp Suite Pro"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({StartBurpPro})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# BurpWithZap
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Burp Suite Community/ZAP"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({BurpWithZap})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# BurpProWithZap
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Burp Suite Pro/ZAP"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({BurpProWithZap})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# StartZAP
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "ZAP"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({StartZAP})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
@@ -1518,24 +1524,6 @@ $Button.AutoSize = $true
 $Button.Text = "Install Base APKs"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({InstallAPKS})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# StartZAP
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "ZAP Using Burp"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({StartZAP})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# StartBurpPro
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "BurpSuite Pro"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({StartBurpPro})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
@@ -1613,5 +1601,8 @@ $Button.Add_Click({Debloat})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
+
 ############# SHOW FORM
 $main_form.ShowDialog()
+
+
