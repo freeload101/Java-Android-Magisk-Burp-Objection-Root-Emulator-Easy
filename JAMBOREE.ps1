@@ -164,7 +164,7 @@ Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 Add-Type -assembly System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
-$main_form.Text = "JAMBOREE 3.1"
+$main_form.Text = "JAMBOREE 2.1"
 
 $hShift = 0
 $vShift = 0
@@ -615,7 +615,7 @@ Function AVDStart {
 			Write-Host "[+] $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup"
 			Write-Host "[+] Starting AVD emulator"
 			Start-Sleep -Seconds 2
-			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
+			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system" -NoNewWindow
             }
                 catch {
                     throw $_.Exception.Message
@@ -626,7 +626,7 @@ Function AVDStart {
             Write-Host "[+] $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup"
 			Write-Host "[+] Starting AVD emulator"
 			Start-Sleep -Seconds 2
-			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
+			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system" -NoNewWindow
 			
             }
 }
@@ -850,7 +850,7 @@ Function StartBurpSocks {
     CheckBurp
 	Write-Host "[+] Setting $env:USERPROFILE back to $USERPROFILE_BACKUP to fix open dialog for Burp Suite"
 	$env:USERPROFILE="$USERPROFILE_BACKUP"
-	Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -Dhttp.proxyHost=localhost -Dhttp.proxyPort=8081 -Dhttps.proxyHost=localhost -Dhttps.proxyPort=8081  -jar `"$VARCD\$BurpProLatest`"    && " 
+	Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -Dhttp.proxyHost=localhost -Dhttp.proxyPort=8081 -Dhttps.proxyHost=localhost -Dhttps.proxyPort=8081  -jar  `"$VARCD\burpsuite_community.jar`"   && " 
 	Write-Host "[+] Waiting for Burp Suite to download cert"
 	Retry{PullCert "Error PullCert"} # -maxAttempts 10
 }
@@ -876,7 +876,11 @@ Function StartBurpProSocks {
 	$env:USERPROFILE="$USERPROFILE_BACKUP"
 	$BurpProLatest = Get-ChildItem -Force -Recurse -File -Path "$VARCD" -Depth 0 -Filter *pro*.jar -ErrorAction SilentlyContinue | Sort-Object LastwriteTime -Descending | select -first 1
 	#Does not work right ??? Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\$BurpProLatest`" -DsocksProxyHost=localhost -DsocksProxyPort=8081 --use-defaults  && "
+	# Test 
+	# cd .\jdk\bin\
+	# javaw.exe  -Xms4000m -Xmx4000m  -jar ..\..\burpsuite_pro_v2023.9.3.jar  -Dhttp.proxyHost=localhost -Dhttp.proxyPort=8081 -Dhttps.proxyHost=localhost -Dhttps.proxyPort=8081
 	Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -Dhttp.proxyHost=localhost -Dhttp.proxyPort=8081 -Dhttps.proxyHost=localhost -Dhttps.proxyPort=8081  -jar `"$VARCD\$BurpProLatest`"    && "
+	
 	# wait for burp to setup env paths for config
 	Start-Sleep -Seconds 2
 	BurpConfigPush	
