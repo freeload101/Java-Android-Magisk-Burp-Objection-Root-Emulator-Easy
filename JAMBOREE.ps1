@@ -696,7 +696,7 @@ Function CMDPrompt {
 ############# AUTOMATIC1111
 Function AUTOMATIC1111 {
 	#  --xformers --deepdanbooru --disable-safe-unpickle --listen --theme dark --enable-insecure-extension-access
-	# stable-diffusion-webui\modules\processing.py
+	# stable-diffusion-webui\modules\processing.py  params.txt
 	CheckPythonA1111
 	
 	# set env for A111 python
@@ -720,6 +720,11 @@ Function AUTOMATIC1111 {
 	
 	Start-Process -FilePath "$VARCD\stable-diffusion-webui\webui-user.bat" -WorkingDirectory "$VARCD\stable-diffusion-webui"  -ArgumentList " "  -wait -NoNewWindow
 	Write-Host "[+] Suggest creating hard links to your models with mklink /d "
+
+ 	Start-Sleep -Seconds 15
+	Stop-process -name chrome -Force -ErrorAction SilentlyContinue |Out-Null
+	Stop-process -name Chromium -Force -ErrorAction SilentlyContinue |Out-Null
+	Start-Process -FilePath "C:\Program Files\Chromium\Application\chrome.exe" -WorkingDirectory "$VARCD\" -ArgumentList " --disable-history-quick-provider --guest `"http://127.0.0.1:7860/`"" 
 }
 
 ############# CHECK PYTHONA111
