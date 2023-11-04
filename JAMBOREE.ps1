@@ -1557,15 +1557,6 @@ $Button.Add_Click({StartFrida})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# StartObjection
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "StartObjection"
-$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button.Add_Click({StartObjection})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
 ############# CMDPrompt
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
