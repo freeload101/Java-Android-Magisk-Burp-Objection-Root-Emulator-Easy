@@ -107,8 +107,7 @@ https://github.com/newbit1/rootAVD RootAVD
 Six Degrees of Domain Admin
 
 ![image](https://user-images.githubusercontent.com/4307863/221010307-94951724-ea8b-497f-a7ed-754510838e67.png)
-![image](https://user-images.githubusercontent.com/4307863/229207944-83c876c3-7c25-4826-ba85-1dd030c68cfc.png)
-
+ 
 ## Useful cypher queries and links
 
 [The BloodHound 4.3 Release Get Global Admin More Often.mp4](https://rmccurdy.com/.scripts/videos/The%20BloodHound%204.3%20Release%20Get%20Global%20Admin%20More%20Often.mp4) 20230418
