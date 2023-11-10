@@ -22,7 +22,9 @@ Update Video with 7minsec Podcast!
 
 [https://youtu.be/XdXleap0BiM](https://youtu.be/XdXleap0BiM)
 
-![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/ee5998fb-03b9-4fbd-8502-69b4304eed8e)
+[![name]()](https://youtu.be/pYv4UwP3BaU)
+
+![image]()
 
 
 [https://youtu.be/pYv4UwP3BaU](https://youtu.be/pYv4UwP3BaU)
