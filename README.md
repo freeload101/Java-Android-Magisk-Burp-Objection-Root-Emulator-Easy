@@ -18,6 +18,13 @@ I would like to make it even easier to use but I don't want to spend more time d
 
 ## Burp/Android Emulator (Video Tutorial )
 
+Update Video with 7minsec Podcast!
+
+[https://youtu.be/XdXleap0BiM](https://youtu.be/XdXleap0BiM)
+
+![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/ee5998fb-03b9-4fbd-8502-69b4304eed8e)
+
+
 [https://youtu.be/pYv4UwP3BaU](https://youtu.be/pYv4UwP3BaU)
 
 [![name](https://user-images.githubusercontent.com/4307863/225742029-c7090555-049f-422d-bb61-59852bc35cda.png)](https://youtu.be/pYv4UwP3BaU)
