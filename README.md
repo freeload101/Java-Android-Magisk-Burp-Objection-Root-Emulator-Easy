@@ -22,9 +22,9 @@ Update Video with 7minsec Podcast!
 
 [https://youtu.be/XdXleap0BiM](https://youtu.be/XdXleap0BiM)
 
-[![name]()](https://youtu.be/pYv4UwP3BaU)
+[![name](https://user-images.githubusercontent.com/4307863/225742029-c7090555-049f-422d-bb61-59852bc35cda.png)](https://youtu.be/pYv4UwP3BaU)
 
-![image]()
+ 
 
 
 [https://youtu.be/pYv4UwP3BaU](https://youtu.be/pYv4UwP3BaU)
