@@ -22,13 +22,22 @@ Update Video with 7minsec Podcast!
 
 [https://youtu.be/XdXleap0BiM](https://youtu.be/XdXleap0BiM)
 
-[![name](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/707d686a-5a2e-49c9-b179-f32dd98e2168)](https://youtu.be/pYv4UwP3BaU)
+[![name](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/707d686a-5a2e-49c9-b179-f32dd98e2168)](https://youtu.be/XdXleap0BiM)
 
- 
+(Video Tutorial)
 
 [https://youtu.be/pYv4UwP3BaU](https://youtu.be/pYv4UwP3BaU)
 
 [![name](https://user-images.githubusercontent.com/4307863/225742029-c7090555-049f-422d-bb61-59852bc35cda.png)](https://youtu.be/pYv4UwP3BaU)
+
+PhreakNIC 24: Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
+
+[https://www.youtube.com/watch?v=R1eu2Ui1ZLU](https://www.youtube.com/watch?v=R1eu2Ui1ZLU)
+
+[![name](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/5dfd94cc-c49f-466f-8157-363994d78326)](https://www.youtube.com/watch?v=R1eu2Ui1ZLU)
+
+ 
+ScreenShots
 
 ![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/603755c7-c818-4c4b-bbe9-0e50ed6c77ca)
 ![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/febfce57-3087-4595-b240-272d68637215)
