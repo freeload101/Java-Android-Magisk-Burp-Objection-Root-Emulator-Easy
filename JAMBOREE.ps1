@@ -1629,24 +1629,6 @@ $Button.Add_Click({InstallAPKS})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# StartZAP
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "ZAP Using Burp"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({StartZAP})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# StartBurpPro
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "BurpSuite Pro"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({StartBurpPro})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
 ############ KillADB
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
