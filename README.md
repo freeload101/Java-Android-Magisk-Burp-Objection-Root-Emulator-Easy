@@ -39,7 +39,8 @@ PhreakNIC 24: Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
  
 ScreenShots
 
-![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/603755c7-c818-4c4b-bbe9-0e50ed6c77ca)
+![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/58ec0cd7-2d45-46a2-b61e-04b0211f914c)
+
 ![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/febfce57-3087-4595-b240-272d68637215)
 
 
