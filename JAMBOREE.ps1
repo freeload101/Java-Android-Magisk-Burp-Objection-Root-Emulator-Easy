@@ -934,7 +934,7 @@ Function BurpProWithZap {
 
 ############# BurpConfigPush
 Function BurpConfigPush {
-Write-Host "[+] Pushing Byurp Crawler scan config for bypassing CloudFlare"
+Write-Host "[+] Pushing Burp Crawler scan config for bypassing CloudFlare"
 # BurpConfigChrome.json
 $BurpConfigChrome = @'
 {
@@ -1317,7 +1317,7 @@ Function CheckPyCharm {
 			$downloadUri = (Invoke-RestMethod -Method GET -Uri "https://data.services.jetbrains.com/products?code=PCP%2CPCC&release.type=release").releases.downloads.windows.link -match 'pycharm-community'| select -first 1
             downloadFile "$downloadUri" "$VARCD\pycharm-community.exe"
 			Write-Host "[+] Extracting PyCharm"
-			Start-Process -FilePath "$VARCD\7zip\7z.exe" -ArgumentList "x pycharm-community.exe -o$VARCD\pycharm-community" -NoNewWindow -Wait
+			Start-Process -FilePath "$VARCD\7zip\7z.exe" -ArgumentList "x $VARCD\pycharm-community.exe -o$VARCD\pycharm-community" -NoNewWindow -Wait
 			Start-Process -FilePath "$VARCD\pycharm-community\bin\pycharm64.exe" -WorkingDirectory "$VARCD\pycharm-community"   -NoNewWindow 
             }
                 catch {
