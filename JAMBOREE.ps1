@@ -795,7 +795,8 @@ Function RootAVD {
 	Write-Host "[+] Enbleing keyboard in config.ini"
 	(Get-Content "$VARCD\avd\pixel_2.avd\config.ini") `
 	-replace 'hw.keyboard = no', 'hw.keyboard = yes' `
-	-replace 'hw.keyboard=no', 'hw.keyboard=yes' ` |
+	-replace 'hw.camera.back.*', 'hw.camera.back = webcam0' `
+	-replace 'hw.camera.back.*', 'hw.camera.front = webcam0' ` |
 	Out-File -Encoding Ascii "$VARCD\avd\pixel_2.avd\config.ini"
 if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
     try {
