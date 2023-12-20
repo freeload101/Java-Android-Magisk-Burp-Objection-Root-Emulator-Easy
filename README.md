@@ -39,7 +39,10 @@ PhreakNIC 24: Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
  
 ScreenShots
 
-![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/58ec0cd7-2d45-46a2-b61e-04b0211f914c)
+![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/e5eb7681-acea-40bc-89b4-da88c15871f9)
+
+![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/04762472-3795-461b-a4a1-754c18b31d84)
+
 
 ![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/febfce57-3087-4595-b240-272d68637215)
 
@@ -95,6 +98,7 @@ Included `%USERPROFILE%\AppData\Roaming\BurpSuite\ConfigLibrary_JAMBOREE_Crawl_L
 
 |Core|Status|
 |--|--|
+|RMS:Runtime Mobile Security|✔️|
 |PyCharm|✔️|
 |AUTOMATIC1111|✔️|
 |AutoGPT|✔️|
