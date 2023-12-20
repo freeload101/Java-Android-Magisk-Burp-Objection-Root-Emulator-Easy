@@ -41,7 +41,7 @@ ScreenShots
 
 ![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/e5eb7681-acea-40bc-89b4-da88c15871f9)
 
-![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/04762472-3795-461b-a4a1-754c18b31d84)
+![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/4ce83554-0f9a-4403-8b55-d1ae6fe44026)
 
 
 ![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/febfce57-3087-4595-b240-272d68637215)
