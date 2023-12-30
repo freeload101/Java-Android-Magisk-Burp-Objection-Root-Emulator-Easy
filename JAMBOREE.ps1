@@ -436,6 +436,7 @@ Write-Message  -Message  "Complete Installing Base APKS"  -Type "INFO"
 
 ############# CertPush
 function CertPush {
+SecListsCheck
 Write-Message  -Message  "Starting CertPush"  -Type "INFO"
 
 $wshShell = New-Object -ComObject Wscript.Shell
