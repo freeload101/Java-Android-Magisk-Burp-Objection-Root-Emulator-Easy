@@ -132,6 +132,10 @@ Six Degrees of Domain Admin
  
 ## Useful cypher queries and links
 
+https://www.youtube.com/@specterops/videos
+
+https://posts.specterops.io/cypher-queries-in-bloodhound-enterprise-c7221a0d4bb3
+
 [The BloodHound 4.3 Release Get Global Admin More Often.mp4](https://rmccurdy.com/.scripts/videos/The%20BloodHound%204.3%20Release%20Get%20Global%20Admin%20More%20Often.mp4) 20230418
 
 https://www.google.com/search?q=%22shortestPath%22+%22bloodhound%22+site:github.com
