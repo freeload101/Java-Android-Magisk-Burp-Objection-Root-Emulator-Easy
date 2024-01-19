@@ -1691,7 +1691,7 @@ $vShift = $vShift + 30
 ############# SharpHoundRun
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "SharpHound"
+$Button.Text = "SharpHound (Old Method)"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({SharpHoundRun})
 $main_form.Controls.Add($Button)
@@ -1700,7 +1700,7 @@ $vShift = $vShift + 30
 ############# Neo4jRun
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "Neo4j"
+$Button.Text = "Neo4j  (Old Method)"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({Neo4jRun})
 $main_form.Controls.Add($Button)
@@ -1709,7 +1709,7 @@ $vShift = $vShift + 30
 ############# Bloodhound
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "Bloodhound"
+$Button.Text = "Bloodhound  (Old Method)"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({BloodhoundRun})
 $main_form.Controls.Add($Button)
