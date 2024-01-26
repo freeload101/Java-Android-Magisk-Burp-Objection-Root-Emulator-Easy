@@ -171,6 +171,17 @@ $env:ANDROID_AVD_HOME="$VARCD\avd"
 New-Item -Path "$VARCD\avd" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 $env:ANDROID_SDK_HOME="$VARCD"
 
+# postgres paths
+Write-Message  -Message  "Setting postgres ENV Paths $VARCD"  -Type "INFO"
+$env:PGDATA = "$VARCD\PG\data"
+$env:PGDATABASE = "postgres"
+$env:PGUSER = "postgres"
+$env:PGPORT = "5439"
+$env:PGLOCALEDIR = "$VARCD\PG\data"
+$env:PGDATA = "$VARCD\PG\share\locale"
+$env:PGLOG = "$VARCD\PG\postgres.log"
+
+
 #java
 Write-Message  -Message  "Setting JAVA ENV Paths $VARCD"  -Type "INFO"
 $env:JAVA_HOME = "$VARCD\jdk"
@@ -180,8 +191,8 @@ Write-Message  -Message  "Setting rootAVD ENV Paths $VARCD"  -Type "INFO"
 #Use this if you want to keep your %PATH% ...
 #$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
 
-Write-Message  -Message  "Resetting Path variables to not use local python,java,node,adb,git,java ..."  -Type "INFO"
-$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\node"
+Write-Message  -Message  "Resetting Path variables to not use local python,java,node,adb,git,java,postgres ..."  -Type "INFO"
+$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\PG\bin;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\node"
 
 # python
 $env:PYTHONHOME="$VARCD\python\tools"
@@ -193,7 +204,7 @@ Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 Add-Type -assembly System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
-$main_form.Text = "JAMBOREE 3.6"
+$main_form.Text = "JAMBOREE 3.7"
 
 $hShift = 0
 $vShift = 0
@@ -202,6 +213,58 @@ $vShift = 0
 
 ################################# FUNCTIONS
  
+############# CheckAdmin
+Function CheckAdmin {
+	
+	If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]"Administrator")) {
+		if ($PSCommandPath -eq $null) { function GetPSCommandPath() { return $MyInvocation.PSCommandPath; } $PSCommandPath = GetPSCommandPath }
+			$wshell = New-Object -ComObject Wscript.Shell
+			$pause = $wshell.Popup("Need to esclate to administrator to run the current Function!", 0, "Wait!", 48+1)
+				
+			if ($pause -eq '1') {
+				Write-Message  -Message  "Restarting $PSCommandPath as admin... "  -Type "INFO"
+				Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" " -WorkingDirectory "$VARCD" -Verb RunAs
+			}
+			Elseif ($pause = '2') {
+				Write-Message  -Message  "Not running as admin"  -Type "INFO"
+				return
+			}
+		
+		
+		Exit
+	}
+}
+
+Function WSLEnableUpdate {
+# Get the WSL distributions and their versions
+$wslInfo = wsl --list --verbose
+
+# Check if any of the distributions are using WSL 2
+	if ($wslInfo -notmatch ' 2 ') {
+		# If not, print a message and exit the script
+	CheckAdmin
+	Write-Message  -Message  "Setting up WSL 2" -Type "INFO"
+	dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+	dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+
+	wsl --update
+	wsl --set-default-version 2
+	}
+}
+
+Function WSLRockLinux {
+	Write-Message  -Message  "Downloading Rocky Linux WSL files WIP STATIC URL" -Type "INFO"
+	downloadFile "https://github.com/rocky-linux/sig-cloud-instance-images/raw/Rocky-8.4-x86_64/rocky-8.4-docker-x86_64.tar.xz" "$VARCD\RL.tar.gz"
+	Start-Process -FilePath "$VARCD\7zip\7z.exe" -ArgumentList "x -aoa `"$VARCD\RL.tar.gz`" -o`"$VARCD\RL`"" -NoNewWindow -Wait
+	Write-Message  -Message  "Importing `"$VARCD\RL\RL.tar`" " -Type "INFO"
+	Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " --import RockyLinux `"$VARCD\RL`" `"$VARCD\RL\RL.tar`" --version 2" -WorkingDirectory "c:\Program Files\WSL\" -NoNewWindow   -Wait
+	
+	Write-Message  -Message  "Running yum -y update and install " -Type "INFO"
+	Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " -d RockyLinux  -e bash -c `"yum -y update;yum -y install`" "   -WorkingDirectory "c:\Program Files\WSL\"   -NoNewWindow -Wait
+  
+	Write-Message  -Message  "Attaching to RockyLinux just run wsl -d RockLinux next time you want to start" -Type "WARNING"
+	Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " -d RockyLinux "   -WorkingDirectory "c:\Program Files\WSL\"  
+}
 
 ############# CheckRMS
 Function CheckRMS {
@@ -1495,6 +1558,42 @@ function CheckProcess($windowTitle, $ProcessName) {
 }
 
 
+############# CheckPostgres
+Function CheckPostgres {
+   if (-not(Test-Path -Path "$VARCD\PG" )) {
+        try {
+			
+			New-Item -Path "$VARCD\PG" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+			Write-Message  -Message  "Downloading postgres installer for windows" -Type "INFO"
+			
+			$downloadUri = (Invoke-RestMethod -Method GET -Uri "https://www.enterprisedb.com/downloads/postgres-postgresql-downloads")    -split '>' -match '.*href.*sbp.enterprisedb.*'  | ForEach-Object {$_ -ireplace ".* href=`'",'' -ireplace  "`' onclick.*",''} |Select-Object -Index 1
+			downloadFile "$downloadUri" "$VARCD\PG\"
+			
+			Write-Message  -Message  "setting __COMPAT_LAYER=RUNASINVOKER "  -Type "INFO"
+			$env:__COMPAT_LAYER = "RUNASINVOKER"
+			Write-Message  -Message  "Extracting This takes a long time .. like 400 megs ..." -Type "INFO"
+			Start-Process -FilePath "$VARCD\postgresql.exe" -WorkingDirectory "$VARCD\PG" -ArgumentList " --extract-only 1 --mode unattended --prefix `"$VARCD\PG`" " -wait -NoNewWindow
+			
+			Write-Message  -Message  "Init database... " -Type "INFO"
+			Write-Message  -Message  "Wiping folder `"$VARCD\share\locale`" " -Type "INFO"
+			Remove-Item -Path "$VARCD\PG\share\locale" -Force -ErrorAction SilentlyContinue |Out-Null
+			Start-Process -FilePath "$VARCD\PG\bin\initdb.exe" -WorkingDirectory "$VARCD\PG" -ArgumentList " -U `"$env:PGUSER`" -A trust -E utf8 --locale=C "  
+			
+			
+			}
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+			Write-Message  -Message  "Starting pg_ctl.exe " -Type "INFO"
+			Start-Process -FilePath "$VARCD\PG\bin\pg_ctl.exe" -WorkingDirectory "$VARCD\PG" -ArgumentList " -D `"$env:PGDATA`" -l `"$env:PGLOG`" -w start  " 
+			Start-Sleep -Seconds 10			
+			Write-Message  -Message  "Starting psql.exe " -Type "INFO"
+			Start-Process -FilePath "$VARCD\PG\bin\psql.exe" -WorkingDirectory "$VARCD\PG" -ArgumentList " --port=`"$env:PGPORT`" --dbname=`"$env:PGDATABASE`" --username=`"$env:PGUSER`"  "  			
+			}
+}
+
 
 ######################################################################################################################### FUNCTIONS END
 
@@ -1691,16 +1790,17 @@ $vShift = $vShift + 30
 ############# SharpHoundRun
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "SharpHound (Old Method)"
+$Button.Text = "SharpHound"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({SharpHoundRun})
 $main_form.Controls.Add($Button)
-$vShift = $vShift + 30
+$vShift = 0
+$hShift = $hShift + 250
 
 ############# Neo4jRun
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "Neo4j  (Old Method)"
+$Button.Text = "Neo4j"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({Neo4jRun})
 $main_form.Controls.Add($Button)
@@ -1709,7 +1809,7 @@ $vShift = $vShift + 30
 ############# Bloodhound
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "Bloodhound  (Old Method)"
+$Button.Text = "Bloodhound"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({BloodhoundRun})
 $main_form.Controls.Add($Button)
@@ -1750,6 +1850,26 @@ $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({Debloat})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
+
+############# WSLRockLinux
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "WSL RockLinux"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({WSLRockLinux})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# CheckPostgres
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "PostgreSQL"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({CheckPostgres})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+
 
 ############# SHOW FORM
 $main_form.ShowDialog()
