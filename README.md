@@ -4,10 +4,13 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 
 * Run Android apps and pentest without the adware and malware of BlueStacks or NOX. 
 * Run BloodHound Active Directory auditing tool
+* Android Debloat Tools
 * AUTOMATIC1111  Stable Diffusion web UI A browser interface based on Gradio library for Stable Diffusion
 * AutoGPT  ( Setup for Pay as you go gpt3-turbo https://platform.openai.com/account/usage )
 * PyCharm
-* Android Debloat Tools
+* No admin Postgres
+* Rocky Linux WSL
+
 
 ### How it works:
 
@@ -39,11 +42,16 @@ PhreakNIC 24: Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
  
 ScreenShots
 
-![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/e5eb7681-acea-40bc-89b4-da88c15871f9)
+### GUI-ish
+![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/a46e1a99-6bfe-4a74-b0fc-efd56bc56d76)
 
+### Postgres (no admin ) and RockyLinks WSL !
+![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/d023fa27-2439-40d4-909a-72ee4038eb2b)
+
+### RMS
 ![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/4ce83554-0f9a-4403-8b55-d1ae6fe44026)
 
-
+## Debloat
 ![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/febfce57-3087-4595-b240-272d68637215)
 
 
