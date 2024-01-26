@@ -40,23 +40,23 @@ PhreakNIC 24: Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 [![name](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/5dfd94cc-c49f-466f-8157-363994d78326)](https://www.youtube.com/watch?v=R1eu2Ui1ZLU)
 
  
-###ScreenShots
+# ScreenShots
 
-# GUI-ish
+### GUI-ish
 ![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/a46e1a99-6bfe-4a74-b0fc-efd56bc56d76)
 
-# Postgres (no admin ) and RockyLinks WSL !
+### Postgres (no admin ) and RockyLinks WSL !
 ![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/d023fa27-2439-40d4-909a-72ee4038eb2b)
 
-# RMS
+### RMS
 ![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/4ce83554-0f9a-4403-8b55-d1ae6fe44026)
 
-# Debloat
+### Debloat
 ![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/febfce57-3087-4595-b240-272d68637215)
 
 
 
-### Requirements:
+# Requirements:
 
 - Local admin just to install Android AVD Driver:
 
@@ -125,6 +125,8 @@ Included `%USERPROFILE%\AppData\Roaming\BurpSuite\ConfigLibrary_JAMBOREE_Crawl_L
 |Python|✔️|
 |Frida|✔️|
 |Certs|✔️|
+|Rocky Linux WSL|✔️|
+|Postgres No admin|✔️|
 
  
 ## Credit
