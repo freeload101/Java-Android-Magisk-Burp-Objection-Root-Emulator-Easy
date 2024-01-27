@@ -240,7 +240,7 @@ Function WSLEnableUpdate {
 Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList  " --version"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
 Start-Sleep -Seconds 1
 $wslInfo = Get-Content -Path "RedirectStandardOutput.txt" 
-if (($wslInfo) -match  (".*")  -or ($wslInfo) -match  (".*W.S.L. .v.e.r.s.i.o.n.:. .2.*"))  {
+if (($wslInfo) -match  (".*:.2.*")  -or ($wslInfo) -match  (".*W.S.L. .v.e.r.s.i.o.n.:. .2.*"))  {
 	Write-Message  -Message  "WSL versoin 2 found OK" -Type "INFO"
 } else {
 	Write-Message  -Message  "Updating WSL" -Type "WARNING"
