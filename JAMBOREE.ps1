@@ -236,21 +236,24 @@ Function CheckAdmin {
 }
 
 Function WSLEnableUpdate {
-# Get the WSL distributions and their versions
-$wslInfo = wsl --list --verbose
-
-# Check if any of the distributions are using WSL 2
-	if ($wslInfo -notmatch ' 2 ') {
-		# If not, print a message and exit the script
-	CheckAdmin
+Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList  " --version"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
+Start-Sleep -Seconds .5
+ $wslInfo = Get-Content -Path "RedirectStandardOutput.txt" | Out-String
+# NOPE $wslInfo = Invoke-Expression -Command "'c:\Program Files\WSL\wsl.exe' --version"
+Write-Output "wslInfo: $wslInfo"
+if (($wslInfo) -match  (".*WSL version: 2.*")  -or ($wslInfo) -match  (".*W.S.L. .v.e.r.s.i.o.n.:. .2.*"))  {
+    Write-Output "Zort! The string 'WSL version: 2' is in the variable, Brain!"
+} else {
+    CheckAdmin
 	Write-Message  -Message  "Setting up WSL 2" -Type "INFO"
 	dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
 	dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
 
-	wsl --update
-	wsl --set-default-version 2
-	}
+    Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " --update " -NoNewWindow -Wait
+    Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList "--set-default-version 2 " -NoNewWindow -Wait
 }
+
+ }
 
 Function WSLRockLinux {
 	Check7zip
