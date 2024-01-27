@@ -260,6 +260,7 @@ Function WSLRockyLinux {
 	WSLEnableUpdate
 	
 	if (-not(Test-Path -Path "$VARCD\RL.tar.gz" )) {
+		Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " --unregister RockyLinux "   -WorkingDirectory "c:\Program Files\WSL\"  
 		Write-Message  -Message  "Downloading Rocky Linux WSL files WIP STATIC URL" -Type "INFO"
 		downloadFile "https://github.com/rocky-linux/sig-cloud-instance-images/raw/Rocky-8.4-x86_64/rocky-8.4-docker-x86_64.tar.xz" "$VARCD\RL.tar.gz"
 		Start-Process -FilePath "$VARCD\7zip\7z.exe" -ArgumentList "x -aoa `"$VARCD\RL.tar.gz`" -o`"$VARCD\RL`"" -NoNewWindow -Wait
@@ -268,6 +269,8 @@ Function WSLRockyLinux {
 		
 		Write-Message  -Message  "Running yum -y update and install " -Type "INFO"
 		Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " -d RockyLinux  -e bash -c `"yum -y update;yum -y install`" "   -WorkingDirectory "c:\Program Files\WSL\"   -NoNewWindow -Wait
+		Write-Message  -Message  "Attaching to RockyLinux just run wsl -d RockyLinux next time you want to start" -Type "WARNING"
+		Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " -d RockyLinux "   -WorkingDirectory "c:\Program Files\WSL\" 
 	} else {
 		Write-Message  -Message  "Attaching to RockyLinux just run wsl -d RockyLinux next time you want to start" -Type "WARNING"
 		Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " -d RockyLinux "   -WorkingDirectory "c:\Program Files\WSL\"  
