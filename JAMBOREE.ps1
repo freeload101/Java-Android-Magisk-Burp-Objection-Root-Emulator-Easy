@@ -192,7 +192,7 @@ Write-Message  -Message  "Setting rootAVD ENV Paths $VARCD"  -Type "INFO"
 #$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
 
 Write-Message  -Message  "Resetting Path variables to not use local python,java,node,adb,git,java,postgres ..."  -Type "INFO"
-$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\PG\bin;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\node"
+$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\PG\bin;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\node;c:\users\$env:USERNAME\AppData\Local\Microsoft\WindowsApps"
 
 # python
 $env:PYTHONHOME="$VARCD\python\tools"
@@ -236,38 +236,42 @@ Function CheckAdmin {
 }
 
 Function WSLEnableUpdate {
+ 
 Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList  " --version"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
-Start-Sleep -Seconds .5
- $wslInfo = Get-Content -Path "RedirectStandardOutput.txt" | Out-String
-# NOPE $wslInfo = Invoke-Expression -Command "'c:\Program Files\WSL\wsl.exe' --version"
-Write-Output "wslInfo: $wslInfo"
-if (($wslInfo) -match  (".*WSL version: 2.*")  -or ($wslInfo) -match  (".*W.S.L. .v.e.r.s.i.o.n.:. .2.*"))  {
-    Write-Output "Zort! The string 'WSL version: 2' is in the variable, Brain!"
+Start-Sleep -Seconds 1
+$wslInfo = Get-Content -Path "RedirectStandardOutput.txt" 
+if (($wslInfo) -match  (".*")  -or ($wslInfo) -match  (".*W.S.L. .v.e.r.s.i.o.n.:. .2.*"))  {
+	Write-Message  -Message  "WSL versoin 2 found OK" -Type "INFO"
 } else {
+	Write-Message  -Message  "Updating WSL" -Type "WARNING"
     CheckAdmin
 	Write-Message  -Message  "Setting up WSL 2" -Type "INFO"
 	dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
 	dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
-
-    Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " --update " -NoNewWindow -Wait
-    Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList "--set-default-version 2 " -NoNewWindow -Wait
+	
+    Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " --update "  -Wait
+    Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList "--set-default-version 2 "  
 }
 
  }
 
-Function WSLRockLinux {
+Function WSLRockyLinux {
 	Check7zip
-	Write-Message  -Message  "Downloading Rocky Linux WSL files WIP STATIC URL" -Type "INFO"
-	downloadFile "https://github.com/rocky-linux/sig-cloud-instance-images/raw/Rocky-8.4-x86_64/rocky-8.4-docker-x86_64.tar.xz" "$VARCD\RL.tar.gz"
-	Start-Process -FilePath "$VARCD\7zip\7z.exe" -ArgumentList "x -aoa `"$VARCD\RL.tar.gz`" -o`"$VARCD\RL`"" -NoNewWindow -Wait
-	Write-Message  -Message  "Importing `"$VARCD\RL\RL.tar`" " -Type "INFO"
-	Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " --import RockyLinux `"$VARCD\RL`" `"$VARCD\RL\RL.tar`" --version 2" -WorkingDirectory "c:\Program Files\WSL\" -NoNewWindow   -Wait
+	WSLEnableUpdate
 	
-	Write-Message  -Message  "Running yum -y update and install " -Type "INFO"
-	Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " -d RockyLinux  -e bash -c `"yum -y update;yum -y install`" "   -WorkingDirectory "c:\Program Files\WSL\"   -NoNewWindow -Wait
-  
-	Write-Message  -Message  "Attaching to RockyLinux just run wsl -d RockLinux next time you want to start" -Type "WARNING"
-	Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " -d RockyLinux "   -WorkingDirectory "c:\Program Files\WSL\"  
+	if (-not(Test-Path -Path "$VARCD\RL.tar.gz" )) {
+		Write-Message  -Message  "Downloading Rocky Linux WSL files WIP STATIC URL" -Type "INFO"
+		downloadFile "https://github.com/rocky-linux/sig-cloud-instance-images/raw/Rocky-8.4-x86_64/rocky-8.4-docker-x86_64.tar.xz" "$VARCD\RL.tar.gz"
+		Start-Process -FilePath "$VARCD\7zip\7z.exe" -ArgumentList "x -aoa `"$VARCD\RL.tar.gz`" -o`"$VARCD\RL`"" -NoNewWindow -Wait
+		Write-Message  -Message  "Importing `"$VARCD\RL\RL.tar`" " -Type "INFO"
+		Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " --import RockyLinux `"$VARCD\RL`" `"$VARCD\RL\RL.tar`" --version 2" -WorkingDirectory "c:\Program Files\WSL\" -NoNewWindow   -Wait
+		
+		Write-Message  -Message  "Running yum -y update and install " -Type "INFO"
+		Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " -d RockyLinux  -e bash -c `"yum -y update;yum -y install`" "   -WorkingDirectory "c:\Program Files\WSL\"   -NoNewWindow -Wait
+	} else {
+		Write-Message  -Message  "Attaching to RockyLinux just run wsl -d RockyLinux next time you want to start" -Type "WARNING"
+		Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " -d RockyLinux "   -WorkingDirectory "c:\Program Files\WSL\"  
+	}
 }
 
 ############# CheckRMS
@@ -1853,12 +1857,12 @@ $Button.Add_Click({Debloat})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# WSLRockLinux
+############# WSLRockyLinux
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "WSL RockLinux"
+$Button.Text = "WSL RockyLinux"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({WSLRockLinux})
+$Button.Add_Click({WSLRockyLinux})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
