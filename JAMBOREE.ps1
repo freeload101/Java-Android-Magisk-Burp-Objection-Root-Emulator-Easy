@@ -253,6 +253,7 @@ $wslInfo = wsl --list --verbose
 }
 
 Function WSLRockLinux {
+	Check7zip
 	Write-Message  -Message  "Downloading Rocky Linux WSL files WIP STATIC URL" -Type "INFO"
 	downloadFile "https://github.com/rocky-linux/sig-cloud-instance-images/raw/Rocky-8.4-x86_64/rocky-8.4-docker-x86_64.tar.xz" "$VARCD\RL.tar.gz"
 	Start-Process -FilePath "$VARCD\7zip\7z.exe" -ArgumentList "x -aoa `"$VARCD\RL.tar.gz`" -o`"$VARCD\RL`"" -NoNewWindow -Wait
@@ -1561,39 +1562,37 @@ function CheckProcess($windowTitle, $ProcessName) {
 ############# CheckPostgres
 Function CheckPostgres {
    if (-not(Test-Path -Path "$VARCD\PG" )) {
-        try {
-			
 			New-Item -Path "$VARCD\PG" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
-			Write-Message  -Message  "Downloading postgres installer for windows" -Type "INFO"
-			
 			$downloadUri = (Invoke-RestMethod -Method GET -Uri "https://www.enterprisedb.com/downloads/postgres-postgresql-downloads")    -split '>' -match '.*href.*sbp.enterprisedb.*'  | ForEach-Object {$_ -ireplace ".* href=`'",'' -ireplace  "`' onclick.*",''} |Select-Object -Index 1
-			downloadFile "$downloadUri" "$VARCD\PG\"
+			Write-Message  -Message  "Downloading postgres installer for windows $downloadUri" -Type "INFO"
+			
+			downloadFile "$downloadUri" "$VARCD\postgresql.exe"
 			
 			Write-Message  -Message  "setting __COMPAT_LAYER=RUNASINVOKER "  -Type "INFO"
 			$env:__COMPAT_LAYER = "RUNASINVOKER"
 			Write-Message  -Message  "Extracting This takes a long time .. like 400 megs ..." -Type "INFO"
 			Start-Process -FilePath "$VARCD\postgresql.exe" -WorkingDirectory "$VARCD\PG" -ArgumentList " --extract-only 1 --mode unattended --prefix `"$VARCD\PG`" " -wait -NoNewWindow
 			
-			Write-Message  -Message  "Init database... " -Type "INFO"
 			Write-Message  -Message  "Wiping folder `"$VARCD\share\locale`" " -Type "INFO"
-			Remove-Item -Path "$VARCD\PG\share\locale" -Force -ErrorAction SilentlyContinue |Out-Null
-			Start-Process -FilePath "$VARCD\PG\bin\initdb.exe" -WorkingDirectory "$VARCD\PG" -ArgumentList " -U `"$env:PGUSER`" -A trust -E utf8 --locale=C "  
+			Remove-Item -Path "$VARCD\PG\share\locale" -Force -ErrorAction SilentlyContinue  -Confirm:$false -Recurse |Out-Null
+			Write-Message  -Message  "Init database... " -Type "INFO"
 			
-			
-			}
-                catch {
-                    throw $_.Exception.Message
-            }
-            }
-        else {
+			Start-Process -FilePath "$VARCD\PG\bin\initdb.exe" -WorkingDirectory "$VARCD\PG" -ArgumentList " -U `"$env:PGUSER`" -A trust -E utf8 --locale=C "   -NoNewWindow -Wait
 			Write-Message  -Message  "Starting pg_ctl.exe " -Type "INFO"
 			Start-Process -FilePath "$VARCD\PG\bin\pg_ctl.exe" -WorkingDirectory "$VARCD\PG" -ArgumentList " -D `"$env:PGDATA`" -l `"$env:PGLOG`" -w start  " 
 			Start-Sleep -Seconds 10			
 			Write-Message  -Message  "Starting psql.exe " -Type "INFO"
 			Start-Process -FilePath "$VARCD\PG\bin\psql.exe" -WorkingDirectory "$VARCD\PG" -ArgumentList " --port=`"$env:PGPORT`" --dbname=`"$env:PGDATABASE`" --username=`"$env:PGUSER`"  "  			
-			}
+	
+	}
+    else {
+			Write-Message  -Message  "Starting pg_ctl.exe " -Type "INFO"
+			Start-Process -FilePath "$VARCD\PG\bin\pg_ctl.exe" -WorkingDirectory "$VARCD\PG" -ArgumentList " -D `"$env:PGDATA`" -l `"$env:PGLOG`" -w start  " 
+			Start-Sleep -Seconds 10			
+			Write-Message  -Message  "Starting psql.exe " -Type "INFO"
+			Start-Process -FilePath "$VARCD\PG\bin\psql.exe" -WorkingDirectory "$VARCD\PG" -ArgumentList " --port=`"$env:PGPORT`" --dbname=`"$env:PGDATABASE`" --username=`"$env:PGUSER`"  "  			
+	}
 }
-
 
 ######################################################################################################################### FUNCTIONS END
 
