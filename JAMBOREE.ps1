@@ -1787,6 +1787,15 @@ $Button.Add_Click({InstallAPKS})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
+############# Debloat
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Debloat UI Tool"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({Debloat})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
 ############ KillADB
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
@@ -1794,7 +1803,8 @@ $Button.Text = "Kill adb.exe"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({KillADB})
 $main_form.Controls.Add($Button)
-$vShift = $vShift + 30
+$vShift = 0
+$hShift = $hShift + 250
 
 ############# SharpHoundRun
 $Button = New-Object System.Windows.Forms.Button
@@ -1803,8 +1813,7 @@ $Button.Text = "SharpHound"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({SharpHoundRun})
 $main_form.Controls.Add($Button)
-$vShift = 0
-$hShift = $hShift + 250
+$vShift = $vShift + 30
 
 ############# Neo4jRun
 $Button = New-Object System.Windows.Forms.Button
@@ -1848,15 +1857,6 @@ $Button.AutoSize = $true
 $Button.Text = "PyCharm"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({CheckPyCharm})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# Debloat
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Debloat UI Tool"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({Debloat})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
