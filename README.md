@@ -56,7 +56,7 @@ PhreakNIC 24: Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 
 
 
-# Requirements:
+# Requirements ( For Android AVD Emulator) :
 
 - Local admin just to install Android AVD Driver:
 
