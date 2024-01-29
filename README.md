@@ -1,6 +1,6 @@
 ### Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
  
-Get a working portable Python/Git/Java environment on Windows in **SECONDS** without having local administrator, regardless of your broken Python environment. Our open-source script downloads directly from proper sources without any binaries. While the code may not be perfect, it includes many useful PowerShell tricks.
+Get a working portable Python/Git/Java environment on Windows in **SECONDS** without having local administrator, regardless of your broken Python or other environment variables. Our open-source script downloads directly from proper sources without any binaries. While the code may not be perfect, it includes many useful PowerShell tricks.
 
 * Run Android apps and pentest without the adware and malware of BlueStacks or NOX. 
 * Run BloodHound Active Directory auditing tool
@@ -11,6 +11,31 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 * No admin Postgres
 * Rocky Linux WSL
 
+### Features / Request
+
+|Core|Status|
+|--|--|
+|RMS:Runtime Mobile Security|✔️|
+|PyCharm|✔️|
+|AUTOMATIC1111|✔️|
+|AutoGPT|✔️|
+|Bloodhound|✔️|
+|Brida, Burp to Frida bridge|❌|
+|SaftyNet+ Bypass|❌|
+|Burp Suite Pro / CloudFlare UserAgent Workaround-ish|✔️|
+|ZAP Using Burp|✔️|
+|Google Play|✔️|
+|Java|✔️|
+|Android 11 API 30|✔️|
+|Magisk|✔️|
+|Burp|✔️|
+|Objection|✔️|
+|Root|✔️|
+|Python|✔️|
+|Frida|✔️|
+|Certs|✔️|
+|Rocky Linux WSL|✔️|
+|Postgres No admin|✔️|
 
 ### How it works:
 
@@ -102,31 +127,6 @@ Included `%USERPROFILE%\AppData\Roaming\BurpSuite\ConfigLibrary_JAMBOREE_Crawl_L
 ![image](https://user-images.githubusercontent.com/4307863/219110723-5b3e98b9-4d87-4eed-b855-a8a7b0ba0c0c.png)
 
 
-## Status of Automation Script
-
-|Core|Status|
-|--|--|
-|RMS:Runtime Mobile Security|✔️|
-|PyCharm|✔️|
-|AUTOMATIC1111|✔️|
-|AutoGPT|✔️|
-|Bloodhound|✔️|
-|Brida, Burp to Frida bridge|❌|
-|SaftyNet+ Bypass|❌|
-|Burp Suite Pro / CloudFlare UserAgent Workaround-ish|✔️|
-|ZAP Using Burp|✔️|
-|Google Play|✔️|
-|Java|✔️|
-|Android 11 API 30|✔️|
-|Magisk|✔️|
-|Burp|✔️|
-|Objection|✔️|
-|Root|✔️|
-|Python|✔️|
-|Frida|✔️|
-|Certs|✔️|
-|Rocky Linux WSL|✔️|
-|Postgres No admin|✔️|
 
  
 ## Credit
