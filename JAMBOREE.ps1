@@ -191,11 +191,15 @@ Write-Message  -Message  "Setting rootAVD ENV Paths $VARCD"  -Type "INFO"
 #Use this if you want to keep your %PATH% ...
 #$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
 
-Write-Message  -Message  "Resetting Path variables to not use local python,java,node,adb,git,java,postgres ..."  -Type "INFO"
-$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\PG\bin;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\node;c:\users\$env:USERNAME\AppData\Local\Microsoft\WindowsApps"
+Write-Message  -Message  "Resetting Path variables to not use local python,java,node,adb,git,java,postgres ..."  -Type "WARNING"
+$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\PG\bin;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\node"
 
 # python
 $env:PYTHONHOME="$VARCD\python\tools"
+
+# wsl don't use system32 path !
+
+$env:WSLBIN= "c:\users\$env:USERNAME\AppData\Local\Microsoft\WindowsApps\wsl.exe"
 
 #init stuff
 Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
@@ -235,6 +239,7 @@ Function CheckAdmin {
 	}
 }
 
+############# WSLEnableUpdate
 Function WSLEnableUpdate {
  
 Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList  " --version"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
@@ -249,32 +254,72 @@ if (($wslInfo) -match  (".*:.2.*")  -or ($wslInfo) -match  (".*W.S.L. .v.e.r.s.i
 	dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
 	dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
 	
-    Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " --update "  -Wait
+    Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList "--update "  -Wait
     Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList "--set-default-version 2 "  
 }
 
  }
 
+############# THIS IS OLD AND EOL SOON ... WSLRockyLinux
 Function WSLRockyLinux {
 	Check7zip
 	WSLEnableUpdate
 	
 	if (-not(Test-Path -Path "$VARCD\RL.tar.gz" )) {
-		Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " --unregister RockyLinux "   -WorkingDirectory "c:\Program Files\WSL\"  
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --unregister RockyLinux "   -WorkingDirectory "c:\Program Files\WSL\"  
 		Write-Message  -Message  "Downloading Rocky Linux WSL files WIP STATIC URL" -Type "INFO"
 		downloadFile "https://github.com/rocky-linux/sig-cloud-instance-images/raw/Rocky-8.4-x86_64/rocky-8.4-docker-x86_64.tar.xz" "$VARCD\RL.tar.gz"
 		Start-Process -FilePath "$VARCD\7zip\7z.exe" -ArgumentList "x -aoa `"$VARCD\RL.tar.gz`" -o`"$VARCD\RL`"" -NoNewWindow -Wait
 		Write-Message  -Message  "Importing `"$VARCD\RL\RL.tar`" " -Type "INFO"
-		Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " --import RockyLinux `"$VARCD\RL`" `"$VARCD\RL\RL.tar`" --version 2" -WorkingDirectory "c:\Program Files\WSL\" -NoNewWindow   -Wait
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --import RockyLinux `"$VARCD\RL`" `"$VARCD\RL\RL.tar`" --version 2" -WorkingDirectory "c:\Program Files\WSL\" -NoNewWindow   -Wait
 		
 		Write-Message  -Message  "Running yum -y update and install " -Type "INFO"
-		Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " -d RockyLinux  -e bash -c `"yum -y update;yum -y install`" "   -WorkingDirectory "c:\Program Files\WSL\"   -NoNewWindow -Wait
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d RockyLinux  -e bash -c `"yum -y update;yum -y install`" "   -WorkingDirectory "c:\Program Files\WSL\"   -NoNewWindow -Wait
 		Write-Message  -Message  "Attaching to RockyLinux just run wsl -d RockyLinux next time you want to start" -Type "WARNING"
-		Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " -d RockyLinux "   -WorkingDirectory "c:\Program Files\WSL\" 
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d RockyLinux "   -WorkingDirectory "c:\Program Files\WSL\" 
 	} else {
 		Write-Message  -Message  "Attaching to RockyLinux just run wsl -d RockyLinux next time you want to start" -Type "WARNING"
-		Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList " -d RockyLinux "   -WorkingDirectory "c:\Program Files\WSL\"  
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d RockyLinux "   -WorkingDirectory "c:\Program Files\WSL\"  
 	}
+}
+
+############# WSLOracleLinux
+Function WSLOracleLinux {
+WSLEnableUpdate
+
+Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
+Start-Sleep -Seconds 1
+$wslInfo = Get-Content -Path "RedirectStandardOutput.txt" 
+if (($wslInfo) -match  (".*OracleLinux_9_1.*")  -or ($wslInfo) -match  (".*O.r.a.c.l.e.L.i.n.u.x.*"))  {
+	Write-Message  -Message  "OracleLinux_9_1 found Starting..." -Type "INFO"
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d OracleLinux_9_1 -u root"  
+} else {
+	Write-Message  -Message  "OracleLinux_9_1 NOT found ..." -Type "WARNING"
+	Write-Message  -Message  "Updating WSL -update " -Type "INFO"
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --update "  -wait -NoNewWindow
+
+	Write-Message  -Message  "Listing WSL options --list --online " -Type "INFO"
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --list --online " -wait -NoNewWindow
+
+	Write-Message  -Message  "Removing OracleLinux_9_1" -Type "INFO"
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --shutdown -d OracleLinux_9_1 " -wait -NoNewWindow
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --unregister OracleLinux_9_1 " -wait -NoNewWindow
+	
+	Write-Message  -Message  "Waiting 10 seconds.." -Type "INFO"
+	Start-Sleep -Seconds 10
+
+	Write-Message  -Message  "Installing OracleLinux_9_1" -Type "INFO"
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --install -d OracleLinux_9_1 " -NoNewWindow
+
+	Write-Message  -Message  "Waiting 10 seconds.." -Type "INFO"
+	Start-Sleep -Seconds 10
+
+	Write-Message  -Message  "Updating OracleLinux_9_1 this may take some time..." -Type "INFO"
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d OracleLinux_9_1 -u root -e bash -c `"yum -y update`" " -wait -NoNewWindow
+
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d OracleLinux_9_1 -u root"   
+}
+
 }
 
 ############# CheckRMS
@@ -1860,12 +1905,12 @@ $Button.Add_Click({CheckPyCharm})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# WSLRockyLinux
+############# WSLOracleLinux
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "WSL RockyLinux"
+$Button.Text = "WSL OracleLinux"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({WSLRockyLinux})
+$Button.Add_Click({WSLOracleLinux})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
