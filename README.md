@@ -34,7 +34,7 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 |Python|✔️|
 |Frida|✔️|
 |Certs|✔️|
-|Rocky Linux WSL|✔️|
+|OracleLinux WSL|✔️|
 |Postgres No admin|✔️|
 
 ### How it works:
