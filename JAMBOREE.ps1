@@ -858,7 +858,8 @@ Function CMDPrompt {
 Function AUTOMATIC1111 {
 	#  --xformers --deepdanbooru --disable-safe-unpickle --listen --theme dark --enable-insecure-extension-access
 	# stable-diffusion-webui\modules\processing.py  params.txt
-	CheckPythonA1111
+	CheckGit
+ 	CheckPythonA1111
 	
 	# set env for A111 python
 	Write-Message  -Message  "Resetting env for A111 python $VARCD"  -Type "INFO"
