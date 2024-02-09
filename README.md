@@ -3,13 +3,7 @@
 Get a working portable Python/Git/Java environment on Windows in **SECONDS** without having local administrator, regardless of your broken Python or other environment variables. Our open-source script downloads directly from proper sources without any binaries. While the code may not be perfect, it includes many useful PowerShell tricks.
 
 * Run Android apps and pentest without the adware and malware of BlueStacks or NOX. 
-* Run BloodHound Active Directory auditing tool
-* Android Debloat Tools
-* AUTOMATIC1111  Stable Diffusion web UI A browser interface based on Gradio library for Stable Diffusion
-* AutoGPT  ( Setup for Pay as you go gpt3-turbo https://platform.openai.com/account/usage )
-* PyCharm
-* No admin Postgres
-* Rocky Linux WSL
+
 
 ### Features / Request
 
@@ -193,47 +187,6 @@ https://bloodhound.readthedocs.io/en/latest/_images/SharpHoundCheatSheet.png
 ![image](https://user-images.githubusercontent.com/4307863/156181140-951cc25d-d6f7-4385-8520-9980869a7ee2.png)
 
 
-## References/Unsorted:
 
-https://www.droidwin.com/how-to-hide-root-from-apps-via-magisk-denylist/
-
-https://github.com/Fox2Code/FoxMagiskModuleManager/releases
-
-https://forum.xda-developers.com/attachments/magiskhidepropsconf-v6-1-2-zip.5453567/
-
-https://github.com/whalehub/custom-certificate-authorities
-
-https://github.com/NickstaDB/patch-apk/archive/refs/heads/master.zip
-
-https://payatu.com/blog/amit/android_pentesting_lab
-
-https://medium.com/@pranavggang/ssl-pinning-bypass-with-frida-framework-6fb71ca43e33
-
-https://joshspicer.com/ssl-pinning-android
-
-https://www.youtube.com/watch?v=JR4gDRYzY2c
-
-https://forum.xda-developers.com/t/script-rootavd-root-your-android-studio-virtual-device-emulator-with-magisk-android-12-linux-darwin-macos-win-google-play-store-apis.4218123/page-9
-
-https://www.studytonight.com/post/intercept-android-app-traffic-in-burp-suite-from-root-to-hack-ultimate-guide
-
-https://markuta.com/magisk-root-detection-banking-apps/
-
-### CERT Install
-https://www.youtube.com/watch?v=Ml2GIRNIstI
-
-https://www.youtube.com/watch?v=KL1jUvNSL94
-
-https://www.youtube.com/watch?v=Jg4hyZfFTdc
-
-https://systemweakness.com/how-to-install-burp-suite-certificate-on-an-android-emulator-bb2972ba188c
-
-### PINNING
-
-https://book.hacktricks.xyz/mobile-pentesting/android-app-pentesting
-
-### NOTES
-
-https://gist.github.com/Pulimet/5013acf2cd5b28e55036c82c91bd56d8
 
 
