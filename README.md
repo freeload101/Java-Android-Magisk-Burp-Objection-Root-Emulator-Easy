@@ -30,6 +30,7 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 |Certs|✔️|
 |OracleLinux WSL|✔️|
 |Postgres No admin|✔️|
+|SillyTavern|✔️|
 
 ### How it works:
 
@@ -62,7 +63,7 @@ PhreakNIC 24: Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 # ScreenShots
 
 ### GUI-ish
-![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/fb046dfc-8e96-494d-bfeb-4a9eb36c4bc7)
+![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/6aef5f7b-e0fa-445b-b02e-ecad450012c2)
 
 
 ### Postgres (no admin ) and RockyLinks WSL !
