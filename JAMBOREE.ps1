@@ -208,7 +208,7 @@ Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 Add-Type -assembly System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
-$main_form.Text = "JAMBOREE 3.8"
+$main_form.Text = "JAMBOREE 3.9"
 
 $hShift = 0
 $vShift = 0
@@ -260,29 +260,6 @@ if (($wslInfo) -match  (".*:.2.*")  -or ($wslInfo) -match  (".*W.S.L. .v.e.r.s.i
 
  }
 
-############# THIS IS OLD AND EOL SOON ... WSLRockyLinux
-Function WSLRockyLinux {
-	Check7zip
-	WSLEnableUpdate
-	
-	if (-not(Test-Path -Path "$VARCD\RL.tar.gz" )) {
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --unregister RockyLinux "   -WorkingDirectory "c:\Program Files\WSL\"  
-		Write-Message  -Message  "Downloading Rocky Linux WSL files WIP STATIC URL" -Type "INFO"
-		downloadFile "https://github.com/rocky-linux/sig-cloud-instance-images/raw/Rocky-8.4-x86_64/rocky-8.4-docker-x86_64.tar.xz" "$VARCD\RL.tar.gz"
-		Start-Process -FilePath "$VARCD\7zip\7z.exe" -ArgumentList "x -aoa `"$VARCD\RL.tar.gz`" -o`"$VARCD\RL`"" -NoNewWindow -Wait
-		Write-Message  -Message  "Importing `"$VARCD\RL\RL.tar`" " -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --import RockyLinux `"$VARCD\RL`" `"$VARCD\RL\RL.tar`" --version 2" -WorkingDirectory "c:\Program Files\WSL\" -NoNewWindow   -Wait
-		
-		Write-Message  -Message  "Running yum -y update and install " -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d RockyLinux  -e bash -c `"yum -y update;yum -y install`" "   -WorkingDirectory "c:\Program Files\WSL\"   -NoNewWindow -Wait
-		Write-Message  -Message  "Attaching to RockyLinux just run wsl -d RockyLinux next time you want to start" -Type "WARNING"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d RockyLinux "   -WorkingDirectory "c:\Program Files\WSL\" 
-	} else {
-		Write-Message  -Message  "Attaching to RockyLinux just run wsl -d RockyLinux next time you want to start" -Type "WARNING"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d RockyLinux "   -WorkingDirectory "c:\Program Files\WSL\"  
-	}
-}
-
 ############# WSLOracleLinux
 Function WSLOracleLinux {
 WSLEnableUpdate
@@ -321,6 +298,54 @@ if (($wslInfo) -match  (".*OracleLinux_9_1.*")  -or ($wslInfo) -match  (".*O.r.a
 }
 
 }
+
+############# WSLUbuntu
+Function WSLUbuntu {
+WSLEnableUpdate
+
+Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
+Start-Sleep -Seconds 1
+$wslInfo = Get-Content -Path "RedirectStandardOutput.txt" 
+if (($wslInfo) -match  (".*Ubuntu.*")  -or ($wslInfo) -match  (".*U.b.u.n.t.u.*"))  {
+	Write-Message  -Message  "Ubuntu found Starting ollama serve..." -Type "INFO"
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"ollama serve`" "   
+} else {
+	Write-Message  -Message  "Ubuntu NOT found ..." -Type "WARNING"
+	Write-Message  -Message  "Updating WSL -update " -Type "INFO"
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --update "  -wait -NoNewWindow
+
+	Write-Message  -Message  "Listing WSL options --list --online " -Type "INFO"
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --list --online " -wait -NoNewWindow
+
+	Write-Message  -Message  "Removing Ubuntu" -Type "INFO"
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --shutdown -d Ubuntu " -wait -NoNewWindow
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --unregister Ubuntu " -wait -NoNewWindow
+	
+	Write-Message  -Message  "Waiting 10 seconds.." -Type "INFO"
+	Start-Sleep -Seconds 10
+
+	Write-Message  -Message  "Installing Ubuntu" -Type "INFO"
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --install -d Ubuntu " -NoNewWindow
+
+	Write-Message  -Message  "Waiting 10 seconds.." -Type "INFO"
+	Start-Sleep -Seconds 10
+
+	Write-Message  -Message  "Downloading Olamma" -Type "INFO"
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"curl -fsSL https://ollama.com/install.sh | sh`" "   -wait  
+	
+ 	Write-Message  -Message  "Downloading Model Mistral " -Type "INFO"
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"ollama pull Mistral `" "   -wait -NoNewWindow
+  
+ 	Write-Message  -Message  "Starting Olamma Server (serve) " -Type "INFO"
+	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"ollama serve`" "   
+  
+ 
+ 
+	}
+
+}
+
+
 
 ############# CheckNode
 Function CheckNode {
@@ -1951,12 +1976,12 @@ $Button.Add_Click({WSLOracleLinux})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# CheckPostgres
+############# WSLUbuntu
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "PostgreSQL"
+$Button.Text = "WSL Ubuntu/Ollama"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({CheckPostgres})
+$Button.Add_Click({WSLUbuntu})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
@@ -1966,6 +1991,15 @@ $Button.AutoSize = $true
 $Button.Text = "SillyTavern"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({StartSillyTavern})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# CheckPostgres
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "PostgreSQL"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({CheckPostgres})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
