@@ -39,6 +39,36 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 
 I would like to make it even easier to use but I don't want to spend more time developing it if nobody is going to use it! Please let me know if you like it and open bugs/suggestions/feature request etc! you can contact me at https://rmccurdy.com !
 
+
+# Installation/Requirements ( For Android AVD Emulator) :
+
+- Local admin just to install Android AVD Driver:
+
+HAXM Intel driver ( https://github.com/intel/haxm )
+
+OR 
+
+AMD ( https://github.com/google/android-emulator-hypervisor-driver-for-amd-processors )
+
+### Usage:
+
+Put ps1 file in a folder WITH NO SPACES ( WIP for true portability for now path must stay the same )  
+Rightclick Run with PowerShell
+
+OR
+
+From command prompt (NO SPACES IN THE PATH)
+
+    powershell -ExecutionPolicy Bypass -Command "[scriptblock]::Create((Invoke-WebRequest "https://raw.githubusercontent.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/main/JAMBOREE.ps1").Content).Invoke();"
+
+
+
+More infomation on bypass Root Detection and SafeNet
+https://www.droidwin.com/how-to-hide-root-from-apps-via-magisk-denylist/
+
+( Watch the Video Tutorial below it's a 3-5 min process. You only have to setup once. After that it's start burp then start AVD ) 
+
+
 ## Burp/Android Emulator (Video Tutorial )
 
 Update Video with 7minsec Podcast!
@@ -74,37 +104,6 @@ PhreakNIC 24: Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 
 ### Debloat
 ![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/febfce57-3087-4595-b240-272d68637215)
-
-
-
-# Requirements ( For Android AVD Emulator) :
-
-- Local admin just to install Android AVD Driver:
-
-HAXM Intel driver ( https://github.com/intel/haxm )
-
-OR 
-
-AMD ( https://github.com/google/android-emulator-hypervisor-driver-for-amd-processors )
-
-### Usage:
-
-Put ps1 file in a folder WITH NO SPACES ( WIP for true portability for now path must stay the same )  
-Rightclick Run with PowerShell
-
-OR
-
-From command prompt (NO SPACES IN THE PATH)
-
-    powershell -ExecutionPolicy Bypass -Command "[scriptblock]::Create((Invoke-WebRequest "https://raw.githubusercontent.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/main/JAMBOREE.ps1").Content).Invoke();"
-
-
-
-More infomation on bypass Root Detection and SafeNet
-https://www.droidwin.com/how-to-hide-root-from-apps-via-magisk-denylist/
-
-( Watch the Video Tutorial below it's a 3-5 min process. You only have to setup once. After that it's start burp then start AVD ) 
-
 
 
     
