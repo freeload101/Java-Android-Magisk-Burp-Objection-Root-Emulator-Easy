@@ -208,7 +208,7 @@ Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 Add-Type -assembly System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
-$main_form.Text = "JAMBOREE 3.7"
+$main_form.Text = "JAMBOREE 3.8"
 
 $hShift = 0
 $vShift = 0
@@ -322,11 +322,10 @@ if (($wslInfo) -match  (".*OracleLinux_9_1.*")  -or ($wslInfo) -match  (".*O.r.a
 
 }
 
-############# CheckRMS
-Function CheckRMS {
+############# CheckNode
+Function CheckNode {
    if (-not(Test-Path -Path "$VARCD\node" )) {
         try {
-			CheckPython
 			Write-Message  -Message  "Downloading latest node" -Type "INFO"
 			$downloadUri = (Invoke-RestMethod -Method GET -Uri "https://nodejs.org/en/download/")    -split '>' -match '.*win-x64.*zip.*'  | ForEach-Object {$_ -ireplace '.* href="','' -ireplace  '".*',''}
             downloadFile "$downloadUri" "$VARCD\node.zip"
@@ -337,30 +336,67 @@ Function CheckRMS {
 			Get-ChildItem "$VARCD\node-*"  | Rename-Item -NewName "node"
 			Write-Message  -Message  "Updating npm"  -Type "INFO"
 			Start-Process -FilePath "$VARCD\node\npm.cmd" -WorkingDirectory "$VARCD\node" -ArgumentList " install -g npm " -wait -NoNewWindow
-			Write-Message  -Message  "Updating rms-runtime-mobile-security"  -Type "INFO"
-			Start-Process -FilePath "$VARCD\node\npm.cmd" -WorkingDirectory "$VARCD\node" -ArgumentList " install -g rms-runtime-mobile-security " -wait -NoNewWindow
-			StartRMS
 			}
                 catch {
                     throw $_.Exception.Message
             }
             }
         else {
-			StartRMS
+			Write-Message  -Message  "$VARCD\node Already Exist"  -Type "INFO"
 			}
 }
-
+ 
 ############# StartRMS
 Function StartRMS {
-	StartFrida
-	Write-Message  -Message  "Killing node "  -Type "INFO"
-    Stop-process -name node -Force -ErrorAction SilentlyContinue |Out-Null
+	CheckPython
+	CheckNode
 	
-	Write-Message  -Message  "Starting rms-runtime-mobile-security please wait....."  -Type "INFO"
-	Start-Process -FilePath "$VARCD\node\rms.cmd"    -WorkingDirectory "$VARCD\node" -NoNewWindow
-	Start-Sleep -Seconds 5
-	Start-Process "http://127.0.0.1:5491/"
+	if (-not(Test-Path -Path "$VARCD\node\rms.cmd" )) {
+	try {
+		Start-Process -FilePath "$VARCD\node\npm.cmd" -WorkingDirectory "$VARCD\node" -ArgumentList " install -g rms-runtime-mobile-security " -wait -NoNewWindow
+		}
+			catch {
+				throw $_.Exception.Message
+		}
+		}
+	else {
+		Write-Message  -Message  "$VARCD\node\rms.cmd already exist"  -Type "INFO"
+	}
+	
+StartFrida
+Write-Message  -Message  "Killing node "  -Type "INFO"
+Stop-process -name node -Force -ErrorAction SilentlyContinue |Out-Null
+
+Write-Message  -Message  "Starting rms-runtime-mobile-security please wait....."  -Type "INFO"
+Start-Process -FilePath "$VARCD\node\rms.cmd"    -WorkingDirectory "$VARCD\node" -NoNewWindow
+Start-Sleep -Seconds 5
+Start-Process "http://127.0.0.1:5491/"
 }
+
+############# StartSillyTavern
+Function StartSillyTavern {
+	CheckGit
+	Write-Message  -Message  "Killing node "  -Type "INFO"
+	Stop-process -name node -Force -ErrorAction SilentlyContinue |Out-Null
+	CheckNode
+	if (-not(Test-Path -Path "$VARCD\SillyTavern" )) {
+	try {
+		Write-Message  -Message  "Running git clone https://github.com/SillyTavern/SillyTavern -b staging"  -Type "INFO"
+		Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/SillyTavern/SillyTavern`" -b staging " -wait -NoNewWindow
+		}
+			catch {
+				throw $_.Exception.Message
+		}
+		}
+	else {
+		Write-Message  -Message  "$VARCD\SillyTavern"  -Type "WARNING"
+	}
+	
+Write-Message  -Message  "Starting SillyTavern please wait....."  -Type "INFO"
+Start-Process -FilePath "$VARCD\SillyTavern\Start.bat"    -WorkingDirectory "$VARCD\SillyTavern" -NoNewWindow
+
+}
+
 
 ############# CheckADB
 function CheckADB {
@@ -1730,7 +1766,7 @@ $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
 $Button.Text = "RMS: Runtime Mobile Security"
 $Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button.Add_Click({CheckRMS})
+$Button.Add_Click({StartRMS})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
@@ -1755,7 +1791,7 @@ $vShift = $vShift + 30
 ############# CMDPrompt
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "CMD/ADB/Java/Python/Git Prompt"
+$Button.Text = "CMD/ADB/Java/Python/Git/Node Prompt"
 $Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button.Add_Click({CMDPrompt})
 $main_form.Controls.Add($Button)
@@ -1924,7 +1960,14 @@ $Button.Add_Click({CheckPostgres})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-
+############# StartSillyTavern
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "SillyTavern"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({StartSillyTavern})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
 
 ############# SHOW FORM
 $main_form.ShowDialog()
