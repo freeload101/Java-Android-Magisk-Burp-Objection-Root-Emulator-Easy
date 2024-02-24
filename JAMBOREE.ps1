@@ -564,6 +564,8 @@ $PipBatch | Out-File -Encoding Ascii -FilePath "$VARCD\python\tools\Scripts\pip.
 
 ############# InstallAPKS
 function InstallAPKS {
+
+
 Write-Message  -Message  "Downloading Base APKS"  -Type "INFO"
 New-Item -Path "$VARCD\APKS" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 
@@ -596,6 +598,7 @@ downloadFile "$downloadUri" "$VARCD\APKS\AppManager.apk"
 Write-Message  -Message  "Downloading AndroGoat.apk"  -Type "INFO"
 downloadFile "https://github.com/satishpatnayak/MyTest/raw/master/AndroGoat.apk" "$VARCD\APKS\AndroGoat.apk"
 
+SecListsCheck
 
 
 
@@ -616,7 +619,6 @@ Write-Message  -Message  "Complete Installing Base APKS"  -Type "INFO"
 
 ############# CertPush
 function CertPush {
-SecListsCheck
 Write-Message  -Message  "Starting CertPush"  -Type "INFO"
 
 $wshShell = New-Object -ComObject Wscript.Shell
