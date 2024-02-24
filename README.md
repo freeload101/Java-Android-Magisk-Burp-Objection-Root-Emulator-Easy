@@ -12,10 +12,6 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 |Core|Status|
 |--|--|
 |RMS:Runtime Mobile Security|✔️|
-|PyCharm|✔️|
-|AUTOMATIC1111|✔️|
-|AutoGPT|✔️|
-|Bloodhound|✔️|
 |Brida, Burp to Frida bridge|❌|
 |SaftyNet+ Bypass|❌|
 |Burp Suite Pro / CloudFlare UserAgent Workaround-ish|✔️|
@@ -30,7 +26,12 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 |Python|✔️|
 |Frida|✔️|
 |Certs|✔️|
+|AUTOMATIC1111|✔️|
+|AutoGPT|✔️|
+|Bloodhound|✔️|
+|PyCharm|✔️|
 |OracleLinux WSL|✔️|
+|Ubuntu/Olamma WSL|✔️|
 |Postgres No admin|✔️|
 |SillyTavern|✔️|
 
