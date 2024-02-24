@@ -55,12 +55,12 @@ AMD ( https://github.com/google/android-emulator-hypervisor-driver-for-amd-proce
 
 ### Usage:
 
-Put ps1 file in a folder WITH NO SPACES ( WIP for true portability for now path must stay the same )  
+Put ps1 file in a folder   
 Rightclick Run with PowerShell
 
 OR
 
-From command prompt (NO SPACES IN THE PATH)
+From command prompt  
 
     powershell -ExecutionPolicy Bypass -Command "[scriptblock]::Create((Invoke-WebRequest "https://raw.githubusercontent.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/main/JAMBOREE.ps1").Content).Invoke();"
 
