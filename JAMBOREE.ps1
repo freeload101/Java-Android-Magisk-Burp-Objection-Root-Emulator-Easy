@@ -642,7 +642,7 @@ $CertSubjectHash = ($CertSubjectHash.Context.PostContext[7]).SubString(24,2)+($C
 Copy-Item -Path "$VARCD\BURP.pem" -Destination "$VARCD\$CertSubjectHash" -Force
 
 Write-Message  -Message "Pushing $VARCD\$CertSubjectHash to /sdcard "  -Type "INFO"
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push $VARCD\$CertSubjectHash   /sdcard"  -NoNewWindow -Wait
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\$CertSubjectHash`"   /sdcard"  -NoNewWindow -Wait
 
 Write-Message  -Message "Pushing $VARCD\BURP.der to  /data/local/tmp/cert-der.crt "  -Type "INFO"
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\BURP.der`"   /data/local/tmp/cert-der.crt"  -NoNewWindow -Wait
