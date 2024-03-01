@@ -983,7 +983,7 @@ Function RootAVD {
 	(Get-Content "$VARCD\avd\pixel_2.avd\config.ini") `
 	-replace 'hw.keyboard = no', 'hw.keyboard = yes' `
 	-replace 'hw.camera.back.*', 'hw.camera.back = webcam0' `
-	-replace 'hw.camera.front.*', 'hw.camera.front = webcam0' ` |
+	-replace 'hw.camera.front.*', 'hw.camera.front = none' ` |
 	Out-File -Encoding Ascii "$VARCD\avd\pixel_2.avd\config.ini"
 if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
     try {
