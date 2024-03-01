@@ -1,44 +1,3 @@
-<#
--RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
-Start-Sleep -Seconds 2
-start RedirectStandardOutput.txt
-start RedirectStandardError.txt
-
-https://github.com/Displax/safetynet-fix/releases/download/v2.4.0-MOD_1.3/safetynet-fix-v2.4.0-MOD_1.3-Zygisk.zip
-Changelog: v2.4.0-MOD_1.3
-
-Fix "stat /sys/fs/selinux" access time reading. Also removed archaic MIUI cross-region shenanigans. Thanks to PR by aviraxp!
-Ignore props changing on Xiaomi.eu. This fixes randomly attestation failings. So strange ROM...
-Added Riru version back. Remember that is need old MagiskHide support (and adding com.google.android.gms/com.google.android.gms.unstable to HideList) !
-Added microG version. Note there is some strange behavior that GMS can crash while run SN attest more than 2 times in one session. Just do not do this. This behavior should not affect applications in real life.
-
-https://github.com/kdrag0n/safetynet-fix/releases
-
-https://github.com/LSPosed/LSPosed.github.io/releases/download/shamiko-174/Shamiko-v0.7.3-174-release.zip
-
-
-https://github.com/Magisk-Modules-Repo/MagiskHidePropsConf/releases/download/v6.1.2/MagiskHidePropsConf-v6.1.2.zip
-
-
-all I want is 30 with google play and saftynet on real AVD not NOX Bluestacks etc .. see my project https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy
-
-* using this image / googls AVD system-images;android-30;google_apis_playstore;x86
-* running  RootAVD.bat" system-images\android-30\google_apis_playstore\x86\ramdisk.img FAKEBOOTIMG
-* no microG
-
-* I have tried with props config of Plxel 2 MagiskHide Props Config (MHPC)
-
-* tried with props https://forum.xda-developers.com/t/passing-safetynet-on-android-emulator.4469211/post-88345137
-
-*Tried: 
-	safetynet-fix-v2.3.1-MOD_3.0.zip
-	safetynet-fix-v2.4.0-MOD_1.3-Zygisk.zip
-	safetynet-fix-v2.4.0.zip
-
-
-#>
-
-
 # function for messages
 function Write-Message  {
     <#
@@ -138,16 +97,6 @@ Write-Message  -Message  "Setting base path for HOMEPATH,USERPROFILE,APPDATA,LOC
 $env:HOMEPATH="$VARCD"
 $env:USERPROFILE="$VARCD"
 
-<#
-# fix for burp suite open dialog broken when changing %USERPROFILE% but not working tho ...
-Write-Message  -Message  "Setting Share Folder Documents fix for Burp Suite Open Dialog"  -Type "INFO"
-New-Item -Path "$VARCD\Documents" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
-Start-Process -FilePath "$env:SystemRoot\System32\reg.exe" -WorkingDirectory "$VARCD" -ArgumentList " add `"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders`" /v Personal /t REG_SZ /d `"$VARCD\Documents`" /f " -wait			
-Start-Sleep -Seconds 2
-reg query "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"			
-Start-Sleep -Seconds 10
-#>
-
 New-Item -Path "$VARCD\AppData\Roaming" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 $env:APPDATA="$VARCD\AppData\Roaming"
 
@@ -208,7 +157,7 @@ Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 Add-Type -assembly System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
-$main_form.Text = "JAMBOREE 3.9"
+$main_form.Text = "JAMBOREE 3.91"
 
 $hShift = 0
 $vShift = 0
@@ -307,8 +256,7 @@ Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList  " --list" 
 Start-Sleep -Seconds 1
 $wslInfo = Get-Content -Path "RedirectStandardOutput.txt" 
 if (($wslInfo) -match  (".*Ubuntu.*")  -or ($wslInfo) -match  (".*U.b.u.n.t.u.*"))  {
-	Write-Message  -Message  "Ubuntu found Starting ollama serve..." -Type "INFO"
-	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"ollama serve`" "   
+	BashOrOllama
 } else {
 	Write-Message  -Message  "Ubuntu NOT found ..." -Type "WARNING"
 	Write-Message  -Message  "Updating WSL -update " -Type "INFO"
@@ -330,19 +278,33 @@ if (($wslInfo) -match  (".*Ubuntu.*")  -or ($wslInfo) -match  (".*U.b.u.n.t.u.*"
 	Write-Message  -Message  "Waiting 10 seconds.." -Type "INFO"
 	Start-Sleep -Seconds 10
 
-	Write-Message  -Message  "Downloading Olamma" -Type "INFO"
-	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"curl -fsSL https://ollama.com/install.sh | sh`" "   -wait  
-	
- 	Write-Message  -Message  "Downloading Model Mistral " -Type "INFO"
-	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"ollama pull Mistral `" "   -wait -NoNewWindow
-  
- 	Write-Message  -Message  "Starting Olamma Server (serve) " -Type "INFO"
-	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"ollama serve`" "   
-  
- 
  
 	}
 
+}
+
+
+############# BashOrOllama
+Function BashOrOllama {
+	$wshell = New-Object -ComObject Wscript.Shell
+	$pause = $wshell.Popup("Do you want to run Ollama?", 0, "Wait!", 4)
+	if ($pause -eq '6') {
+
+		Write-Message  -Message "Downloading Olamma" -Type "INFO"
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"curl -fsSL https://ollama.com/install.sh | sh`" "   -wait  
+		
+		Write-Message  -Message  "Downloading Model Mistral " -Type "INFO"
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"ollama pull Mistral `" "   -wait -NoNewWindow
+	  
+		Write-Message  -Message  "Starting Olamma Server (serve) " -Type "INFO"
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"ollama serve`" "   
+	  
+	}
+	Elseif ($pause = '7') {
+		Write-Message  -Message  "Ubuntu found Starting bash shell" -Type "INFO"
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash "   
+		return
+	}
 }
 
 
