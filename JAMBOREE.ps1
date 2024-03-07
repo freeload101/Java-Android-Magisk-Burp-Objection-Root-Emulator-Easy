@@ -1,4 +1,6 @@
 # function for messages
+#$ErrorActionPreference="Continue"
+
 function Write-Message  {
     <#
     .SYNOPSIS
@@ -141,7 +143,7 @@ Write-Message  -Message  "Setting rootAVD ENV Paths $VARCD"  -Type "INFO"
 #$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
 
 Write-Message  -Message  "Resetting Path variables to not use local python,java,node,adb,git,java,postgres ..."  -Type "WARNING"
-$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\PG\bin;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\node"
+$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\PG\bin;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools\Lib\venv\scripts\;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\node"
 
 # python
 $env:PYTHONHOME="$VARCD\python\tools"
@@ -157,7 +159,7 @@ Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 Add-Type -assembly System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
-$main_form.Text = "JAMBOREE 3.91"
+$main_form.Text = "JAMBOREE 3.92"
 
 $hShift = 0
 $vShift = 0
@@ -509,13 +511,16 @@ Function CheckPython {
 			Write-Message  -Message  "Updating pip"  -Type "INFO"
 			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow
 
-			 
+
+New-Item -ItemType Directory -Path "$VARCD\python\tools\Scripts" -ErrorAction SilentlyContinue |Out-Null
 # DO NOT INDENT THIS PART
 $PipBatch = @'
 python -m pip %*
 '@
-$PipBatch | Out-File -Encoding Ascii -FilePath "$VARCD\python\tools\Scripts\pip.bat"
+$PipBatch | Out-File -Encoding Ascii -FilePath "$VARCD\python\tools\Scripts\pip.bat" -ErrorAction SilentlyContinue |Out-Null
 # DO NOT INDENT THIS PART
+
+
             }
         else {
             Write-Message  -Message  "$VARCD\python already exists"  -Type "WARNING"
@@ -625,8 +630,8 @@ Write-Message  -Message  "Reboot for changes to take effect!"  -Type "INFO"
 
 ############# AlwaysTrustUserCerts
 Function AlwaysTrustUserCerts {
-Write-Message  -Message  "Checking for AlwaysTrustUserCerts.zip"  -Type "INFO"
-   if (-not(Test-Path -Path "$VARCD\AlwaysTrustUserCerts.zip" )) {
+Write-Message  -Message  "Checking for $VARCD\trustusercerts "  -Type "INFO"
+   if (-not(Test-Path -Path "$VARCD\trustusercerts" )) {
         try {
             $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/NVISOsecurity/MagiskTrustUserCerts/releases/latest").assets | Where-Object name -like *.zip ).browser_download_url
             Write-Message  -Message  "Downloading Magisk Module AlwaysTrustUserCerts.zip"  -Type "INFO"
@@ -1641,6 +1646,80 @@ function CheckProcess($windowTitle, $ProcessName) {
 }
 }
 
+############# CheckArduino
+Function CheckArduino {
+CheckGit
+CheckPython
+
+Write-Message  -Message  "Checking for Arduino"  -Type "INFO"
+   if (-not(Test-Path -Path "$VARCD\Arduino" )) {
+        try {
+
+            #Arduino stuff
+            $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/arduino/arduino-ide/releases/latest").assets | Where-Object name -like *Windows_64bit.zip ).browser_download_url
+            Write-Message  -Message  "Downloading Arduino.zip"  -Type "INFO"
+            downloadFile "$downloadUri" "$VARCD\Arduino.zip" 
+            Write-Message  -Message  "Extracting Arduino.zip"  -Type "INFO"
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+			Add-Type -AssemblyName System.IO.Compression
+            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\Arduino.zip", "$VARCD\Arduino")  
+			
+            # Digistump drivers 
+            Write-Message  -Message  "Download/Installing Digistump Drivers ( ##### ADMIN REQUIRED ##### ) "  -Type "WARNING"
+            $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/digistump/DigistumpArduino/releases/latest").assets | Where-Object name -like *Digistump.Drivers.zip ).browser_download_url
+            Write-Message  -Message  "Downloading Digistump.Drivers.zip"  -Type "INFO"
+            downloadFile "$downloadUri" "$VARCD\Digistump.Drivers.zip" 
+            Write-Message  -Message  "Extracting Digistump.Drivers.zip"  -Type "INFO"
+            Expand-Archive -Path  "$VARCD\Digistump.Drivers.zip" -DestinationPath "$VARCD\" -Force
+
+            Write-Message  -Message  "Installing Drivers"  -Type "INFO"
+			try {
+				Start-Process -FilePath "$VARCD\Digistump Drivers\Install Drivers.exe" -WorkingDirectory "$VARCD" -ErrorAction SilentlyContinue
+			} catch {
+				Write-Message  -Message  "Not running as admin or driver faild install"  -Type "ERROR"
+			}
+
+            # add Digistump board to Arduino
+            Write-Message  -Message  "Adding Digistump board to Arduino IDE"  -Type "INFO"
+            Start-Process -FilePath "$VARCD\Arduino\resources\app\lib\backend\resources\arduino-cli.exe" -WorkingDirectory "$VARCD\Arduino\resources\app\lib\backend\resources\" -ArgumentList " config init " -wait -NoNewWindow
+            Start-Process -FilePath "$VARCD\Arduino\resources\app\lib\backend\resources\arduino-cli.exe" -WorkingDirectory "$VARCD\Arduino\resources\app\lib\backend\resources\" -ArgumentList " config init " -wait -NoNewWindow
+            Start-Process -FilePath "$VARCD\Arduino\resources\app\lib\backend\resources\arduino-cli.exe" -WorkingDirectory "$VARCD\Arduino\resources\app\lib\backend\resources\" -ArgumentList " core update-index " -wait -NoNewWindow
+            Start-Process -FilePath "$VARCD\Arduino\resources\app\lib\backend\resources\arduino-cli.exe" -WorkingDirectory "$VARCD\Arduino\resources\app\lib\backend\resources\" -ArgumentList " core update-index --additional-urls `"https://raw.githubusercontent.com/digistump/arduino-boards-index/master/package_digistump_index.json`" " -wait -NoNewWindow
+            Start-Process -FilePath "$VARCD\Arduino\resources\app\lib\backend\resources\arduino-cli.exe" -WorkingDirectory "$VARCD\Arduino\resources\app\lib\backend\resources\" -ArgumentList " core install digistump:avr --additional-urls `"https://raw.githubusercontent.com/digistump/arduino-boards-index/master/package_digistump_index.json`" " -wait -NoNewWindow
+            
+            # add   digiduck for duck to ino
+            Write-Message  -Message  "Downloading digiduck"  -Type "INFO"
+            Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD" -ArgumentList " clone `"https://github.com/molatho/digiduck.git`" " -wait -NoNewWindow
+			
+			Write-Message  -Message  "Starting Arduino IDE"  -Type "INFO"
+            Start-Process -FilePath "$VARCD\Arduino\Arduino IDE.exe" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\digiduck\example.ino`" " 
+            }
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+            Write-Message  -Message  "$VARCD\Arduino.zip already exists"  -Type "INFO"
+			Write-Message  -Message  "Starting Arduino IDE"  -Type "INFO"
+            Start-Process -FilePath "$VARCD\Arduino\Arduino IDE.exe" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\digiduck\example.ino`" " 
+
+            }
+}
+
+
+############# PushDuckyLoad
+Function PushDuckyLoad {
+CheckGit
+CheckPython
+Write-Message  -Message  "Opening digiduck\example.duck"  -Type "INFO"
+Start-Process "notepad" -WorkingDirectory "$VARCD" -ArgumentList "`"$VARCD\digiduck\example.duck`" " -wait -NoNewWindow
+
+Write-Message  -Message  "Encoding digiduck.py ..\duck2spark\example.duck  -ofile ..\duck2spark\example.ino "  -Type "INFO"
+Remove-Item -Path "$VARCD\digiduck\example.ino" -Force -ErrorAction SilentlyContinue |Out-Null
+Start-Process -FilePath "python" -WorkingDirectory "$VARCD\digiduck\"  -ArgumentList  " `"$VARCD\digiduck\digiduck.py`"  `"$VARCD\digiduck\example.duck`"  -ofile `"$VARCD\digiduck\example.ino`"  "  -NoNewWindow -Wait  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+}
+
+
 
 ############# CheckPostgres
 Function CheckPostgres {
@@ -1968,6 +2047,26 @@ $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({CheckPostgres})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
+
+############# CheckArduino
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Arduino IDE"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({CheckArduino})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# PushDuckyLoad
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Duck2Spark"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({PushDuckyLoad})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+
 
 ############# SHOW FORM
 $main_form.ShowDialog()
