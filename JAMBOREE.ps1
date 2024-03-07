@@ -484,6 +484,17 @@ Write-Message  -Message  "Checking for Java"  -Type "INFO"
             }
 }
 
+############# CHECK Frida tools
+Function CheckFrida {
+			# for frida/AVD
+			Write-Message  -Message  "Installing objection and python-xz needed for AVD"  -Type "INFO"
+			
+            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection " -wait -NoNewWindow
+            # for Frida Android Binary
+            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait -NoNewWindow
+			Write-Message  -Message  "Installing frida-tools"  -Type "INFO"
+			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install frida-tools " -wait -NoNewWindow
+}			
 
 ############# CHECK PYTHON
 Function CheckPython {
@@ -495,17 +506,9 @@ Function CheckPython {
             Add-Type -AssemblyName System.IO.Compression.FileSystem
             Add-Type -AssemblyName System.IO.Compression
             [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\python.zip", "$VARCD\python")
-			
-			# for frida/AVD
-			Write-Message  -Message  "Installing objection and python-xz needed for AVD"  -Type "INFO"
+			Write-Message  -Message  "Updating pip"  -Type "INFO"
 			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection " -wait -NoNewWindow
-            # for Frida Android Binary
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait -NoNewWindow
-			Write-Message  -Message  "Installing frida-tools"  -Type "INFO"
-			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install frida-tools " -wait -NoNewWindow
-            
-			
+
 			 
 # DO NOT INDENT THIS PART
 $PipBatch = @'
@@ -519,9 +522,6 @@ $PipBatch | Out-File -Encoding Ascii -FilePath "$VARCD\python\tools\Scripts\pip.
             }
 			Write-Message  -Message  "CheckPython Complete"  -Type "INFO"
 }
-
-
-
 
 
 ############# InstallAPKS
@@ -653,6 +653,7 @@ Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `
 }
 Function StartFrida {
 CheckPython
+CheckFrida
    if (-not(Test-Path -Path "$VARCD\frida-server" )) {
         try {
             Write-Message  -Message  "Downloading Latest $downloadUri "  -Type "INFO"
@@ -705,6 +706,7 @@ Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `
 }
 
 Function StartJAMBOREE_SSL_N_ANTIROOT {
+CheckFrida
 StartFrida
 
 Write-Message  -Message  "Running Frida-ps select package to run JAMBOREE_SSL_N_ANTIROOT.JS:"  -Type "INFO"
