@@ -86,6 +86,13 @@ Update Video with 7minsec Podcast!
 
 [![name](https://user-images.githubusercontent.com/4307863/225742029-c7090555-049f-422d-bb61-59852bc35cda.png)](https://youtu.be/pYv4UwP3BaU)
 
+USB Rubber Ducky Scripts & Payloads Python 3 Arduino DigiSpark 
+
+[https://youtu.be/e8tKhFS0Tow](https://youtu.be/e8tKhFS0Tow)
+
+[![name](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/ad3e7efa-f97a-46f4-a72e-dbbaaa1fb438)](https://youtu.be/e8tKhFS0Tow)
+
+
 PhreakNIC 24: Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 
 [https://www.youtube.com/watch?v=R1eu2Ui1ZLU](https://www.youtube.com/watch?v=R1eu2Ui1ZLU)
