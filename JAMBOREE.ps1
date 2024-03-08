@@ -1690,8 +1690,17 @@ Write-Message  -Message  "Checking for Arduino"  -Type "INFO"
             # add   digiduck for duck to ino
             Write-Message  -Message  "Downloading digiduck"  -Type "INFO"
             Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD" -ArgumentList " clone `"https://github.com/molatho/digiduck.git`" " -wait -NoNewWindow
-			
-			Write-Message  -Message  "Starting Arduino IDE"  -Type "INFO"
+
+            # get old payloads 
+            $downloadUri = "https://github.com/hak5/usbrubberducky-payloads/archive/1d3e9be7ba3f80cdb008885fac49be2ba926649d.zip"
+            Write-Message  -Message  "Downloading Old example payloads "  -Type "INFO"
+            downloadFile "$downloadUri" "$VARCD\1d3e9be7ba3f80cdb008885fac49be2ba926649d.zip" 
+            Write-Message  -Message  "Extracting Old example payloads"  -Type "INFO"
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            Add-Type -AssemblyName System.IO.Compression
+            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\1d3e9be7ba3f80cdb008885fac49be2ba926649d.zip", "$VARCD\_Old_Ducky_payloads") 
+
+	    Write-Message  -Message  "Starting Arduino IDE"  -Type "INFO"
             Start-Process -FilePath "$VARCD\Arduino\Arduino IDE.exe" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\digiduck\example.ino`" " 
             }
                 catch {
