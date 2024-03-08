@@ -92,6 +92,8 @@ USB Rubber Ducky Scripts & Payloads Python 3 Arduino DigiSpark
 
 [![name](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/ad3e7efa-f97a-46f4-a72e-dbbaaa1fb438)](https://youtu.be/e8tKhFS0Tow)
 
+Old payloads: [https://github.com/hak5/usbrubberducky-payloads/tree/1d3e9be7ba3f80cdb008885fac49be2ba926649d/payloads](https://github.com/hak5/usbrubberducky-payloads/tree/1d3e9be7ba3f80cdb008885fac49be2ba926649d/payloads)
+
 
 PhreakNIC 24: Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 
