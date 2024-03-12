@@ -159,7 +159,7 @@ Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 Add-Type -assembly System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
-$main_form.Text = "JAMBOREE 3.92"
+$main_form.Text = "JAMBOREE 3.93"
 
 $hShift = 0
 $vShift = 0
@@ -1765,6 +1765,40 @@ Function CheckPostgres {
 	}
 }
 
+############# Ytdlp
+Function Ytdlp {
+CheckGit
+
+New-Item -Path "$VARCD\ytdlp" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+
+Write-Message  -Message  "Downloading Latest yt-dlp"  -Type "INFO"
+$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest").assets | Where-Object name -like yt-dlp.exe ).browser_download_url
+#downloadFile "$downloadUri" "$VARCD\ytdlp\yt-dlp.exe"
+
+Write-Message  -Message  "Opening $VARCD\ytdlp\LIST.txt"  -Type "INFO"
+New-Item -Path "$VARCD\ytdlp\LIST.txt" -ItemType "file"  -ErrorAction SilentlyContinue -Force 
+start-sleep -Seconds 1
+Start-Process "notepad" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\ytdlp\LIST.txt`" " -wait -NoNewWindow
+
+
+    Get-Content "$VARCD\ytdlp\LIST.txt" | ForEach-Object { 
+    Write-Message  -Message  "Downloading $_"  -Type "INFO"
+
+    $GetDate = Get-Date -Format yyyyMMddTHHmmss 
+    Start-Process "$VARCD\ytdlp\yt-dlp.exe" -WorkingDirectory "$VARCD\ytdlp" -ArgumentList "  -o `"$GetDate %(upload_date)s - %(title)s.%(ext)s`"  `"$_`"     " -wait -NoNewWindow
+    
+    Invoke-Item "$VARCD\ytdlp"
+    
+    # old multi stream downloading script don't use because multi threaded downloads do not always work ...  
+	# wget -q -U "rmccurdy.com" -q -P aria2  -e robots=off  -nd -r  "https://github.com/aria2/aria2/releases/latest" --max-redirect 1 -l 1 -A "latest,aria*win*64*.zip" -R '*.gz,release*.*' --regex-type pcre --accept-regex "aria2-.*-win-64bit-build1.zip"
+    # wget -q -U "rmccurdy.com" -q -P ffmpeg  -e robots=off  -nd -r  "https://github.com/BtbN/FFmpeg-Builds/releases/latest" --max-redirect 1 -l 1 -R '*shared*,*lgpl*,autobuild-*.*' --regex-type pcre --accept-regex "latest.*"  --regex-type pcre --accept-regex "autobuild.*" --regex-type pcre --accept-regex "ffmpeg-n.*-win64-gpl-[0-9].*.zip"
+    # start "aria2c !UUID!"	 cmd /c yt-dlp.exe -w --no-continue  --merge-output-format mkv --ffmpeg-location .\ -o ".\downloads\%%(uploader)s - %%(title)s - %%(id)s_!UUID!.%%(ext)s" -i   --external-downloader aria2c --external-downloader-args " -x 16 -s 16 -k 1M" "%%A"  ^& pause
+    
+    }
+
+}
+
+
 ######################################################################################################################### FUNCTIONS END
 
 ############# accel
@@ -2075,7 +2109,14 @@ $Button.Add_Click({PushDuckyLoad})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-
+############# Ytdlp
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Ytdlp"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({Ytdlp})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
 
 ############# SHOW FORM
 $main_form.ShowDialog()
