@@ -1773,7 +1773,7 @@ New-Item -Path "$VARCD\ytdlp" -ItemType Directory  -ErrorAction SilentlyContinue
 
 Write-Message  -Message  "Downloading Latest yt-dlp"  -Type "INFO"
 $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest").assets | Where-Object name -like yt-dlp.exe ).browser_download_url
-#downloadFile "$downloadUri" "$VARCD\ytdlp\yt-dlp.exe"
+downloadFile "$downloadUri" "$VARCD\ytdlp\yt-dlp.exe"
 
 Write-Message  -Message  "Opening $VARCD\ytdlp\LIST.txt"  -Type "INFO"
 New-Item -Path "$VARCD\ytdlp\LIST.txt" -ItemType "file"  -ErrorAction SilentlyContinue -Force 
