@@ -316,7 +316,7 @@ Function CheckNode {
    if (-not(Test-Path -Path "$VARCD\node" )) {
         try {
 			Write-Message  -Message  "Downloading latest node" -Type "INFO"
-			$downloadUri = (Invoke-RestMethod -Method GET -Uri "https://nodejs.org/en/download/")    -split '>' -match '.*win-x64.*zip.*'  | ForEach-Object {$_ -ireplace '.* href="','' -ireplace  '".*',''}
+			$downloadUri = $downloadUri = (Invoke-RestMethod -Method GET -Uri "https://nodejs.org/dist/latest/")    -split '"'    -match '.*node-.*-win-x64.zip.*'   | ForEach-Object {$_ -ireplace '^','https://nodejs.org/dist/latest/' }  | select -first 1
             downloadFile "$downloadUri" "$VARCD\node.zip"
 			Write-Message  -Message  "Extracting Node"  -Type "INFO"
 			Add-Type -AssemblyName System.IO.Compression.FileSystem
