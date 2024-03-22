@@ -1,6 +1,8 @@
 # function for messages
 #$ErrorActionPreference="Continue"
 
+
+
 function Write-Message  {
     <#
     .SYNOPSIS
@@ -159,7 +161,7 @@ Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 Add-Type -assembly System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
-$main_form.Text = "JAMBOREE 3.93"
+$main_form.Text = "JAMBOREE 3.91"
 
 $hShift = 0
 $vShift = 0
@@ -316,7 +318,7 @@ Function CheckNode {
    if (-not(Test-Path -Path "$VARCD\node" )) {
         try {
 			Write-Message  -Message  "Downloading latest node" -Type "INFO"
-			$downloadUri = $downloadUri = (Invoke-RestMethod -Method GET -Uri "https://nodejs.org/dist/latest/")    -split '"'    -match '.*node-.*-win-x64.zip.*'   | ForEach-Object {$_ -ireplace '^','https://nodejs.org/dist/latest/' }  | select -first 1
+			$downloadUri = (Invoke-RestMethod -Method GET -Uri "https://nodejs.org/en/download/")    -split '>' -match '.*win-x64.*zip.*'  | ForEach-Object {$_ -ireplace '.* href="','' -ireplace  '".*',''}
             downloadFile "$downloadUri" "$VARCD\node.zip"
 			Write-Message  -Message  "Extracting Node"  -Type "INFO"
 			Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -1729,6 +1731,37 @@ Start-Process -FilePath "python" -WorkingDirectory "$VARCD\digiduck\"  -Argument
 }
 
 
+function Get-ScriptPathFromCallStack {
+    # Get the current call stack
+    $callStack = Get-PSCallStack
+
+    # Iterate through the call stack entries
+    foreach ($stackFrame in $callStack) {
+        # Check if the InvocationInfo.MyCommand.CommandType is ExternalScript, which indicates a script file
+        if ($stackFrame.InvocationInfo.MyCommand.CommandType -eq 'ExternalScript') {
+            # Return the script path
+            return $stackFrame.InvocationInfo.MyCommand.Definition
+        }
+    }
+
+    # If no script file was found in the call stack, return $null or an appropriate message
+    return $null
+}
+
+
+
+############# UpdateJAMBO
+Function UpdateJAMBO {
+$JAMBOPATH = Get-ScriptPathFromCallStack
+Write-Message  -Message  "Downloading latest JAMBOREE to $JAMBOPATH"  -Type "INFO"
+Invoke-WebRequest -Method GET -Uri 'https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/raw/main/JAMBOREE.ps1' -OutFile "$JAMBOPATH"
+Write-Host "Restarting"
+Start-Sleep -Seconds 1
+Set-Variable -Name ErrorActionPreference -Value SilentlyContinue
+
+Start-Process -FilePath "powershell" -WorkingDirectory "$VARCD\" -ArgumentList " -File `"$JAMBOPATH`" "  -ErrorAction SilentlyContinue
+#exit 0
+}
 
 ############# CheckPostgres
 Function CheckPostgres {
@@ -1785,9 +1818,9 @@ Start-Process "notepad" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\ytdl
     Write-Message  -Message  "Downloading $_"  -Type "INFO"
 
     $GetDate = Get-Date -Format yyyyMMddTHHmmss 
-    Start-Process "$VARCD\ytdlp\yt-dlp.exe" -WorkingDirectory "$VARCD\ytdlp" -ArgumentList "  -o `"$GetDate %(upload_date)s - %(title)s.%(ext)s`"  `"$_`"     " -wait -NoNewWindow
+    Start-Process "$VARCD\ytdlp\yt-dlp.exe" -WorkingDirectory "$VARCD\ytdlp" -ArgumentList " -x -o `"$GetDate %(upload_date)s - %(title)s.%(ext)s`"  `"$_`"     " -wait -NoNewWindow
     
-    
+    Invoke-Item "$VARCD\ytdlp"
     
     # old multi stream downloading script don't use because multi threaded downloads do not always work ...  
 	# wget -q -U "rmccurdy.com" -q -P aria2  -e robots=off  -nd -r  "https://github.com/aria2/aria2/releases/latest" --max-redirect 1 -l 1 -A "latest,aria*win*64*.zip" -R '*.gz,release*.*' --regex-type pcre --accept-regex "aria2-.*-win-64bit-build1.zip"
@@ -1795,7 +1828,7 @@ Start-Process "notepad" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\ytdl
     # start "aria2c !UUID!"	 cmd /c yt-dlp.exe -w --no-continue  --merge-output-format mkv --ffmpeg-location .\ -o ".\downloads\%%(uploader)s - %%(title)s - %%(id)s_!UUID!.%%(ext)s" -i   --external-downloader aria2c --external-downloader-args " -x 16 -s 16 -k 1M" "%%A"  ^& pause
     
     }
-Invoke-Item "$VARCD\ytdlp"
+
 }
 
 
@@ -2117,6 +2150,18 @@ $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({Ytdlp})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
+
+############# UpdateJAMBO
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Update JAMBOREE"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({UpdateJAMBO})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+
+
 
 ############# SHOW FORM
 $main_form.ShowDialog()
