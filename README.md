@@ -105,7 +105,7 @@ PhreakNIC 24: Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 # ScreenShots
 
 ### GUI-ish
-![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/1b6d061f-afa4-4b3f-9b78-676714f1231d)
+![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/9b47922e-99d7-4d03-85d5-6c12e8c6073d)
 
 
 ### Postgres (no admin ) and ~~RockyLinks~~ OracleLinux WSL !
