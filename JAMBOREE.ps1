@@ -319,6 +319,7 @@ Function CheckNode {
         try {
 			Write-Message  -Message  "Downloading latest node" -Type "INFO"
 			$downloadUri = $downloadUri = (Invoke-RestMethod -Method GET -Uri "https://nodejs.org/dist/latest/")    -split '"'    -match '.*node-.*-win-x64.zip.*'   | ForEach-Object {$_ -ireplace '^','https://nodejs.org/dist/latest/' }  | select -first 1
+            downloadFile "$downloadUri" "$VARCD\node.zip"
 			Write-Message  -Message  "Extracting Node"  -Type "INFO"
 			Add-Type -AssemblyName System.IO.Compression.FileSystem
             Add-Type -AssemblyName System.IO.Compression
@@ -335,7 +336,7 @@ Function CheckNode {
 			Write-Message  -Message  "$VARCD\node Already Exist"  -Type "INFO"
 			}
 }
- 
+
 ############# StartRMS
 Function StartRMS {
 	CheckPython
