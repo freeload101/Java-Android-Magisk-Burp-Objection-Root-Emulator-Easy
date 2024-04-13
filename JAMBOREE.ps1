@@ -252,14 +252,6 @@ if (($wslInfo) -match  (".*OracleLinux_9_1.*")  -or ($wslInfo) -match  (".*O.r.a
 
 }
 
-############# CompileVol
-function CompileVol
-{
-
-
-}
-
-
 ############# CHECK PYTHON
 Function CheckVolatility3 {
    if (-not(Test-Path -Path "$VARCD\volatility3-develop" )) { 
