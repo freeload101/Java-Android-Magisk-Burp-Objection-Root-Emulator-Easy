@@ -252,44 +252,46 @@ if (($wslInfo) -match  (".*OracleLinux_9_1.*")  -or ($wslInfo) -match  (".*O.r.a
 
 }
 
-############# CHECK PYTHON
+############# CheckVolatility3
 Function CheckVolatility3 {
    if (-not(Test-Path -Path "$VARCD\volatility3-develop" )) { 
         try {
             CheckPython
-			Write-Message  -Message  "Installing Volatility 3 Dependencies" -Type "INFO"
-			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install install --upgrade pip " -wait -NoNewWindow
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install wheel " -wait -NoNewWindow
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install pyinstaller " -wait -NoNewWindow
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install pefile " -wait -NoNewWindow
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install capstone " -wait -NoNewWindow
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install pycryptodome " -wait -NoNewWindow
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install leechcorepyc " -wait -NoNewWindow
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-snappy==0.6.0 " -wait -NoNewWindow
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install yara-python " -wait -NoNewWindow
-            
+
 			Write-Message  -Message  "Downloading volatility3" -Type "INFO"
 			downloadFile "https://github.com/volatilityfoundation/volatility3/archive/refs/heads/develop.zip" "$VARCD\develop.zip"
+			Add-Type -AssemblyName System.IO.Compression.FileSystem
+            Add-Type -AssemblyName System.IO.Compression
 			[System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\develop.zip", "$VARCD\")
+
 
 			Write-Message  -Message  "Downloading upx-3.96-win64.zip" -Type "INFO"
 			downloadFile "https://github.com/upx/upx/releases/download/v3.96/upx-3.96-win64.zip" "$VARCD\upx.zip"
 			[System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\upx.zip", "$VARCD\")
 			
 			
+			Write-Message -Message "Installing Setuptools" -Type "INFO"
+			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " -m pip install setuptools " -wait -NoNewWindow
+			Write-Message -Message "Installing pyinstaller " -Type "INFO"
+			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " -m pip install pyinstaller " -wait -NoNewWindow
+			Write-Message -Message "Installing requirements.txt" -Type "INFO"
+			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " -m pip install -r requirements.txt " -wait -NoNewWindow
+            
+			
 			Write-Message -Message "Building Volatility" -Type "INFO"
+			Set-Location -Path "$VARCD\volatility3-develop\"
 			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " setup.py build " -wait -NoNewWindow
 			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " setup.py install " -wait -NoNewWindow
-
-			Write-Message  -Message  "Current Working Directory $VARCD\volatility3-develop\volatility3" -Type "INFO"
-			Start-Process -FilePath "$VARCD\python\tools\Scripts\pyinstaller.exe" -WorkingDirectory "$VARCD\volatility3-develop\volatility3" -ArgumentList "  --upx-dir `"$VARCD\upx-3.96-win64`" ..\vol.spec " -wait -NoNewWindow
+						
+			Write-Message  -Message  "Running pyinstaller to create binary  " -Type "INFO"
+			Start-Process -FilePath "$VARCD\python\tools\Scripts\pyinstaller.exe" -WorkingDirectory "$VARCD\volatility3-develop\"  -ArgumentList "  --upx-dir `"$VARCD\upx-3.96-win64`" ..\vol.spec " -wait -NoNewWindow
 
 			Write-Message  -Message  "Downloading Volatility Symbols ~800MB" -Type "INFO"
 			downloadFile "https://downloads.volatilityfoundation.org/volatility3/symbols/windows.zip" "$VARCD\windows.zip"
 			New-Item -Path "$VARCD\volatility3-develop\volatility3\dist\symbols" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 			[System.IO.Compression.ZipFile]::ExtractToDirectory( "$VARCD\windows.zip", "$VARCD\volatility3-develop\volatility3\dist\symbols")
 			
-			Write-Message  -Message  "Complete opening volatility3 folder example command line vol.exe -f  memory.dump windows.pslist " -Type "INFO"
+			Write-Message  -Message  "Complete opening volatility3 folder example command line .\vol.exe -f  memory.dump windows.pslist " -Type "INFO"
 			explorer "$VARCD\volatility3-develop\volatility3\dist"
 
             }
