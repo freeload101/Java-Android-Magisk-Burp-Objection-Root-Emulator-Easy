@@ -257,7 +257,6 @@ Function CheckVolatility3 {
    if (-not(Test-Path -Path "$VARCD\volatility3-develop" )) { 
         try {
             CheckPython
-
 			Write-Message  -Message  "Downloading volatility3" -Type "INFO"
 			downloadFile "https://github.com/volatilityfoundation/volatility3/archive/refs/heads/develop.zip" "$VARCD\develop.zip"
 			Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -279,12 +278,11 @@ Function CheckVolatility3 {
             
 			
 			Write-Message -Message "Building Volatility" -Type "INFO"
-			Set-Location -Path "$VARCD\volatility3-develop\"
 			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " setup.py build " -wait -NoNewWindow
 			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " setup.py install " -wait -NoNewWindow
 						
 			Write-Message  -Message  "Running pyinstaller to create binary  " -Type "INFO"
-			Start-Process -FilePath "$VARCD\python\tools\Scripts\pyinstaller.exe" -WorkingDirectory "$VARCD\volatility3-develop\"  -ArgumentList "  --upx-dir `"$VARCD\upx-3.96-win64`" ..\vol.spec " -wait -NoNewWindow
+			Start-Process -FilePath "$VARCD\python\tools\Scripts\pyinstaller.exe" -WorkingDirectory "$VARCD\volatility3-develop\volatility3"  -ArgumentList "  --upx-dir `"$VARCD\upx-3.96-win64`" ..\vol.spec " -wait -NoNewWindow
 
 			Write-Message  -Message  "Downloading Volatility Symbols ~800MB" -Type "INFO"
 			downloadFile "https://downloads.volatilityfoundation.org/volatility3/symbols/windows.zip" "$VARCD\windows.zip"
@@ -293,7 +291,8 @@ Function CheckVolatility3 {
 			
 			Write-Message  -Message  "Complete opening volatility3 folder example command line .\vol.exe -f  memory.dump windows.pslist " -Type "INFO"
 			explorer "$VARCD\volatility3-develop\volatility3\dist"
-
+			New-Item -Path "$VARCD\volatility3-develop\volatility3\dist\symbols" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+			
             }
                 catch {
                     throw $_.Exception.Message
