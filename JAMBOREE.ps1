@@ -161,7 +161,7 @@ Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 Add-Type -assembly System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
-$main_form.Text = "JAMBOREE 3.91"
+$main_form.Text = "JAMBOREE 3.92"
 
 $hShift = 0
 $vShift = 0
