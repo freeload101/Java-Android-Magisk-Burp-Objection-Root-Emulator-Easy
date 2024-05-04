@@ -36,6 +36,7 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 |SillyTavern|✔️|
 |Volatility 3|✔️|
 |Arduino IDE / Duck2Spark|✔️|
+|Youtube Downloader Yt-dlp |✔️|
 
 ### How it works:
 
