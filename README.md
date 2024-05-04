@@ -35,6 +35,7 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 |Postgres No admin|✔️|
 |SillyTavern|✔️|
 |Volatility 3|✔️|
+|Arduino IDE / Duck2Spark|✔️|
 
 ### How it works:
 
