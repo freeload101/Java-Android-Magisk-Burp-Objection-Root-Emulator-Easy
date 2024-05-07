@@ -355,7 +355,7 @@ Function BashOrOllama {
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"ollama pull Mistral `" "   -wait -NoNewWindow
 	  
 		Write-Message  -Message  "Starting Olamma Server (serve) " -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"ollama serve`" "   
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"OLLAMA_HOST=0.0.0.0 ollama serve`" "   
 	  
 	}
 	Elseif ($pause = '7') {
