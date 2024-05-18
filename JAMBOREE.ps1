@@ -1855,12 +1855,24 @@ Function CheckPostgres {
 ############# Ytdlp
 Function Ytdlp {
 CheckGit
+if (-not(Test-Path -Path "$VARCD\ytdlp" )) {
+    New-Item -Path "$VARCD\ytdlp" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 
-New-Item -Path "$VARCD\ytdlp" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+    Write-Message  -Message  "Downloading Latest yt-dlp"  -Type "INFO"
+    $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest").assets | Where-Object name -like yt-dlp.exe ).browser_download_url
+    downloadFile "$downloadUri" "$VARCD\ytdlp\yt-dlp.exe"
+    Write-Message  -Message  "Downloading Latest ffmpeg-master-latest-win64-gpl-shared.zip"  -Type "INFO"
+    downloadFIle "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip" "$VARCD\ytdlp\ffmpeg-master-latest-win64-gpl-shared.zip"
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+	Add-Type -AssemblyName System.IO.Compression
+    [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\ytdlp\ffmpeg-master-latest-win64-gpl-shared.zip", "$VARCD\ytdlp")
 
-Write-Message  -Message  "Downloading Latest yt-dlp"  -Type "INFO"
-$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest").assets | Where-Object name -like yt-dlp.exe ).browser_download_url
-downloadFile "$downloadUri" "$VARCD\ytdlp\yt-dlp.exe"
+    $env:Path = "$env:Path;$VARCD\C:\ROBERT\ytdlp\ffmpeg-master-latest-win64-gpl-shared\bin"
+
+    Remove-Item -Path "$VARCD\ytdlp\ffmpeg-master-latest-win64-gpl-shared.zip" -Force -ErrorAction SilentlyContinue |Out-Null
+
+}
+
 
 Write-Message  -Message  "Opening $VARCD\ytdlp\LIST.txt"  -Type "INFO"
 New-Item -Path "$VARCD\ytdlp\LIST.txt" -ItemType "file"  -ErrorAction SilentlyContinue -Force 
@@ -1872,8 +1884,10 @@ Start-Process "notepad" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\ytdl
     Write-Message  -Message  "Downloading $_"  -Type "INFO"
 
     $GetDate = Get-Date -Format yyyyMMddTHHmmss 
-    Start-Process "$VARCD\ytdlp\yt-dlp.exe" -WorkingDirectory "$VARCD\ytdlp" -ArgumentList " -o `"$GetDate %(upload_date)s - %(title)s.%(ext)s`"  `"$_`"     " -wait -NoNewWindow
+    Write-Message  -Message  " --ffmpeg-location `"$VARCD\ytdlp\ffmpeg-master-latest-win64-gpl-shared\bin`" -o `"$GetDate %(upload_date)s - %(title)s.%(ext)s`"  `"$_`"     "  -Type "INFO"
     
+    Start-Process "$VARCD\ytdlp\yt-dlp.exe" -WorkingDirectory "$VARCD\ytdlp" -ArgumentList " --ffmpeg-location `"$VARCD\ytdlp\ffmpeg-master-latest-win64-gpl-shared\bin`" -o `"$GetDate %(upload_date)s - %(title)s.%(ext)s`"  `"$_`"     " -wait -NoNewWindow
+  
     Invoke-Item "$VARCD\ytdlp"
     
     # old multi stream downloading script don't use because multi threaded downloads do not always work ...  
