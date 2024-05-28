@@ -348,13 +348,13 @@ Function BashOrOllama {
 	$pause = $wshell.Popup("Do you want to run Ollama?", 0, "Wait!", 4)
 	if ($pause -eq '6') {
 
-		Write-Message  -Message "Downloading Olamma" -Type "INFO"
+		Write-Message  -Message "Downloading Ollama" -Type "INFO"
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"curl -fsSL https://ollama.com/install.sh | sh`" "   -wait  
 		
 		Write-Message  -Message  "Downloading Model Mistral " -Type "INFO"
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"ollama pull Mistral `" "   -wait -NoNewWindow
 	  
-		Write-Message  -Message  "Starting Olamma Server (serve) " -Type "INFO"
+		Write-Message  -Message  "Starting Ollama Server (serve) " -Type "INFO"
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"OLLAMA_HOST=0.0.0.0 ollama serve`" "   
 	  
 	}
