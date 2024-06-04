@@ -345,7 +345,7 @@ if (($wslInfo) -match  (".*Ubuntu.*")  -or ($wslInfo) -match  (".*U.b.u.n.t.u.*"
 ############# BashOrOllama
 Function BashOrOllama {
 	$wshell = New-Object -ComObject Wscript.Shell
-	$pause = $wshell.Popup("Do you want to run Ollama?", 0, "Wait!", 4)
+	$pause = $wshell.Popup("Do you want to run Ollama API server on port 11434 ?", 0, "Wait!", 4)
 	if ($pause -eq '6') {
 
 		Write-Message  -Message "Downloading Ollama" -Type "INFO"
