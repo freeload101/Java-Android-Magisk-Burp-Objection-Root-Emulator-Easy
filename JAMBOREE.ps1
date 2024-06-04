@@ -345,7 +345,7 @@ if (($wslInfo) -match  (".*Ubuntu.*")  -or ($wslInfo) -match  (".*U.b.u.n.t.u.*"
 ############# BashOrOllama
 Function BashOrOllama {
 	$wshell = New-Object -ComObject Wscript.Shell
-	$pause = $wshell.Popup("Do you want to run Ollama API server on port 11434 ?", 0, "Wait!", 4)
+	$pause = $wshell.Popup("Do you want to run Ollama?", 0, "Wait!", 4)
 	if ($pause -eq '6') {
 
 		Write-Message  -Message "Downloading Ollama" -Type "INFO"
@@ -976,6 +976,44 @@ Function AUTOMATIC1111 {
 	Stop-process -name Chromium -Force -ErrorAction SilentlyContinue |Out-Null
 	Start-Process -FilePath "C:\Program Files\Chromium\Application\chrome.exe" -WorkingDirectory "$VARCD\" -ArgumentList " --disable-history-quick-provider --guest `"http://127.0.0.1:7860/`"" 
 }
+
+
+
+############# vladmandic_automatic
+Function vladmandic_automatic {
+	#  --xformers --deepdanbooru --disable-safe-unpickle --listen --theme dark --enable-insecure-extension-access
+	# stable-diffusion-webui\modules\processing.py  params.txt
+	CheckGit
+ 	CheckPythonA1111
+	
+	# set env for A111 python
+	Write-Message  -Message  "Resetting env for vladmandic_automatic python $VARCD"  -Type "INFO"
+	
+	# env
+	# Path python
+	Write-Message  -Message  "Resetting Path variables to not use local python"  -Type "INFO"
+	$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\pythonA111\tools\Scripts;$VARCD\pythonA111\tools;pythonA111\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
+
+	# python
+	$env:PYTHONHOME="$VARCD\pythonA111\tools"
+	$env:PYTHONPATH="$VARCD\pythonA111\tools\Lib\site-packages"
+	
+	Write-Message  -Message  "Running pip install --upgrade pip"  -Type "INFO"
+	Start-Process -FilePath "$VARCD\pythonA111\tools\python.exe" -WorkingDirectory "$VARCD\pythonA111\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow
+           
+	   
+	Write-Message  -Message  "Cloning vladmandic_automatic"  -Type "INFO"
+	Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/vladmandic/automatic.git`" " -wait -NoNewWindow
+	
+	Start-Process -FilePath "$VARCD\automatic\webui.bat" -WorkingDirectory "$VARCD\automatic"  -ArgumentList " --use-ipex "  -wait -NoNewWindow
+	Write-Message  -Message  "Suggest creating hard links to your models with mklink /d "  -Type "INFO"
+
+ 	Start-Sleep -Seconds 15
+	Stop-process -name chrome -Force -ErrorAction SilentlyContinue |Out-Null
+	Stop-process -name Chromium -Force -ErrorAction SilentlyContinue |Out-Null
+	Start-Process -FilePath "C:\Program Files\Chromium\Application\chrome.exe" -WorkingDirectory "$VARCD\" -ArgumentList " --disable-history-quick-provider --guest `"http://127.0.0.1:7860/`"" 
+}
+
 
 ############# CHECK PYTHONA111
 Function CheckPythonA1111 {
@@ -2144,6 +2182,15 @@ $Button.AutoSize = $true
 $Button.Text = "AUTOMATIC1111"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({AUTOMATIC1111})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# vladmandic_automatic
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "vladmandic_automatic"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({vladmandic_automatic})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
