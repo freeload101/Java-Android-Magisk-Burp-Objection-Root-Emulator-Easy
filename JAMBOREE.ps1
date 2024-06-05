@@ -2182,7 +2182,7 @@ $vShift = $vShift + 30
 ############# vladmandic_automatic
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "vladmandic_automatic"
+$Button.Text = "SD.Next Stable Diffusion"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({vladmandic_automatic})
 $main_form.Controls.Add($Button)
