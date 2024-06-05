@@ -27,6 +27,7 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 |Frida|✔️|
 |Certs|✔️|
 |AUTOMATIC1111|✔️|
+|SD.Next Stable Diffusion implementation with advanced features|✔️|
 |AutoGPT|✔️|
 |Bloodhound|✔️|
 |PyCharm|✔️|
