@@ -971,10 +971,7 @@ Function AUTOMATIC1111 {
 	Start-Process -FilePath "$VARCD\stable-diffusion-webui\webui-user.bat" -WorkingDirectory "$VARCD\stable-diffusion-webui"  -ArgumentList " "  -wait -NoNewWindow
 	Write-Message  -Message  "Suggest creating hard links to your models with mklink /d "  -Type "INFO"
 
- 	Start-Sleep -Seconds 15
-	Stop-process -name chrome -Force -ErrorAction SilentlyContinue |Out-Null
-	Stop-process -name Chromium -Force -ErrorAction SilentlyContinue |Out-Null
-	Start-Process -FilePath "C:\Program Files\Chromium\Application\chrome.exe" -WorkingDirectory "$VARCD\" -ArgumentList " --disable-history-quick-provider --guest `"http://127.0.0.1:7860/`"" 
+ 	Start-Process -FilePath "C:\Program Files\Chromium\Application\chrome.exe" -WorkingDirectory "$VARCD\" -ArgumentList " --disable-history-quick-provider --guest `"http://127.0.0.1:7860/`"" 
 }
 
 
@@ -1005,13 +1002,10 @@ Function vladmandic_automatic {
 	Write-Message  -Message  "Cloning vladmandic_automatic"  -Type "INFO"
 	Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/vladmandic/automatic.git`" " -wait -NoNewWindow
 	
-	Start-Process -FilePath "$VARCD\automatic\webui.bat" -WorkingDirectory "$VARCD\automatic"  -ArgumentList " --use-ipex "  -wait -NoNewWindow
+	Start-Process -FilePath "$VARCD\automatic\webui.bat" -WorkingDirectory "$VARCD\automatic"  -ArgumentList "  "  -wait -NoNewWindow
 	Write-Message  -Message  "Suggest creating hard links to your models with mklink /d "  -Type "INFO"
 
- 	Start-Sleep -Seconds 15
-	Stop-process -name chrome -Force -ErrorAction SilentlyContinue |Out-Null
-	Stop-process -name Chromium -Force -ErrorAction SilentlyContinue |Out-Null
-	Start-Process -FilePath "C:\Program Files\Chromium\Application\chrome.exe" -WorkingDirectory "$VARCD\" -ArgumentList " --disable-history-quick-provider --guest `"http://127.0.0.1:7860/`"" 
+ 	Start-Process -FilePath "C:\Program Files\Chromium\Application\chrome.exe" -WorkingDirectory "$VARCD\" -ArgumentList " --disable-history-quick-provider --guest `"http://127.0.0.1:7860/`"" 
 }
 
 
