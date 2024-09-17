@@ -38,6 +38,7 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 |Volatility 3|✔️|
 |Arduino IDE / Duck2Spark|✔️|
 |Youtube Downloader Yt-dlp |✔️|
+|SOCFortress CoPilot /  Velociraptor / Wazuh |✔️|
 
 ### How it works:
 
@@ -109,7 +110,7 @@ PhreakNIC 24: Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 # ScreenShots
 
 ### GUI-ish
-![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/765852dd-e2de-4e0a-b079-8ef564201cca)
+![image](https://github.com/user-attachments/assets/f3ab4b59-a776-43d3-a9bc-17c13d53e756)
 
 
 ### Postgres (no admin ) and ~~RockyLinks~~ OracleLinux WSL !
