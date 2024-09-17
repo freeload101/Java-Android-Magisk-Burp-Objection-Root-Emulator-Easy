@@ -161,7 +161,7 @@ Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 Add-Type -assembly System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
-$main_form.Text = "JAMBOREE 3.92"
+$main_form.Text = "JAMBOREE 4.0"
 
 $hShift = 0
 $vShift = 0
@@ -365,7 +365,24 @@ Function BashOrOllama {
 	}
 }
 
+############# SOCFortressCoPilotFast
+Function SOCFortressCoPilotFast {
+	$wshell = New-Object -ComObject Wscript.Shell
+	$pause = $wshell.Popup("SOCFortress_CoPilot_Fast.bash?", 0, "Wait!", 4)
+	if ($pause -eq '6') {
 
+		Write-Message  -Message "Downloading / running SOCFortress_CoPilot_Fast.bash " -Type "INFO"
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"wget -O SOCFortress_CoPilot_Fast.bash  https://raw.githubusercontent.com/freeload101/SCRIPTS/master/Bash/SOCFortress_CoPilot_Fast.bash`" "   -wait 
+		#Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"cd /opt/ ; cp /mnt/c/delete/POTATO/SOCFortress_CoPilot_Fast.bash /opt  `" "   -wait 
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"bash SOCFortress_CoPilot_Fast.bash `" "   -wait  
+		
+	}
+	Elseif ($pause = '7') {
+		Write-Message  -Message  "Ubuntu found Starting bash shell" -Type "INFO"
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash "   
+		return
+	}
+}
 
 ############# CheckNode
 Function CheckNode {
@@ -1931,6 +1948,77 @@ Start-Process "notepad" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\ytdl
 
 }
 
+############# WSLShrink
+Function WSLShrink {
+CheckAdmin
+# Credit Johan Arwidmark
+# https://www.deploymentresearch.com/optimizing-vhdx-files-in-a-hyper-v-lab/ https://www.deploymentresearch.com/author/admin/ 
+
+
+Write-Message  -Message  "Running docker image prune -a -f to reclaime disk space" -Type "INFO"
+Start-Process -FilePath "$env:WSLBIN" -ArgumentList "  -u root -e bash -c `"docker image prune -a -f`" " -wait -NoNewWindow
+Start-Sleep -Seconds 10
+Write-Message  -Message  "Shutting down wsl" -Type "INFO"
+Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --shutdown " -wait -NoNewWindow
+Start-Sleep -Seconds 10
+
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All
+
+$VirtualDisks = Get-ChildItem -Path "$env:USERPROFILE\AppData\Local\Packages" -Filter *.vhdx -Recurse
+
+$Time = Measure-Command {
+    [System.Collections.ArrayList]$VHDXInfo = @()
+    foreach ($VHDX in $VirtualDisks) {
+       
+        $DiskSizeBeforeInGB = [math]::Round($(Get-Item -Path $VHDX.FullName).length/1GB)
+
+        $Mount = Mount-VHD -Path $VHDX.FullName -Passthru
+        $Volumes = $Mount | Get-Disk | Get-Partition | Get-Volume | Select-Object -Property DriveLetter, FileSystem, Drivetype | Where-Object {$_.DriveLetter -notin '',$null} 
+
+        # Defrag each volume
+        foreach ($Volume in $Volumes){
+
+            $DriveLetter = $Volume.DriveLetter+":"
+            # Code for VHDX stored on SSD drives (not using /d)
+            defrag $DriveLetter /x
+            defrag $DriveLetter /k /l
+            defrag $DriveLetter /x # repeated
+            defrag $DriveLetter /k # repeated, but without trim (/l)
+        }
+        
+        Dismount-VHD -Path $VHDX.FullName
+        
+        # Mount the VHDX file read-only, not mapping any drive letters
+        Mount-VHD -Path $VHDX.FullName -NoDriveLetter -ReadOnly
+        Optimize-VHD -Path $VHDX.FullName -Mode Full
+        Dismount-VHD -Path $VHDX.FullName
+
+        $DiskSizeAfterInGB = [math]::Round($(Get-Item -Path $VHDX.FullName).length/1GB)
+
+        $obj = [PSCustomObject]@{
+
+            # Add values to arraylist
+            DiskSizeBeforeInGB = $DiskSizeBeforeInGB
+            DiskSizeAfterInGB = $DiskSizeAfterInGB
+        }
+
+        # Add all the values
+        $VHDXInfo.Add($obj)|Out-Null
+    }
+
+    $TotalDiskSizeBeforeInGB = ($VHDXInfo.DiskSizeBeforeInGB | Measure-Object -Sum).Sum
+    $TotalDiskSizeAfterInGB = ($VHDXInfo.DiskSizeAfterInGB | Measure-Object -Sum).Sum
+    $SavingsInGB = $TotalDiskSizeBeforeInGB -  $TotalDiskSizeAfterInGB
+    Write-Host "Total disk size before optimization: $TotalDiskSizeBeforeInGB GB"
+    Write-Host "Total disk size after optimization: $TotalDiskSizeAfterInGB GB"
+    Write-Host "Total savings after optimization is: $SavingsInGB GB"
+
+}
+
+Write-Host "Optimization runtime was $($Time.Minutes) minutes and $($Time.Seconds) Seconds"
+}
+
+
 
 ######################################################################################################################### FUNCTIONS END
 
@@ -2212,6 +2300,24 @@ $Button.AutoSize = $true
 $Button.Text = "WSL Ubuntu/Ollama"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({WSLUbuntu})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# SOCFortressCoPilotFast
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "WSL SOCFortress CoPilot"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({SOCFortressCoPilotFast})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# WSLShrink
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "WSL Shrink"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({WSLShrink})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
