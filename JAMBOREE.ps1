@@ -2058,10 +2058,44 @@ Start-Sleep 10
         Write-Message  -Message "Downloading / running SOCFortress_CoPilot_Fast.bash " -Type "INFO"
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d SOCFortress -u root -e bash -c `"wget -O SOCFortress_CoPilot_Fast.bash  https://raw.githubusercontent.com/freeload101/SCRIPTS/master/Bash/SOCFortress_CoPilot_Fast.bash`" "   -wait 
         Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d SOCFortress -u root -e bash -c `"bash SOCFortress_CoPilot_Fast.bash `" "  -NoNewWindow
- 	
+		
+		#port fwd
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d SOCFortress -u root -e bash -c `" ip route get 1.1.1.1  `" " -NoNewWindow -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+		Start-Sleep 10
+		Get-Content RedirectStandardOutput.txt
+		#Get-Content RedirectStandardError.txt
+
+		$INTERNETIP = Get-Content RedirectStandardOutput.txt | ForEach-Object { $elements = $_ -split ' '; $elements[6] }
+		 
+		Write-Message  -Message "You need to run the following as administrator to reach the services from outside the host mashine" -Type "WARNING"
+		Write-Message  -Message "netsh interface portproxy add v4tov4 listenport=1514 listenaddress=0.0.0.0 connectport=1514 connectaddress=$INTERNETIP" -Type "WARNING"
+		Write-Message  -Message "netsh interface portproxy add v4tov4 listenport=1515 listenaddress=0.0.0.0 connectport=1515 connectaddress=$INTERNETIP" -Type "WARNING"
+		Write-Message  -Message "netsh interface portproxy add v4tov4 listenport=8889 listenaddress=0.0.0.0 connectport=8889 connectaddress=$INTERNETIP" -Type "WARNING"
+		Write-Message  -Message "netsh interface portproxy add v4tov4 listenport=4433 listenaddress=0.0.0.0 connectport=4433 connectaddress=$INTERNETIP" -Type "WARNING"
+		Write-Message  -Message "netsh interface portproxy add v4tov4 listenport=443 listenaddress=0.0.0.0 connectport=443 connectaddress=$INTERNETIP" -Type "WARNING"
+
         }
 }
 
+function SOCFortressCoPilotPortFWD{
+$env:WSLBIN= "c:\users\$env:USERNAME\AppData\Local\Microsoft\WindowsApps\wsl.exe"
+$env:WSL_UTF8 = 1
+Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d SOCFortress -u root -e bash -c `" ip route get 1.1.1.1  `" " -NoNewWindow -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+Start-Sleep 10
+Get-Content RedirectStandardOutput.txt
+#Get-Content RedirectStandardError.txt
+
+$INTERNETIP = Get-Content RedirectStandardOutput.txt | ForEach-Object { $elements = $_ -split ' '; $elements[6] }
+ 
+
+netsh interface portproxy add v4tov4 listenport=1514 listenaddress=0.0.0.0 connectport=1514 connectaddress=$INTERNETIP
+netsh interface portproxy add v4tov4 listenport=1515 listenaddress=0.0.0.0 connectport=1515 connectaddress=$INTERNETIP
+netsh interface portproxy add v4tov4 listenport=1514 listenaddress=0.0.0.0 connectport=1514 connectaddress=$INTERNETIP
+netsh interface portproxy add v4tov4 listenport=1515 listenaddress=0.0.0.0 connectport=1515 connectaddress=$INTERNETIP
+netsh interface portproxy add v4tov4 listenport=8889 listenaddress=0.0.0.0 connectport=8889 connectaddress=$INTERNETIP
+netsh interface portproxy add v4tov4 listenport=4433 listenaddress=0.0.0.0 connectport=4433 connectaddress=$INTERNETIP
+netsh interface portproxy add v4tov4 listenport=443 listenaddress=0.0.0.0 connectport=443 connectaddress=$INTERNETIP
+}
 
 ######################################################################################################################### FUNCTIONS END
 
