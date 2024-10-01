@@ -161,7 +161,7 @@ Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 Add-Type -assembly System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
-$main_form.Text = "JAMBOREE 4.0"
+$main_form.Text = "JAMBOREE 4.1"
 
 $hShift = 0
 $vShift = 0
@@ -199,7 +199,7 @@ Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList  " --versio
 Start-Sleep -Seconds 1
 $wslInfo = Get-Content -Path "RedirectStandardOutput.txt" 
 if (($wslInfo) -match  (".*:.2.*")  -or ($wslInfo) -match  (".*W.S.L. .v.e.r.s.i.o.n.:. .2.*"))  {
-	Write-Message  -Message  "WSL versoin 2 found OK" -Type "INFO"
+	Write-Message  -Message  "WSL version 2 found OK" -Type "INFO"
 } else {
 	Write-Message  -Message  "Updating WSL" -Type "WARNING"
     CheckAdmin
@@ -217,7 +217,7 @@ if (($wslInfo) -match  (".*:.2.*")  -or ($wslInfo) -match  (".*W.S.L. .v.e.r.s.i
 Function WSLOracleLinux {
 WSLEnableUpdate
 
-Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
+Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
 Start-Sleep -Seconds 1
 $wslInfo = Get-Content -Path "RedirectStandardOutput.txt" 
 if (($wslInfo) -match  (".*OracleLinux_9_1.*")  -or ($wslInfo) -match  (".*O.r.a.c.l.e.L.i.n.u.x.*"))  {
@@ -310,7 +310,7 @@ Function CheckVolatility3 {
 Function WSLUbuntu {
 WSLEnableUpdate
 
-Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
+Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
 Start-Sleep -Seconds 1
 $wslInfo = Get-Content -Path "RedirectStandardOutput.txt" 
 if (($wslInfo) -match  (".*Ubuntu.*")  -or ($wslInfo) -match  (".*U.b.u.n.t.u.*"))  {
@@ -363,26 +363,7 @@ Function BashOrOllama {
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash "   
 		return
 	}
-}
-
-############# SOCFortressCoPilotFast
-Function SOCFortressCoPilotFast {
-	$wshell = New-Object -ComObject Wscript.Shell
-	$pause = $wshell.Popup("SOCFortress_CoPilot_Fast.bash?", 0, "Wait!", 4)
-	if ($pause -eq '6') {
-
-		Write-Message  -Message "Downloading / running SOCFortress_CoPilot_Fast.bash " -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"wget -O SOCFortress_CoPilot_Fast.bash  https://raw.githubusercontent.com/freeload101/SCRIPTS/master/Bash/SOCFortress_CoPilot_Fast.bash`" "   -wait 
-		#Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"cd /opt/ ; cp /mnt/c/delete/POTATO/SOCFortress_CoPilot_Fast.bash /opt  `" "   -wait 
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"bash SOCFortress_CoPilot_Fast.bash `" "   -wait  
-		
-	}
-	Elseif ($pause = '7') {
-		Write-Message  -Message  "Ubuntu found Starting bash shell" -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash "   
-		return
-	}
-}
+} 
 
 ############# CheckNode
 Function CheckNode {
@@ -2018,6 +1999,68 @@ $Time = Measure-Command {
 Write-Host "Optimization runtime was $($Time.Minutes) minutes and $($Time.Seconds) Seconds"
 }
 
+function CheckImage{
+WSLEnableUpdate
+
+    $env:WSL_UTF8 = 1
+    $wslImage = "Ubuntu-22.04"
+ 
+    Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt" -Wait
+    Start-Sleep -Seconds 1
+    
+    $wslInfo = Get-Content -Path "RedirectStandardOutput.txt"
+        # check for existing $wslImage
+        if (($wslInfo) -match (".*$wslImage.*"))  {
+
+        $wshell = New-Object -ComObject Wscript.Shell
+        $pause = $wshell.Popup("Do you want to use $wslImage as your base clean image for JAMBOREE?", 0, "Wait!", 4)
+            if ($pause -eq '6') {
+            return
+            }
+            Elseif ($pause = '7') {
+            Write-Message  -Message  "You will need to create a base image $wslImage for JAMBOREE!" -Type "ERROR"
+            Start-Sleep 10
+            [Environment]::Exit(1)
+            }
+        } ELSE {
+        # create base image 
+            Write-Message "No $wslImage image found. Installing base $wslImage WSL image"  -Type "WARNING"
+            Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --install -d $wslImage " -wait 
+        }
+}
+
+
+ 
+function SOCFortressCoPilotFast{
+WSLEnableUpdate
+CheckImage
+Start-Sleep 10
+ 
+    $env:WSL_UTF8 = 1
+    $wslImage = "Ubuntu-22.04"
+    Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt" -Wait
+    Start-Sleep -Seconds 1
+    $wslInfo = Get-Content -Path "RedirectStandardOutput.txt"
+     # check for existing SOCFortress image
+        if (($wslInfo) -match (".*SOCFortress.*"))  {
+        # run socfortressstart
+		
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d SOCFortress -u root -e bash -c `"bash  `" "  
+		
+        } ELSE {
+        # clone base image
+        Write-Message "Cloning $wslImage to $wslImage.tar"  -Type "INFO"
+        Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar`" " -NoNewWindow -Wait
+        Write-Output "Cloaning base $wslImage to SOCFortress WSL image"
+        Start-Process -FilePath "wsl.exe" -ArgumentList " --import SOCFortress SOCFortress `"$VARCD\$wslImage.tar`" "  -NoNewWindow -Wait
+        
+        # run install script ...
+        Write-Message  -Message "Downloading / running SOCFortress_CoPilot_Fast.bash " -Type "INFO"
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d SOCFortress -u root -e bash -c `"wget -O SOCFortress_CoPilot_Fast.bash  https://raw.githubusercontent.com/freeload101/SCRIPTS/master/Bash/SOCFortress_CoPilot_Fast.bash`" "   -wait 
+        Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d SOCFortress -u root -e bash -c `"bash SOCFortress_CoPilot_Fast.bash `" "  -NoNewWindow
+ 	
+        }
+}
 
 
 ######################################################################################################################### FUNCTIONS END
