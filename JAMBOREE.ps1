@@ -2073,6 +2073,7 @@ Start-Sleep 10
 		Add-Content -Path NetSh.txt -Value "netsh interface portproxy add v4tov4 listenport=8889 listenaddress=0.0.0.0 connectport=8889 connectaddress=$INTERNETIP"
 		Add-Content -Path NetSh.txt -Value "netsh interface portproxy add v4tov4 listenport=4433 listenaddress=0.0.0.0 connectport=4433 connectaddress=$INTERNETIP"
 		Add-Content -Path NetSh.txt -Value "netsh interface portproxy add v4tov4 listenport=443 listenaddress=0.0.0.0 connectport=443 connectaddress=$INTERNETIP"
+  		Add-Content -Path NetSh.txt -Value "netsh interface portproxy add v4tov4 listenport=8000 listenaddress=0.0.0.0 connectport=8000 connectaddress=$INTERNETIP"
 		Invoke-Item -Path NetSh.txt 
         }
 }
