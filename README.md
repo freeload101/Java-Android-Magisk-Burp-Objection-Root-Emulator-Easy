@@ -38,7 +38,7 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 |Volatility 3|✔️|
 |Arduino IDE / Duck2Spark|✔️|
 |Youtube Downloader Yt-dlp |✔️|
-|SOCFortress CoPilot /  Velociraptor / Wazuh |✔️|
+|SOCFortress CoPilot /  Velociraptor / Wazuh  WSL |✔️|
 
 ### How it works:
 
