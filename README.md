@@ -113,6 +113,8 @@ PhreakNIC 24: Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 ![image](https://github.com/user-attachments/assets/d07eba83-369e-4f39-a730-53dc64dbff0d)
 
 ### SOCFortress CoPilot / Velociraptor / Wazuh	
+[![name](https://i.ytimg.com/an_webp/6I8ZsIO9aDI/mqdefault_6s.webp?du=3000&sqp=CJaUorgG&rs=AOn4CLCgJe7rVyNc1mXNc7C3qcueW5koWA)](https://youtu.be/6I8ZsIO9aDI)
+
 ![image](https://github.com/user-attachments/assets/2e709698-91b2-4c41-9c25-b76392477c95)
 
 ### Postgres (no admin ) and ~~RockyLinks~~ OracleLinux WSL !
