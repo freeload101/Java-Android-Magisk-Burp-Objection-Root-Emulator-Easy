@@ -606,7 +606,7 @@ Write-Message  -Message  "Downloading Gameguardian"  -Type "INFO"
 downloadFile "https://gameguardian.net/forum/files/file/2-gameguardian/?do=download&r=50314&confirm=1&t=1" "$VARCD\APKS\gameguardian.apk"
 
 Write-Message  -Message  "Downloading Lucky Patcher"  -Type "INFO"
-downloadFile "http://chelpus.com/luckypatcher/LuckyPatcherInstaller.apk" "$VARCD\APKS\LP_Downloader.apk"
+downloadFile "https://chelpus.com/luckypatcher/LuckyPatcherInstaller.apk" "$VARCD\APKS\LP_Downloader.apk"
 
 Write-Message  -Message  "Downloading YASNAC"  -Type "INFO"
 $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/RikkaW/YASNAC/releases/latest").assets | Where-Object name -like *.apk ).browser_download_url
