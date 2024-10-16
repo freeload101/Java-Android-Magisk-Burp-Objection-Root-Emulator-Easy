@@ -1081,7 +1081,7 @@ Function RootAVD {
 if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
     try {
             Write-Message  -Message  "Downloading rootAVD"  -Type "INFO"
-            downloadFile "https://github.com/newbit1/rootAVD/archive/refs/heads/master.zip" "$VARCD\rootAVD-master.zip"
+            downloadFile "https://gitlab.com/newbit/rootAVD/-/archive/master/rootAVD-master.zip" "$VARCD\rootAVD-master.zip"
             Write-Message  -Message  "Extracting rootAVD (Turn On AVD 1st"  -Type "INFO"
             Expand-Archive -Path  "$VARCD\rootAVD-master.zip" -DestinationPath "$VARCD" -Force
         }
