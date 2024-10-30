@@ -526,7 +526,7 @@ Function CheckJava {
 Write-Message  -Message  "Checking for Java"  -Type "INFO"
    if (-not(Test-Path -Path "$VARCD\jdk" )) {
             Write-Message  -Message  "Downloading Java"  -Type "INFO"
-            downloadFile "https://download.oracle.com/java/22/latest/jdk-22_windows-x64_bin.zip" "$VARCD\jdk.zip"
+            downloadFile "https://download.oracle.com/java/22/archive/jdk-22.0.2_windows-x64_bin.zip" "$VARCD\jdk.zip"
             Write-Message  -Message  "Extracting Java"  -Type "INFO"
 			Add-Type -AssemblyName System.IO.Compression.FileSystem
             Add-Type -AssemblyName System.IO.Compression
