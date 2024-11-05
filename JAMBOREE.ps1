@@ -897,6 +897,13 @@ Function AVDStart {
 			Write-Message  -Message  "Do not run emulator with  -http-proxy 127.0.0.1:8080 it is not stable"  -Type "INFO"
 			# DO NOT USE THIS IT IS BUGGY ... Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
             Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system " -NoNewWindow
+				Start-Sleep -Seconds 10
+				Write-Message  -Message  "Enbleing keyboard in config.ini"  -Type "INFO"
+				(Get-Content "$VARCD\avd\pixel_2.avd\config.ini") `
+				-replace 'hw.keyboard = no', 'hw.keyboard = yes' `
+				-replace 'hw.camera.back.*', 'hw.camera.back = webcam0' `
+				-replace 'hw.camera.front.*', 'hw.camera.front = none' ` |
+				Out-File -Encoding Ascii "$VARCD\avd\pixel_2.avd\config.ini"
             }
     else {
             Write-Message  -Message  "AVDStart $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup"  -Type "WARNING"
@@ -1072,12 +1079,7 @@ Function AutoGPTEnv {
 Function RootAVD {
     # I had to start the image before I enabled keyboard ....
 	Start-Sleep -Seconds 2
-	Write-Message  -Message  "Enbleing keyboard in config.ini"  -Type "INFO"
-	(Get-Content "$VARCD\avd\pixel_2.avd\config.ini") `
-	-replace 'hw.keyboard = no', 'hw.keyboard = yes' `
-	-replace 'hw.camera.back.*', 'hw.camera.back = webcam0' `
-	-replace 'hw.camera.front.*', 'hw.camera.front = none' ` |
-	Out-File -Encoding Ascii "$VARCD\avd\pixel_2.avd\config.ini"
+
 if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
     try {
             Write-Message  -Message  "Downloading rootAVD"  -Type "INFO"
