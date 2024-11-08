@@ -526,7 +526,7 @@ Function CheckJava {
 Write-Message  -Message  "Checking for Java"  -Type "INFO"
    if (-not(Test-Path -Path "$VARCD\jdk" )) {
             Write-Message  -Message  "Downloading Java"  -Type "INFO"
-            downloadFile "https://download.oracle.com/java/22/archive/jdk-22.0.2_windows-x64_bin.zip" "$VARCD\jdk.zip"
+            downloadFile "https://download.oracle.com/java/23/latest/jdk-23_windows-x64_bin.zip" "$VARCD\jdk.zip"
             Write-Message  -Message  "Extracting Java"  -Type "INFO"
 			Add-Type -AssemblyName System.IO.Compression.FileSystem
             Add-Type -AssemblyName System.IO.Compression
@@ -606,7 +606,7 @@ Write-Message  -Message  "Downloading Gameguardian"  -Type "INFO"
 downloadFile "https://gameguardian.net/forum/files/file/2-gameguardian/?do=download&r=50314&confirm=1&t=1" "$VARCD\APKS\gameguardian.apk"
 
 Write-Message  -Message  "Downloading Lucky Patcher"  -Type "INFO"
-downloadFile "https://chelpus.com/download/LuckyPatchers.com_Official_Installer_10.8.1.apk" "$VARCD\APKS\LP_Downloader.apk"
+downloadFile "https://chelpus.com/luckypatcher/LuckyPatcherInstaller.apk" "$VARCD\APKS\LP_Downloader.apk"
 
 Write-Message  -Message  "Downloading YASNAC"  -Type "INFO"
 $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/RikkaW/YASNAC/releases/latest").assets | Where-Object name -like *.apk ).browser_download_url
@@ -1083,7 +1083,8 @@ Function RootAVD {
 if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
     try {
             Write-Message  -Message  "Downloading rootAVD"  -Type "INFO"
-            downloadFile "https://github.com/newbit1/rootAVD/archive/refs/heads/master.zip" "$VARCD\rootAVD-master.zip"
+            # Just in cases : downloadFile "https://github.com/newbit1/rootAVD/archive/refs/heads/master.zip" "$VARCD\rootAVD-master.zip"
+	    downloadFile "https://gitlab.com/newbit/rootAVD/-/archive/master/rootAVD-master.zip" "$VARCD\rootAVD-master.zip"
             Write-Message  -Message  "Extracting rootAVD (Turn On AVD 1st"  -Type "INFO"
             Expand-Archive -Path  "$VARCD\rootAVD-master.zip" -DestinationPath "$VARCD" -Force
         }
