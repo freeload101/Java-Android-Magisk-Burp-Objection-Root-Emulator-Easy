@@ -1,12 +1,12 @@
 # function for messages
 #$ErrorActionPreference="Continue"
-
-
+$VerNum = 'JAMBOREE 4.1.1'
+$host.ui.RawUI.WindowTitle = $VerNum 
 
 function Write-Message  {
     <#
     .SYNOPSIS
-        Prints colored messages depending on type
+        Prints	 colored messages depending on type
     .PARAMETER TYPE
         Type of error message to be prepended to the message and sets the color
     .PARAMETER MESSAGE
@@ -28,7 +28,6 @@ Write-Host  (Get-Date -UFormat "%m/%d:%T")$($Tag)$($Message) -ForegroundColor $C
 #echo "$Message"
 }
 
-
 $splashArt = @"
  "                                  .
       .              .   .'.     \   /
@@ -47,7 +46,6 @@ $splashArt = @"
       '-----'  
 
 "@
-
 
 function Draw-Splash{
     param([string]$Text)
@@ -80,9 +78,6 @@ function Draw-Splash{
     }
 }
 
-
-
-
 # splash art
 Draw-Splash $splashArt
 
@@ -94,7 +89,6 @@ $VARCD = (Get-Location)
 
 Write-Message  -Message  "Current Working Directory $VARCD"  -Type "INFO"
 Set-Location -Path "$VARCD"
-
  
 # for pycharm and any other 
 Write-Message  -Message  "Setting base path for HOMEPATH,USERPROFILE,APPDATA,LOCALAPPDATA,TEMP and TMP to $VARCD"  -Type "INFO"
@@ -134,11 +128,9 @@ $env:PGLOCALEDIR = "$VARCD\PG\data"
 $env:PGDATA = "$VARCD\PG\share\locale"
 $env:PGLOG = "$VARCD\PG\postgres.log"
 
-
 #java
 Write-Message  -Message  "Setting JAVA ENV Paths $VARCD"  -Type "INFO"
 $env:JAVA_HOME = "$VARCD\jdk"
-
 
 Write-Message  -Message  "Setting rootAVD ENV Paths $VARCD"  -Type "INFO"
 #Use this if you want to keep your %PATH% ...
@@ -161,7 +153,7 @@ Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 Add-Type -assembly System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
-$main_form.Text = "JAMBOREE 4.1"
+$main_form.Text = "$VerNum"
 
 $hShift = 0
 $vShift = 0
@@ -186,8 +178,6 @@ Function CheckAdmin {
 				Write-Message  -Message  "Not running as admin"  -Type "INFO"
 				return
 			}
-		
-		
 		Exit
 	}
 }
@@ -260,11 +250,10 @@ Function CheckVolatility3 {
 			Write-Message  -Message  "Downloading volatility3" -Type "INFO"
 			downloadFile "https://github.com/volatilityfoundation/volatility3/archive/refs/heads/develop.zip" "$VARCD\develop.zip"
 			Add-Type -AssemblyName System.IO.Compression.FileSystem
-            Add-Type -AssemblyName System.IO.Compression
+            		Add-Type -AssemblyName System.IO.Compression
 			[System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\develop.zip", "$VARCD\")
 
-
-			Write-Message  -Message  "Downloading upx-3.96-win64.zip" -Type "INFO"
+   			Write-Message  -Message  "Downloading upx-3.96-win64.zip" -Type "INFO"
 			downloadFile "https://github.com/upx/upx/releases/download/v3.96/upx-3.96-win64.zip" "$VARCD\upx.zip"
 			[System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\upx.zip", "$VARCD\")
 			
@@ -303,9 +292,6 @@ Function CheckVolatility3 {
             }
 } 
 
-
-
-
 ############# WSLUbuntu
 Function WSLUbuntu {
 WSLEnableUpdate
@@ -335,12 +321,9 @@ if (($wslInfo) -match  (".*Ubuntu.*")  -or ($wslInfo) -match  (".*U.b.u.n.t.u.*"
 
 	Write-Message  -Message  "Waiting 10 seconds.." -Type "INFO"
 	Start-Sleep -Seconds 10
-
- 
 	}
 
 }
-
 
 ############# BashOrOllama
 Function BashOrOllama {
@@ -440,7 +423,6 @@ Start-Process -FilePath "$VARCD\SillyTavern\Start.bat"    -WorkingDirectory "$VA
 
 }
 
-
 ############# CheckADB
 function CheckADB {
     $varadb = (adb devices)
@@ -493,7 +475,6 @@ function downloadFile($url, $targetFile)
     $responseStream.Dispose()
 }
 
-
 ############# CHECK JAVA FOR NEO4J
 Function CheckJavaNeo4j {
    if (-not(Test-Path -Path "$VARCD\jdk_neo4j" )) {
@@ -519,8 +500,6 @@ Function CheckJavaNeo4j {
 			
 			}
 }
-
-
 ############# CHECK JAVA
 Function CheckJava {
 Write-Message  -Message  "Checking for Java"  -Type "INFO"
@@ -565,7 +544,6 @@ Function CheckPython {
 			Write-Message  -Message  "Updating pip"  -Type "INFO"
 			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow
 
-
 New-Item -ItemType Directory -Path "$VARCD\python\tools\Scripts" -ErrorAction SilentlyContinue |Out-Null
 # DO NOT INDENT THIS PART
 $PipBatch = @'
@@ -574,7 +552,6 @@ python -m pip %*
 $PipBatch | Out-File -Encoding Ascii -FilePath "$VARCD\python\tools\Scripts\pip.bat" -ErrorAction SilentlyContinue |Out-Null
 # DO NOT INDENT THIS PART
 
-
             }
         else {
             Write-Message  -Message  "$VARCD\python already exists"  -Type "WARNING"
@@ -582,10 +559,8 @@ $PipBatch | Out-File -Encoding Ascii -FilePath "$VARCD\python\tools\Scripts\pip.
 			Write-Message  -Message  "CheckPython Complete"  -Type "INFO"
 }
 
-
 ############# InstallAPKS
 function InstallAPKS {
-
 
 Write-Message  -Message  "Downloading Base APKS"  -Type "INFO"
 New-Item -Path "$VARCD\APKS" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
@@ -621,8 +596,6 @@ downloadFile "https://github.com/satishpatnayak/MyTest/raw/master/AndroGoat.apk"
 
 SecListsCheck
 
-
-
 $varadb=CheckADB
 $env:ANDROID_SERIAL=$varadb
 
@@ -635,8 +608,6 @@ Write-Message  -Message  "Installing Base APKS"  -Type "INFO"
     }
 Write-Message  -Message  "Complete Installing Base APKS"  -Type "INFO"
 }
-
-
 
 ############# CertPush
 function CertPush {
@@ -667,7 +638,6 @@ Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"
 
 Write-Message  -Message "Pushing $VARCD\BURP.der to  /data/local/tmp/cert-der.crt "  -Type "INFO"
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\BURP.der`"   /data/local/tmp/cert-der.crt"  -NoNewWindow -Wait
-
 
 Write-Message  -Message "Pushing Copying /scard/$CertSubjectHash /data/misc/user/0/cacerts-added "  -Type "INFO"
 
@@ -748,9 +718,6 @@ with xz.open('frida-server-android_LATEST.xz') as f:
             Write-Message  -Message  "$VARCD\frida-server already exists"  -Type "WARNING"
             }
 
-
-
-
 $varadb=CheckADB
 $env:ANDROID_SERIAL=$varadb
 
@@ -807,7 +774,6 @@ Start-sleep -Seconds 5
  
 }
 
-
 ############# StartADB
 function StartADB {
     $varadb=CheckADB
@@ -856,7 +822,6 @@ Function AVDDownload {
    
   
 }
-
 
 ############# HAXMInstall
 Function HyperVInstall {
@@ -946,7 +911,6 @@ Function CMDPrompt {
 	
 }
 
-
 ############# AUTOMATIC1111
 Function AUTOMATIC1111 {
 	#  --xformers --deepdanbooru --disable-safe-unpickle --listen --theme dark --enable-insecure-extension-access
@@ -978,8 +942,6 @@ Function AUTOMATIC1111 {
 
  	Start-Process -FilePath "C:\Program Files\Chromium\Application\chrome.exe" -WorkingDirectory "$VARCD\" -ArgumentList " --disable-history-quick-provider --guest `"http://127.0.0.1:7860/`"" 
 }
-
-
 
 ############# vladmandic_automatic
 Function vladmandic_automatic {
@@ -1013,7 +975,6 @@ Function vladmandic_automatic {
  	Start-Process -FilePath "C:\Program Files\Chromium\Application\chrome.exe" -WorkingDirectory "$VARCD\" -ArgumentList " --disable-history-quick-provider --guest `"http://127.0.0.1:7860/`"" 
 }
 
-
 ############# CHECK PYTHONA111
 Function CheckPythonA1111 {
    if (-not(Test-Path -Path "$VARCD\pythonA111" )) {
@@ -1046,12 +1007,10 @@ Function AutoGPTEnv {
 	Write-Message  -Message  "Running pip install -r requirements.txt"  -Type "INFO"
 	Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -ArgumentList " -m pip install -r requirements.txt  " -wait -NoNewWindow
 
-
 	Write-Message  -Message  "Updating AutoGPT .env config for YOLO and Gpt-3 because I'm cheap"  -Type "INFO"
 	$OPENAI_API_KEY = Read-Host 'Enter your OPENAI_API_KEY see: http://www.google.com/cse/ '
 	$CUSTOM_SEARCH_ENGINE_ID = Read-Host 'Enter your CUSTOM_SEARCH_ENGINE_ID see: http://www.google.com/cse/ '
 	$GOOGLE_API_KEY = Read-Host 'Enter your GOOGLE_API_KEY key see https://console.cloud.google.com/apis/credentials click "Create Credentials". Choose "API Key".'
-
 
 	(Get-Content "$VARCD\Auto-GPT\.env.template") `
 	-replace '# EXECUTE_LOCAL_COMMANDS=False', 'EXECUTE_LOCAL_COMMANDS=True' `
@@ -1342,13 +1301,11 @@ $BurpConfigProxy = @'
 $BurpConfigProxy |set-Content "$env:USERPROFILE\AppData\Roaming\BurpSuite\BurpConfigProxy.json"
 }
 
-
 ############# PullCert
 Function PullCert {
     Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://127.0.0.1:8080'  -Out "$VARCD\BURP.der" -Verbose
     Start-Process -FilePath "$env:SYSTEMROOT\System32\certutil.exe" -ArgumentList  " -user -addstore `"Root`"    `"$VARCD\BURP.der`"  "  -NoNewWindow -Wait
 }
-
 
 ############# ZAPCheck
 Function ZAPCheck {
@@ -1368,7 +1325,6 @@ Function ZAPCheck {
 			Get-ChildItem "$VARCD\ZAP_D*"  | Rename-Item -NewName { $_.Name -replace '_.*','' }
 
             ###
-
 
             }
                 catch {
@@ -1392,8 +1348,6 @@ Function StartZAP {
     Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$ZAPJarPath`" -config network.localServers.mainProxy.address=localhost -config network.localServers.mainProxy.port=8081 "
 	#Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$ZAPJarPath`" -config network.localServers.mainProxy.address=localhost -config network.localServers.mainProxy.port=8081 -config network.connection.httpProxy.host=localhost -config network.connection.httpProxy.port=8080 -config network.connection.httpProxy.enabled=true"
 }
-
-
 
 ############# Retry
 function Retry()
@@ -1435,7 +1389,6 @@ function Retry()
     $ErrorActionPreference = $ErrorActionPreferenceToRestore
 }
 
-
 ############# SecListsCheck
 Function SecListsCheck {
     if (-not(Test-Path -Path "$VARCD\SecLists.zip" )) {
@@ -1476,7 +1429,6 @@ Function SharpHoundRun {
     Write-Message  -Message  "Starting SharpHound"  -Type "INFO"
 	Start-Process -FilePath "$VARCD\SharpHound.exe" -WorkingDirectory "$VARCD\"  -ArgumentList "  -s --CollectionMethods All --prettyprint true "
 }
-
 
 ############# Neo4jRun
 Function Neo4jRun {
@@ -1531,9 +1483,6 @@ Function BloodhoundRun {
 	Start-Process -FilePath "$VARCD\BloodHound-win32-x64\BloodHound.exe" -WorkingDirectory "$VARCD\"
 }
 
-
-
-
 ############# CHECK CheckGit
 Function CheckGit {
    if (-not(Test-Path -Path "$VARCD\PortableGit" )) {
@@ -1557,15 +1506,10 @@ Function CheckGit {
             }
 }
 
-
-
-
-
 ############# CHECK StartAutoGPT
 Function StartAutoGPT {
 CheckPython
 CheckGit
-
 
 <#
  Weather2
@@ -1587,8 +1531,6 @@ Start-Process -FilePath "cmd.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -Argument
 
 Write-Message  -Message  "EXIT"  -Type "INFO"
 }
-
-
 
 ############# CHECK pycharm
 Function CheckPyCharm {
@@ -1613,7 +1555,6 @@ Function CheckPyCharm {
 			Start-Process -FilePath "$VARCD\pycharm-community\bin\pycharm64.exe" -WorkingDirectory "$VARCD\pycharm-community"   -NoNewWindow 
 			}
 }
-
 
 ############# CHECK 7zip
 Function Check7zip {
@@ -1723,7 +1664,6 @@ Function Debloat {
 	Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"pm uninstall -k --user 0 $PkgListTarget `" `" " -NoNewWindow  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
 }
 
-
 ############# CheckProcess
 function CheckProcess($windowTitle, $ProcessName) {
 
@@ -1804,7 +1744,6 @@ Write-Message  -Message  "Checking for Arduino"  -Type "INFO"
             }
 }
 
-
 ############# PushDuckyLoad
 Function PushDuckyLoad {
 CheckGit
@@ -1816,7 +1755,6 @@ Write-Message  -Message  "Encoding digiduck.py ..\duck2spark\example.duck  -ofil
 Remove-Item -Path "$VARCD\digiduck\example.ino" -Force -ErrorAction SilentlyContinue |Out-Null
 Start-Process -FilePath "python" -WorkingDirectory "$VARCD\digiduck\"  -ArgumentList  " `"$VARCD\digiduck\digiduck.py`"  `"$VARCD\digiduck\example.duck`"  -ofile `"$VARCD\digiduck\example.ino`"  "  -NoNewWindow -Wait  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
 }
-
 
 function Get-ScriptPathFromCallStack {
     # Get the current call stack
@@ -1834,8 +1772,6 @@ function Get-ScriptPathFromCallStack {
     # If no script file was found in the call stack, return $null or an appropriate message
     return $null
 }
-
-
 
 ############# UpdateJAMBO
 Function UpdateJAMBO {
@@ -1906,12 +1842,10 @@ if (-not(Test-Path -Path "$VARCD\ytdlp" )) {
 
 }
 
-
 Write-Message  -Message  "Opening $VARCD\ytdlp\LIST.txt"  -Type "INFO"
 New-Item -Path "$VARCD\ytdlp\LIST.txt" -ItemType "file"  -ErrorAction SilentlyContinue -Force 
 start-sleep -Seconds 1
 Start-Process "notepad" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\ytdlp\LIST.txt`" " -wait -NoNewWindow
-
 
     Get-Content "$VARCD\ytdlp\LIST.txt" | ForEach-Object { 
     Write-Message  -Message  "Downloading $_"  -Type "INFO"
@@ -1937,7 +1871,6 @@ Function WSLShrink {
 CheckAdmin
 # Credit Johan Arwidmark
 # https://www.deploymentresearch.com/optimizing-vhdx-files-in-a-hyper-v-lab/ https://www.deploymentresearch.com/author/admin/ 
-
 
 Write-Message  -Message  "Running docker image prune -a -f to reclaime disk space" -Type "INFO"
 Start-Process -FilePath "$env:WSLBIN" -ArgumentList "  -u root -e bash -c `"docker image prune -a -f`" " -wait -NoNewWindow
@@ -2031,7 +1964,6 @@ WSLEnableUpdate
             Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --install -d $wslImage " -wait 
         }
 }
-
 
  
 function SOCFortressCoPilotFast{
@@ -2445,9 +2377,6 @@ $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({UpdateJAMBO})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
-
-
-
 
 ############# SHOW FORM
 $main_form.ShowDialog()
