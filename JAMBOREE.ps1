@@ -1,6 +1,6 @@
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.1.1'
+$VerNum = 'JAMBOREE 4.1.2'
 $host.ui.RawUI.WindowTitle = $VerNum 
 
 function Write-Message  {
