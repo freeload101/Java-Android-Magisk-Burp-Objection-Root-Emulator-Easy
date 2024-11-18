@@ -1872,11 +1872,17 @@ CheckAdmin
 # Credit Johan Arwidmark
 # https://www.deploymentresearch.com/optimizing-vhdx-files-in-a-hyper-v-lab/ https://www.deploymentresearch.com/author/admin/ 
 
+# set WSL image
+$env:WSL_UTF8 = 1
+$distributionNames =  wsl --list | %{ ($_ -split "\s")[0]} | Select -Skip 1
+$WSLName = wsl --list | %{ ($_ -split "\s")[0]} | Select -Skip 1   | Out-GridView -Title "Select WSL image to Shrink"  -OutputMode Single
+
+
 Write-Message  -Message  "Running docker image prune -a -f to reclaime disk space" -Type "INFO"
-Start-Process -FilePath "$env:WSLBIN" -ArgumentList "  -u root -e bash -c `"docker image prune -a -f`" " -wait -NoNewWindow
+Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d $WSLName -u root -e bash -c `"docker image prune -a -f`" " -wait -NoNewWindow -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
 Start-Sleep -Seconds 10
 Write-Message  -Message  "Shutting down wsl" -Type "INFO"
-Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --shutdown " -wait -NoNewWindow
+Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d $WSLName --shutdown " -wait -NoNewWindow
 Start-Sleep -Seconds 10
 
 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All
