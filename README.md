@@ -52,7 +52,11 @@ I would like to make it even easier to use but I don't want to spend more time d
 
 # Installation/Requirements ( For Android AVD Emulator) :
 
-- Local admin just to install Android AVD Driver:
+WSL or just "virtual machine platform"  
+
+OR 
+
+- Local admin just to install Android AVD Driver or :
 
 HAXM Intel driver ( https://github.com/intel/haxm )
 
