@@ -1,6 +1,6 @@
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.1.2'
+$VerNum = 'JAMBOREE 4.1.3'
 $host.ui.RawUI.WindowTitle = $VerNum 
 
 function Write-Message  {
@@ -2018,7 +2018,49 @@ Start-Sleep 10
 		Invoke-Item -Path NetSh.txt 
         }
 }
+
+
+function WSLOpenWebUI{
+WSLEnableUpdate
+CheckImage
+Start-Sleep 10
  
+    $env:WSL_UTF8 = 1
+    $wslImage = "Ubuntu-22.04"
+    Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt" -Wait
+    Start-Sleep -Seconds 1
+    $wslInfo = Get-Content -Path "RedirectStandardOutput.txt"
+     # check for existing WSLOpenWebUI image
+        if (($wslInfo) -match (".*WSLOpenWebUI.*"))  {
+        # run socfortressstart
+		
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d WSLOpenWebUI -u root -e bash -c `"bash  `" "  
+		
+        } ELSE {
+        # clone base image
+        Write-Message "Cloning $wslImage to $wslImage.tar"  -Type "INFO"
+        Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar`" " -NoNewWindow -Wait
+        Write-Output "Cloaning base $wslImage to WSLOpenWebUI WSL image"
+        Start-Process -FilePath "wsl.exe" -ArgumentList " --import WSLOpenWebUI WSLOpenWebUI `"$VARCD\$wslImage.tar`" "  -NoNewWindow -Wait
+        
+        # run install script ...
+        Write-Message  -Message "Downloading / running OpenWebUI_Fast.bash " -Type "INFO"
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d WSLOpenWebUI -u root -e bash -c `"wget -O OpenWebUI_Fast.bash  https://raw.githubusercontent.com/freeload101/SCRIPTS/master/Bash/OpenWebUI_Fast.bash`" "   -wait 
+        Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d WSLOpenWebUI -u root -e bash -c `"bash OpenWebUI_Fast.bash `" "  -NoNewWindow
+		
+		#port fwd
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d WSLOpenWebUI -u root -e bash -c `" ip route get 1.1.1.1  `" " -NoNewWindow -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+		Start-Sleep 10
+		Get-Content RedirectStandardOutput.txt
+		#Get-Content RedirectStandardError.txt
+
+		$INTERNETIP = Get-Content RedirectStandardOutput.txt | ForEach-Object { $elements = $_ -split ' '; $elements[6] }
+		Set-Content -Path NetSh.txt -Value "You need to run the following as administrator to reach the services from outside the host mashine" 
+		Add-Content -Path NetSh.txt -Value "netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=8080 connectaddress=$INTERNETIP"
+		Invoke-Item -Path NetSh.txt 
+        }
+}
+
 
 ######################################################################################################################### FUNCTIONS END
 
@@ -2309,6 +2351,15 @@ $Button.AutoSize = $true
 $Button.Text = "WSL SOCFortress CoPilot"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({SOCFortressCoPilotFast})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# WSLOpenWebUI
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "WSL OpenWebUI NVIDIA"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({WSLOpenWebUI})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
