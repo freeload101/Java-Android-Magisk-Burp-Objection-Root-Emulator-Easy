@@ -1465,7 +1465,7 @@ Function BloodhoundRun {
         try {
             Write-Message  -Message  "Downloading BloodHound"  -Type "INFO"
 			#downloadFile "https://github.com/BloodHoundAD/BloodHound/releases/download/4.2.0/BloodHound-win32-x64.zip" "$VARCD\BloodHound-win32-x64.zip"
-			$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/BloodHoundAD/BloodHound/releases/latest").assets | Where-Object name -like BloodHound-win32-x64*.zip ).browser_download_url
+			$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/BloodHoundAD/BloodHound/releases/latest").assets | Where-Object name -like BloodHound-win32-x64*.zip ).browser_download_url | select -first 1
 			downloadFile  $downloadUri "$VARCD\BloodHound-win32-x64.zip"
 			Write-Message  -Message  "Extracting BloodHound"  -Type "INFO"
             Add-Type -AssemblyName System.IO.Compression.FileSystem
