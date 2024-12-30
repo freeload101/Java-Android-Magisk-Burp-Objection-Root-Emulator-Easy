@@ -1,6 +1,6 @@
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.1.3'
+$VerNum = 'JAMBOREE 4.1.4'
 $host.ui.RawUI.WindowTitle = $VerNum 
 
 function Write-Message  {
@@ -353,7 +353,7 @@ Function CheckNode {
    if (-not(Test-Path -Path "$VARCD\node" )) {
         try {
 			Write-Message  -Message  "Downloading latest node" -Type "INFO"
-			$downloadUri = $downloadUri = (Invoke-RestMethod -Method GET -Uri "https://nodejs.org/dist/latest/")    -split '"'    -match '.*node-.*-win-x64.zip.*'   | ForEach-Object {$_ -ireplace '^','https://nodejs.org/dist/latest/' }  | select -first 1
+			$downloadUri = $downloadUri = (Invoke-RestMethod -Method GET -Uri "https://nodejs.org/dist/latest/")  -split '"' -match '.*node-.*-win-x64.zip.*' | ForEach-Object {$_ -ireplace '^\/','https://nodejs.org/' } | select -first 1
             downloadFile "$downloadUri" "$VARCD\node.zip"
 			Write-Message  -Message  "Extracting Node"  -Type "INFO"
 			Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -903,6 +903,7 @@ Function CMDPrompt {
 	CheckJava
 	CheckGit
 	CheckPython
+	CheckNode
 	Start-Process -FilePath "cmd" -WorkingDirectory "$VARCD"
 	
 	$varadb=CheckADB
@@ -1465,7 +1466,7 @@ Function BloodhoundRun {
         try {
             Write-Message  -Message  "Downloading BloodHound"  -Type "INFO"
 			#downloadFile "https://github.com/BloodHoundAD/BloodHound/releases/download/4.2.0/BloodHound-win32-x64.zip" "$VARCD\BloodHound-win32-x64.zip"
-			$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/BloodHoundAD/BloodHound/releases/latest").assets | Where-Object name -like BloodHound-win32-x64*.zip ).browser_download_url | select -first 1
+			$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/BloodHoundAD/BloodHound/releases/latest").assets | Where-Object name -like BloodHound-win32-x64*.zip ).browser_download_url
 			downloadFile  $downloadUri "$VARCD\BloodHound-win32-x64.zip"
 			Write-Message  -Message  "Extracting BloodHound"  -Type "INFO"
             Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -1489,7 +1490,7 @@ Function CheckGit {
         try {
             Write-Message  -Message  "Downloading Git"  -Type "INFO"
 
-            $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/git-for-windows/git/releases/latest").assets | Where-Object name -like *PortableGit*64*.exe ).browser_download_url
+            $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/git-for-windows/git/releases/latest").assets | Where-Object name -like *PortableGit*64*.exe ).browser_download_url | select -first 1
             downloadFile "$downloadUri" "$VARCD\git7zsfx.exe"
             # https://superuser.com/questions/1104567/how-can-i-find-out-the-command-line-options-for-git-bash-exe
             # file:///C:/Users/Administrator/SDUI/git/mingw64/share/doc/git-doc/git-bash.html#GIT-WRAPPER
@@ -2030,26 +2031,26 @@ Start-Sleep 10
     Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt" -Wait
     Start-Sleep -Seconds 1
     $wslInfo = Get-Content -Path "RedirectStandardOutput.txt"
-     # check for existing WSLOpenWebUI image
-        if (($wslInfo) -match (".*WSLOpenWebUI.*"))  {
+     # check for existing OpenWebUI_WSL image
+        if (($wslInfo) -match (".*OpenWebUI_WSL.*"))  {
         # run socfortressstart
 		
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d WSLOpenWebUI -u root -e bash -c `"bash  `" "  
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d OpenWebUI_WSL -u root -e bash -c `"bash  `" "  
 		
         } ELSE {
         # clone base image
         Write-Message "Cloning $wslImage to $wslImage.tar"  -Type "INFO"
         Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar`" " -NoNewWindow -Wait
-        Write-Output "Cloaning base $wslImage to WSLOpenWebUI WSL image"
-        Start-Process -FilePath "wsl.exe" -ArgumentList " --import WSLOpenWebUI WSLOpenWebUI `"$VARCD\$wslImage.tar`" "  -NoNewWindow -Wait
+        Write-Output "Cloaning base $wslImage to OpenWebUI_WSL WSL image"
+        Start-Process -FilePath "wsl.exe" -ArgumentList " --import OpenWebUI_WSL OpenWebUI_WSL `"$VARCD\$wslImage.tar`" "  -NoNewWindow -Wait
         
         # run install script ...
         Write-Message  -Message "Downloading / running OpenWebUI_Fast.bash " -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d WSLOpenWebUI -u root -e bash -c `"wget -O OpenWebUI_Fast.bash  https://raw.githubusercontent.com/freeload101/SCRIPTS/master/Bash/OpenWebUI_Fast.bash`" "   -wait 
-        Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d WSLOpenWebUI -u root -e bash -c `"bash OpenWebUI_Fast.bash `" "  -NoNewWindow
+		#Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d OpenWebUI_WSL -u root -e bash -c `"wget -O OpenWebUI_Fast.bash  https://raw.githubusercontent.com/freeload101/SCRIPTS/master/Bash/OpenWebUI_Fast.bash`" "   -wait 
+        Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d OpenWebUI_WSL -u root -e bash -c `"bash OpenWebUI_Fast.bash `" "  -NoNewWindow
 		
 		#port fwd
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d WSLOpenWebUI -u root -e bash -c `" ip route get 1.1.1.1  `" " -NoNewWindow -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d OpenWebUI_WSL -u root -e bash -c `" ip route get 1.1.1.1  `" " -NoNewWindow -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
 		Start-Sleep 10
 		Get-Content RedirectStandardOutput.txt
 		#Get-Content RedirectStandardError.txt
