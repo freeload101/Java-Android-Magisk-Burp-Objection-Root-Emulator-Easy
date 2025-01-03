@@ -116,7 +116,7 @@ PhreakNIC 24: Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 # ScreenShots
 
 ### GUI-ish
-![image](https://github.com/user-attachments/assets/d07eba83-369e-4f39-a730-53dc64dbff0d)
+![image](https://github.com/user-attachments/assets/1d4e89b7-68fa-41cc-9c16-092a3290ab64)
 
 ### SOCFortress CoPilot / Velociraptor / Wazuh	
 [![name](https://i.ytimg.com/an_webp/6I8ZsIO9aDI/mqdefault_6s.webp?du=3000&sqp=CJaUorgG&rs=AOn4CLCgJe7rVyNc1mXNc7C3qcueW5koWA)](https://youtu.be/6I8ZsIO9aDI)
