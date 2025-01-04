@@ -13,6 +13,7 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 
 |Core|Status|
 |--|--|
+|WSL OpenWebUI NVIDIA|✔️|
 |RMS:Runtime Mobile Security|✔️|
 |Brida, Burp to Frida bridge|❌|
 |SaftyNet+ Bypass|❌|
