@@ -1,6 +1,6 @@
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.1.4'
+$VerNum = 'JAMBOREE 4.1.6'
 $host.ui.RawUI.WindowTitle = $VerNum 
 
 function Write-Message  {
@@ -435,7 +435,7 @@ function CheckADB {
 			$message = "Check for unauthorized devices listed in ADB UI or use ! AVD Wipe Button"
 			$wshShell.Popup($message, 0, "ADB Failed!", 48)
 			
-			adb devices
+			adb devices -ErrorAction SilentlyContinue |Out-Null
         }
 	return $varadb
 }
@@ -1486,6 +1486,7 @@ Function BloodhoundRun {
 
 ############# CHECK CheckGit
 Function CheckGit {
+	 Write-Message  -Message  "Checking Git"  -Type "INFO"
    if (-not(Test-Path -Path "$VARCD\PortableGit" )) {
         try {
             Write-Message  -Message  "Downloading Git"  -Type "INFO"
@@ -1832,7 +1833,7 @@ if (-not(Test-Path -Path "$VARCD\ytdlp" )) {
     $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest").assets | Where-Object name -like yt-dlp.exe ).browser_download_url
     downloadFile "$downloadUri" "$VARCD\ytdlp\yt-dlp.exe"
     Write-Message  -Message  "Downloading Latest ffmpeg-master-latest-win64-gpl-shared.zip"  -Type "INFO"
-    downloadFIle "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip" "$VARCD\ytdlp\ffmpeg-master-latest-win64-gpl-shared.zip"
+    downloadFile "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip" "$VARCD\ytdlp\ffmpeg-master-latest-win64-gpl-shared.zip"
     Add-Type -AssemblyName System.IO.Compression.FileSystem
 	Add-Type -AssemblyName System.IO.Compression
     [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\ytdlp\ffmpeg-master-latest-win64-gpl-shared.zip", "$VARCD\ytdlp")
@@ -2063,7 +2064,147 @@ Start-Sleep 10
 }
 
 
+############# mindcraft
+Function mindcraft {
+#Write-Message  -Message  "Killing Java and Javaw "  -Type "INFO"
+#Stop-process -name java -Force -ErrorAction SilentlyContinue |Out-Null
+#Stop-process -name javaw -Force -ErrorAction SilentlyContinue |Out-Null
+
+$qwMemorySize = [math]::round(((Get-ItemProperty -Path "HKLM:\SYSTEM\ControlSet001\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0*" -Name HardwareInformation.qwMemorySize -ErrorAction SilentlyContinue)."HardwareInformation.qwMemorySize")/1GB)
+
+if ($qwMemorySize -lt 23) {
+    Write-Message  -Message  "Your Video Memory is less then 23 gigs this script is currently designed for a 24gig GPU"  -Type "ERROR"
+}
+
+CheckGit
+CheckJava
+CheckNode
+MinecraftServer
+
+	
+if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
+	
+	Write-Message  -Message  "Changing working directory to $VARCD\mindcraft"  -Type "INFO"
+	New-Item -Path "$VARCD\mindcraft" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+	New-Item -Path "$VARCD\mindcraft\mindcraft\" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+	Set-Location -Path "$VARCD\mindcraft\mindcraft\" -ErrorAction SilentlyContinue |Out-Null
+		
+	Write-Message  -Message  "Running git clone https://github.com/kolbytn/mindcraft.git "  -Type "INFO"
+	Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\mindcraft" -ArgumentList " clone `"https://github.com/kolbytn/mindcraft.git`" " -wait -NoNewWindow
+
+	Write-Message  -Message  "Installing mindcraft"  -Type "INFO"
+	Start-Process -FilePath "$VARCD\node\npm.cmd" -WorkingDirectory "$VARCD\mindcraft\mindcraft\" -ArgumentList " install  " -wait -NoNewWindow
+
+	}
+	########################################
+	Write-Message  -Message  "Changing working directory to $VARCD\mindcraft"  -Type "INFO"
+	New-Item -Path "$VARCD\mindcraft\mindcraft\" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+	Set-Location -Path "$VARCD\mindcraft\mindcraft\" -ErrorAction SilentlyContinue |Out-Null
+
+
+	Write-Message  -Message  "Settings.js: Replace the minecraft port with common Minecraft port"  -Type "INFO"
+	(Get-Content $VARCD\mindcraft\mindcraft\settings.js).Replace("55916", "25565") | Set-Content $VARCD\mindcraft\mindcraft\settings.js
+	
+	Write-Message  -Message  "Settings.js: Replace the Mindcraft port with less common port I have stuff runnning on 8080 so change to 8881"  -Type "INFO"
+	(Get-Content $VARCD\mindcraft\mindcraft\settings.js).Replace("8080", "8881") | Set-Content $VARCD\mindcraft\mindcraft\settings.js
+
+	Write-Message  -Message  "Settings.js: Replace andy with moded AlienAnthony profile for ollama and a 24g VRAM NVIDIA GPU"  -Type "INFO"
+	(Get-Content $VARCD\mindcraft\mindcraft\settings.js).Replace("andy", "profiles/AlienAnthony") | Set-Content $VARCD\mindcraft\mindcraft\settings.js
+	
+	Write-Message  -Message  ".\src\server\mind_server.js: Replace the port with common Minecraft port "  -Type "INFO"
+	(Get-Content $VARCD\mindcraft\mindcraft\src\server\mind_server.js).Replace("8080", "8082") | Set-Content $VARCD\mindcraft\mindcraft\src\server\mind_server.js
+	######################################	
+	####################################### Write-Message  -Message  ".\profiles\AlienAnthony.json: Downloading AlienAnthony.json profile "  -Type "INFO"
+	Invoke-WebRequest -Uri "https://github.com/freeload101/SCRIPTS/raw/refs/heads/master/MISC/AlienAnthony.json" -OutFile "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
+    ######################################
+	Write-Message  -Message  "Starting Mindcraft" -Type "INFO"
+	Start-Process -FilePath "$VARCD\node\node.exe" -WorkingDirectory ".\" -ArgumentList " main.js " 
+	
+	
+}
+
+############# MinecraftServer
+Function MinecraftServer {
+	Write-Message  -Message  "Running MinecraftServer"  -Type "INFO"
+if (-not(Test-Path -Path "$VARCD\mindcraft\MinecraftServer" )) {
+	
+	Write-Message  -Message  "Creating $VARCD\mindcraft\MinecraftServer"  -Type "INFO"
+	New-Item -Path "$VARCD\mindcraft\MinecraftServer" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+	Set-Location -Path "$VARCD\mindcraft\MinecraftServer"
+	
+	Write-Message  -Message  "Downloading MinecraftServer"  -Type "INFO"
+	#downloadFile "https://piston-data.mojang.com/v1/objects/8dd1a28015f51b1803213892b50b7b4fc76e594d/server.jar" "$VARCD\mindcraft\MinecraftServer\server.jar"
+	
+}
+
+
+# Create and configure server.properties
+$properties = @"
+server-port=25565
+online-mode=false
+eula=true
+difficulty=peaceful
+gamerule doDaylightCycle=false
+time set day
+
+"@
+$properties | Out-File "$VARCD\mindcraft\MinecraftServer\server.properties" -encoding ascii
+
+# Create eula.txt
+out-file -filepath .\eula.txt -encoding ascii -inputobject "eula=true`n"
+
+# Run the server
+Start-Process -FilePath "java.exe" -WorkingDirectory "$VARCD\mindcraft\MinecraftServer" -ArgumentList " -Xmx2G -jar server.jar nogui  " 
+
+Write-Message  -Message  "Waiting 30 seconds for MinecraftServer to start this should be a proc check / wait 10 seconds loop ... "  -Type "INFO"
+Start-Sleep 30
+
+}
+
+############# lowerright
+Function lowerright {
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+
+public class Win32 {
+    [DllImport("user32.dll")]
+    public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+
+    public struct RECT {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+}
+"@
+
+$handle = [Win32]::GetForegroundWindow()
+$screen = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
+$rect = New-Object Win32+RECT
+
+[Win32]::GetWindowRect($handle, [ref]$rect)
+$width = $rect.Right - $rect.Left
+$height = $rect.Bottom - $rect.Top
+
+# Position window in lower right
+$x = $screen.Right - $width
+$y = $screen.Bottom - $height
+
+[Win32]::MoveWindow($handle, $x, $y, $width, $height, $true)
+}
+
+
 ######################################################################################################################### FUNCTIONS END
+
+lowerright
 
 ############# accel
 $pname=(Get-WMIObject win32_Processor | Select-Object name)
@@ -2363,6 +2504,17 @@ $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({WSLOpenWebUI})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
+
+############# mindcraft
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Mindcraft"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({mindcraft})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+
 
 ############# WSLShrink
 $Button = New-Object System.Windows.Forms.Button
