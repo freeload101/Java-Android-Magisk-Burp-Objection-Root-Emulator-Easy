@@ -2133,7 +2133,7 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\MinecraftServer" )) {
 	Set-Location -Path "$VARCD\mindcraft\MinecraftServer"
 	
 	Write-Message  -Message  "Downloading MinecraftServer"  -Type "INFO"
-	#downloadFile "https://piston-data.mojang.com/v1/objects/8dd1a28015f51b1803213892b50b7b4fc76e594d/server.jar" "$VARCD\mindcraft\MinecraftServer\server.jar"
+	downloadFile "https://piston-data.mojang.com/v1/objects/8dd1a28015f51b1803213892b50b7b4fc76e594d/server.jar" "$VARCD\mindcraft\MinecraftServer\server.jar"
 	
 }
 
