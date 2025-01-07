@@ -1,6 +1,6 @@
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.1.6'
+$VerNum = 'JAMBOREE 4.2.0'
 $host.ui.RawUI.WindowTitle = $VerNum 
 
 function Write-Message  {
@@ -300,7 +300,8 @@ Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -Re
 Start-Sleep -Seconds 1
 $wslInfo = Get-Content -Path "RedirectStandardOutput.txt" 
 if (($wslInfo) -match  (".*Ubuntu.*")  -or ($wslInfo) -match  (".*U.b.u.n.t.u.*"))  {
-	BashOrOllama
+		Write-Message  -Message  "Ubuntu found Starting bash shell" -Type "INFO"
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash "  
 } else {
 	Write-Message  -Message  "Ubuntu NOT found ..." -Type "WARNING"
 	Write-Message  -Message  "Updating WSL -update " -Type "INFO"
@@ -325,29 +326,6 @@ if (($wslInfo) -match  (".*Ubuntu.*")  -or ($wslInfo) -match  (".*U.b.u.n.t.u.*"
 
 }
 
-############# BashOrOllama
-Function BashOrOllama {
-	$wshell = New-Object -ComObject Wscript.Shell
-	$pause = $wshell.Popup("Do you want to run Ollama?", 0, "Wait!", 4)
-	if ($pause -eq '6') {
-
-		Write-Message  -Message "Downloading Ollama" -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"curl -fsSL https://ollama.com/install.sh | sh`" "   -wait  
-		
-		Write-Message  -Message  "Downloading Model Mistral " -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"ollama pull Mistral `" "   -wait -NoNewWindow
-	  
-		Write-Message  -Message  "Starting Ollama Server (serve) " -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash -c `"OLLAMA_HOST=0.0.0.0 ollama serve`" "   
-	  
-	}
-	Elseif ($pause = '7') {
-		Write-Message  -Message  "Ubuntu found Starting bash shell" -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash "   
-		return
-	}
-} 
-
 ############# CheckNode
 Function CheckNode {
    if (-not(Test-Path -Path "$VARCD\node" )) {
@@ -368,7 +346,7 @@ Function CheckNode {
             }
             }
         else {
-			Write-Message  -Message  "$VARCD\node Already Exist"  -Type "INFO"
+			Write-Message  -Message  "$VARCD\node already Exist"  -Type "WARNING"
 			}
 }
 
@@ -425,8 +403,9 @@ Start-Process -FilePath "$VARCD\SillyTavern\Start.bat"    -WorkingDirectory "$VA
 
 ############# CheckADB
 function CheckADB {
-    $varadb = (adb devices)
-    Write-Message  -Message  "$varadb"  -Type "INFO"
+if ((Get-Command adb -ErrorAction SilentlyContinue)) {
+    $varadb =  (adb devices)
+    Write-Message  -Message  "$varadb"  -Type "INFO"  
     $varadb = $varadb -match 'device\b' -replace 'device','' -replace '\s',''
     Write-Message  -Message  "Online Device: $varadb"  -Type "INFO"
         if (($varadb.length -lt 1 )) {
@@ -434,10 +413,11 @@ function CheckADB {
 			$wshShell = New-Object -ComObject Wscript.Shell
 			$message = "Check for unauthorized devices listed in ADB UI or use ! AVD Wipe Button"
 			$wshShell.Popup($message, 0, "ADB Failed!", 48)
-			
-			adb devices -ErrorAction SilentlyContinue |Out-Null
+			adb devices  
         }
 	return $varadb
+
+    }  
 }
 
 ############# KillADB
@@ -905,11 +885,12 @@ Function CMDPrompt {
 	CheckPython
 	CheckNode
 	Start-Process -FilePath "cmd" -WorkingDirectory "$VARCD"
-	
-	$varadb=CheckADB
-	$env:ANDROID_SERIAL=$varadb
-    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell  "
-	
+
+    if ((Get-Command adb -ErrorAction SilentlyContinue)) {		
+		$varadb=CheckADB
+		$env:ANDROID_SERIAL=$varadb
+		Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell  " -ErrorAction SilentlyContinue |Out-Null
+	}
 }
 
 ############# AUTOMATIC1111
@@ -1943,6 +1924,7 @@ $Time = Measure-Command {
 Write-Host "Optimization runtime was $($Time.Minutes) minutes and $($Time.Seconds) Seconds"
 }
 
+############# CheckImage
 function CheckImage{
 WSLEnableUpdate
 
@@ -1973,10 +1955,8 @@ WSLEnableUpdate
         }
 }
 
- 
+############# SOCFortressCoPilotFast
 function SOCFortressCoPilotFast{
-WSLEnableUpdate
-CheckImage
 Start-Sleep 10
  
     $env:WSL_UTF8 = 1
@@ -1984,13 +1964,12 @@ Start-Sleep 10
     Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt" -Wait
     Start-Sleep -Seconds 1
     $wslInfo = Get-Content -Path "RedirectStandardOutput.txt"
-     # check for existing SOCFortress image
+		# check for existing SOCFortress image
         if (($wslInfo) -match (".*SOCFortress.*"))  {
         # run socfortressstart
-		
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d SOCFortress -u root -e bash -c `"bash  `" "  
-		
-        } ELSE {
+	} ELSE {
+		CheckImage
         # clone base image
         Write-Message "Cloning $wslImage to $wslImage.tar"  -Type "INFO"
         Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar`" " -NoNewWindow -Wait
@@ -2004,10 +1983,11 @@ Start-Sleep 10
 		
 		#port fwd
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d SOCFortress -u root -e bash -c `" ip route get 1.1.1.1  `" " -NoNewWindow -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
-		Start-Sleep 10
+		Start-Sleep 1
 		Get-Content RedirectStandardOutput.txt
-		#Get-Content RedirectStandardError.txt
-
+		
+		Start-Process -FilePath "netsh" -ArgumentList " interface portproxy show all " -NoNewWindow 
+		
 		$INTERNETIP = Get-Content RedirectStandardOutput.txt | ForEach-Object { $elements = $_ -split ' '; $elements[6] }
 		 
 		Set-Content -Path NetSh.txt -Value "You need to run the following as administrator to reach the services from outside the host mashine" 
@@ -2021,61 +2001,119 @@ Start-Sleep 10
         }
 }
 
-
-function WSLOpenWebUI{
-WSLEnableUpdate
-CheckImage
-Start-Sleep 10
- 
+############# WSLCheckOllama
+function WSLCheckOllama{
+CheckGPU
     $env:WSL_UTF8 = 1
     $wslImage = "Ubuntu-22.04"
     Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt" -Wait
     Start-Sleep -Seconds 1
     $wslInfo = Get-Content -Path "RedirectStandardOutput.txt"
-     # check for existing OpenWebUI_WSL image
-        if (($wslInfo) -match (".*OpenWebUI_WSL.*"))  {
-        # run socfortressstart
-		
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d OpenWebUI_WSL -u root -e bash -c `"bash  `" "  
+     # check for existing Ollama_WSL image
+        if (($wslInfo) -match (".*Ollama_WSL.*"))  {
+		Write-Message "Existing Ollama_WSL Image found starting Ollama"  -Type "INFO"
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList ' -d Ollama_WSL -u root while true;do echo Keep this running for Ollama WSL;date;sleep 10;done'  -WindowStyle minimized
 		
         } ELSE {
-        # clone base image
-        Write-Message "Cloning $wslImage to $wslImage.tar"  -Type "INFO"
-        Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar`" " -NoNewWindow -Wait
-        Write-Output "Cloaning base $wslImage to OpenWebUI_WSL WSL image"
-        Start-Process -FilePath "wsl.exe" -ArgumentList " --import OpenWebUI_WSL OpenWebUI_WSL `"$VARCD\$wslImage.tar`" "  -NoNewWindow -Wait
-        
-        # run install script ...
-        Write-Message  -Message "Downloading / running OpenWebUI_Fast.bash " -Type "INFO"
-		#Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d OpenWebUI_WSL -u root -e bash -c `"wget -O OpenWebUI_Fast.bash  https://raw.githubusercontent.com/freeload101/SCRIPTS/master/Bash/OpenWebUI_Fast.bash`" "   -wait 
-        Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d OpenWebUI_WSL -u root -e bash -c `"bash OpenWebUI_Fast.bash `" "  -NoNewWindow
-		
-		#port fwd
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d OpenWebUI_WSL -u root -e bash -c `" ip route get 1.1.1.1  `" " -NoNewWindow -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
-		Start-Sleep 10
-		Get-Content RedirectStandardOutput.txt
-		#Get-Content RedirectStandardError.txt
-
-		$INTERNETIP = Get-Content RedirectStandardOutput.txt | ForEach-Object { $elements = $_ -split ' '; $elements[6] }
-		Set-Content -Path NetSh.txt -Value "You need to run the following as administrator to reach the services from outside the host mashine" 
-		Add-Content -Path NetSh.txt -Value "netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=8080 connectaddress=$INTERNETIP"
-		Invoke-Item -Path NetSh.txt 
+		WSLEnableUpdate
+		CheckImage
+		WSLInstallOllama
         }
 }
 
+############# WSLInstallOllama
+function WSLInstallOllama{
+	CheckGPU
+	$wshell = New-Object -ComObject Wscript.Shell
+	$pause = $wshell.Popup("Do you want to also install OpenWebUI ?", 0, "Wait!", 4)
+	if ($pause -eq '6') {
+		# clone base image
+		Write-Message "Cloning $wslImage to $wslImage.tar"  -Type "INFO"
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar`" " -NoNewWindow -Wait
+		Write-Output "Cloaning base $wslImage to Ollama_WSL WSL image"
+		Start-Process -FilePath "wsl.exe" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar`" "  -NoNewWindow -Wait
+
+		# run install script ...
+		Write-Message  -Message "Downloading / running OpenWebUI_Fast.bash " -Type "INFO"
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"wget -O OpenWebUI_Fast.bash  https://raw.githubusercontent.com/freeload101/SCRIPTS/refs/heads/master/Bash/OpenWebUI_Fast.bash`" "   -wait 
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"bash OpenWebUI_Fast.bash `" "  -NoNewWindow
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList ' -d Ollama_WSL -u root while true;do echo Keep this running for Ollama WSL;date;sleep 10;done'  -WindowStyle minimized
+		
+
+	}
+	Elseif ($pause = '7') {
+		# clone base image
+		Write-Message "Cloning $wslImage to $wslImage.tar"  -Type "INFO"
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar`" " -NoNewWindow -Wait
+		Write-Output "Cloaning base $wslImage to Ollama_WSL WSL image"
+		Start-Process -FilePath "wsl.exe" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar`" "  -NoNewWindow -Wait
+		
+		Write-Message  -Message "Downloading Ollama Installer" -Type "INFO"
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"curl -fsSL https://ollama.com/install.sh | sh`" "   -wait  
+		
+		Write-Message  -Message  "Downloading small base model " -Type "INFO"
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"ollama pull dorian2b/vera `" "   -wait -NoNewWindow
+	  
+		Write-Message  -Message "Setting up Ollama systemd to start listening on 0.0.0.0" -Type "INFO"
+		Start-Process -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"  sed -i `'/ExecStart/a Environment=OLLAMA_HOST=0.0.0.0`'   /etc/systemd/system/ollama.service `" "   -wait -NoNewWindow
+		Start-Process -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"  systemctl daemon-reload `" "   -wait -NoNewWindow
+		Write-Message  -Message "Restarting Ollama" -Type "INFO"
+		Start-Process -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `" systemctl restart ollama.service `" "   -wait -NoNewWindow
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList ' -d Ollama_WSL -u root while true;do echo Keep this running for Ollama WSL;date;sleep 10;done'  -WindowStyle minimized
+	}
+	
+		#port fwd
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `" ip route get 1.1.1.1  `" " -NoNewWindow -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+		Start-Sleep 10
+		Get-Content RedirectStandardOutput.txt
+
+		$INTERNETIP = Get-Content RedirectStandardOutput.txt | ForEach-Object { $elements = $_ -split ' '; $elements[6] }
+		Set-Content -Path NetSh.txt -Value "You need to run the following as administrator to reach the services from outside the host mashine exclude port 8080 if you are not running OpenWebUI" 
+		Add-Content -Path NetSh.txt -Value "netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=8080 connectaddress=$INTERNETIP"
+		Add-Content -Path NetSh.txt -Value "netsh interface portproxy add v4tov4 listenport=11434 listenaddress=0.0.0.0 connectport=11434 connectaddress=$INTERNETIP"
+		Invoke-Item -Path NetSh.txt
+	
+}
+
+############# WipeForwardRules
+Function WipeForwardRules {
+			CheckAdmin
+			Write-Message  -Message  "About to clear the following interface portproxy rules..."  -Type "ERROR"
+			Start-Process -FilePath "netsh"  -ArgumentList "  interface portproxy show all   " -wait -NoNewWindow
+			Start-Sleep 10
+			$output = netsh interface portproxy show all | ForEach-Object {
+			$_ -replace '^\s+','' -replace '\s+$',''
+			} | Where-Object {$_ -match '\S'} | ConvertFrom-String -PropertyNames @('ListenAddress','ListenPort','ConnectAddress','ConnectPort') -Delimiter '\s+'
+			$output| ForEach-Object {
+				netsh interface portproxy delete v4tov4 listenport=$($_.ListenPort)  listenaddress=$($_.ListenAddress)
+			}
+			Write-Message  -Message  "Cleared interface portproxy rules..."  -Type "INFO"
+}
+
+############# CheckGPU
+Function CheckGPU {
+	Get-ItemProperty -Path "HKLM:\SYSTEM\ControlSet001\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0*"   | Where-Object {$_."HardwareInformation.qwMemorySize" -gt 0} | ForEach-Object {
+	$DriverDesc = $_.DriverDesc
+	$VRAM = [math]::round($_."HardwareInformation.qwMemorySize"/1GB)
+		}
+		if (0 -eq $VRAM) {
+			Write-Message  -Message  "Dedicated GPU NOT FOUND !!! It does not look like you have a dedicated GPU with Dedicated GPU Memory this is differnet then Shared GPU memory or GPU Memory !"  -Type "ERROR"
+			Write-Message  -Message  "Please wait...and also read this message..."  -Type "INFO"
+			Start-Sleep 10
+			Write-Message  -Message  "No for real .. read it your likly wasting your time or look on youtube for google colab ollama"  -Type "INFO"
+			Start-Sleep 10
+			(Get-WmiObject -Namespace root\CIMV2 -Class CIM_VideoController)  | Select-Object Name,Description,Caption,DeviceID,VideoMemoryType  | Format-Table -AutoSize  
+		} else {
+			Write-Message  -Message  "Dedicated GPU: $DriverDesc with $VRAM GB of VRAM"  -Type "INFO"
+		}
+}
 
 ############# mindcraft
 Function mindcraft {
+WSLCheckOllama
 #Write-Message  -Message  "Killing Java and Javaw "  -Type "INFO"
 #Stop-process -name java -Force -ErrorAction SilentlyContinue |Out-Null
 #Stop-process -name javaw -Force -ErrorAction SilentlyContinue |Out-Null
-
-$qwMemorySize = [math]::round(((Get-ItemProperty -Path "HKLM:\SYSTEM\ControlSet001\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0*" -Name HardwareInformation.qwMemorySize -ErrorAction SilentlyContinue)."HardwareInformation.qwMemorySize")/1GB)
-
-if ($qwMemorySize -lt 23) {
-    Write-Message  -Message  "Your Video Memory is less then 23 gigs this script is currently designed for a 24gig GPU"  -Type "ERROR"
-}
-
 CheckGit
 CheckJava
 CheckNode
@@ -2096,7 +2134,6 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 	Start-Process -FilePath "$VARCD\node\npm.cmd" -WorkingDirectory "$VARCD\mindcraft\mindcraft\" -ArgumentList " install  " -wait -NoNewWindow
 
 	}
-	########################################
 	Write-Message  -Message  "Changing working directory to $VARCD\mindcraft"  -Type "INFO"
 	New-Item -Path "$VARCD\mindcraft\mindcraft\" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 	Set-Location -Path "$VARCD\mindcraft\mindcraft\" -ErrorAction SilentlyContinue |Out-Null
@@ -2108,15 +2145,15 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 	Write-Message  -Message  "Settings.js: Replace the Mindcraft port with less common port I have stuff runnning on 8080 so change to 8881"  -Type "INFO"
 	(Get-Content $VARCD\mindcraft\mindcraft\settings.js).Replace("8080", "8881") | Set-Content $VARCD\mindcraft\mindcraft\settings.js
 
-	Write-Message  -Message  "Settings.js: Replace andy with moded AlienAnthony profile for ollama and a 24g VRAM NVIDIA GPU"  -Type "INFO"
+	Write-Message  -Message  "Settings.js: Replace andy with moded AlienAnthony profile for ollama"  -Type "INFO"
 	(Get-Content $VARCD\mindcraft\mindcraft\settings.js).Replace("andy", "profiles/AlienAnthony") | Set-Content $VARCD\mindcraft\mindcraft\settings.js
 	
 	Write-Message  -Message  ".\src\server\mind_server.js: Replace the port with common Minecraft port "  -Type "INFO"
 	(Get-Content $VARCD\mindcraft\mindcraft\src\server\mind_server.js).Replace("8080", "8082") | Set-Content $VARCD\mindcraft\mindcraft\src\server\mind_server.js
-	######################################	
-	####################################### Write-Message  -Message  ".\profiles\AlienAnthony.json: Downloading AlienAnthony.json profile "  -Type "INFO"
+	
+	Write-Message  -Message  ".\profiles\AlienAnthony.json: Downloading AlienAnthony.json profile "  -Type "INFO"
 	Invoke-WebRequest -Uri "https://github.com/freeload101/SCRIPTS/raw/refs/heads/master/MISC/AlienAnthony.json" -OutFile "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
-    ######################################
+    
 	Write-Message  -Message  "Starting Mindcraft" -Type "INFO"
 	Start-Process -FilePath "$VARCD\node\node.exe" -WorkingDirectory ".\" -ArgumentList " main.js " 
 	
@@ -2127,7 +2164,7 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 Function MinecraftServer {
 	Write-Message  -Message  "Running MinecraftServer"  -Type "INFO"
 if (-not(Test-Path -Path "$VARCD\mindcraft\MinecraftServer" )) {
-	
+
 	Write-Message  -Message  "Creating $VARCD\mindcraft\MinecraftServer"  -Type "INFO"
 	New-Item -Path "$VARCD\mindcraft\MinecraftServer" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 	Set-Location -Path "$VARCD\mindcraft\MinecraftServer"
@@ -2144,8 +2181,9 @@ server-port=25565
 online-mode=false
 eula=true
 difficulty=peaceful
-gamerule doDaylightCycle=false
-time set day
+allow-cheats=true
+force-gamemode=false
+enable-command-block=true
 
 "@
 $properties | Out-File "$VARCD\mindcraft\MinecraftServer\server.properties" -encoding ascii
@@ -2189,16 +2227,13 @@ public class Win32 {
 $handle = [Win32]::GetForegroundWindow()
 $screen = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
 $rect = New-Object Win32+RECT
-
-[Win32]::GetWindowRect($handle, [ref]$rect)
+[Win32]::GetWindowRect($handle, [ref]$rect)  |Out-Null
 $width = $rect.Right - $rect.Left
 $height = $rect.Bottom - $rect.Top
-
 # Position window in lower right
 $x = $screen.Right - $width
 $y = $screen.Bottom - $height
-
-[Win32]::MoveWindow($handle, $x, $y, $width, $height, $true)
+[Win32]::MoveWindow($handle, $x, $y, $width, $height, $true) |Out-Null
 }
 
 
@@ -2481,7 +2516,7 @@ $vShift = $vShift + 30
 ############# WSLUbuntu
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "WSL Ubuntu/Ollama"
+$Button.Text = "WSL Ubuntu"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({WSLUbuntu})
 $main_form.Controls.Add($Button)
@@ -2496,12 +2531,12 @@ $Button.Add_Click({SOCFortressCoPilotFast})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# WSLOpenWebUI
+############# WSLCheckOllama
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "WSL OpenWebUI NVIDIA"
+$Button.Text = "WSL Ollama"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({WSLOpenWebUI})
+$Button.Add_Click({WSLCheckOllama})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
@@ -2513,8 +2548,6 @@ $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({mindcraft})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
-
-
 
 ############# WSLShrink
 $Button = New-Object System.Windows.Forms.Button
@@ -2576,6 +2609,15 @@ $Button.AutoSize = $true
 $Button.Text = "Volatility 3"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({CheckVolatility3})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# WipeForwardRules
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Clear netsh portproxy rules"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({WipeForwardRules})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
