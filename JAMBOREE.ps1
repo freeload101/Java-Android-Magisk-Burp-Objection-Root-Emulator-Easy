@@ -1,6 +1,6 @@
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.2.0'
+$VerNum = 'JAMBOREE 4.2.1'
 $host.ui.RawUI.WindowTitle = $VerNum 
 
 function Write-Message  {
@@ -2177,6 +2177,7 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\MinecraftServer" )) {
 
 # Create and configure server.properties
 $properties = @"
+server-ip=0.0.0.0
 server-port=25565
 online-mode=false
 eula=true
