@@ -2154,12 +2154,7 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 	Write-Message  -Message  ".\profiles\AlienAnthony.json: Downloading AlienAnthony.json profile "  -Type "INFO"
 	Invoke-WebRequest -Uri "https://github.com/freeload101/SCRIPTS/raw/refs/heads/master/MISC/AlienAnthony.json" -OutFile "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
 	
-	Write-Message  -Message  ".\src\agent\commands\actions.js: Monkey patch line 409 "  -Type "INFO"
-     	$content = Get-Content "$VARCD\mindcraft\mindcraft\src\agent\commands\actions.js"
-	$content[409 - 1] = "},"
-	Set-Content "$VARCD\mindcraft\mindcraft\src\agent\commands\actions.js" $content
-
-	Write-Message  -Message  "Starting Mindcraft" -Type "INFO"
+ 	Write-Message  -Message  "Starting Mindcraft" -Type "INFO"
 	Start-Process -FilePath "$VARCD\node\node.exe" -WorkingDirectory ".\" -ArgumentList " main.js " 
 	
 	
