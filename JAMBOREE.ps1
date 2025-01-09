@@ -2138,6 +2138,8 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 	New-Item -Path "$VARCD\mindcraft\mindcraft\" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 	Set-Location -Path "$VARCD\mindcraft\mindcraft\" -ErrorAction SilentlyContinue |Out-Null
 
+	Write-Message  -Message  "Settings.js: show_bot_views to true bot viewer server prismarine-viewer on http://localhost:3000"  -Type "INFO"
+	(Get-Content $VARCD\mindcraft\mindcraft\settings.js).Replace("`"show_bot_views`": false", "`"show_bot_views`": true") | Set-Content $VARCD\mindcraft\mindcraft\settings.js
 
 	Write-Message  -Message  "Settings.js: Replace the minecraft port with common Minecraft port"  -Type "INFO"
 	(Get-Content $VARCD\mindcraft\mindcraft\settings.js).Replace("55916", "25565") | Set-Content $VARCD\mindcraft\mindcraft\settings.js
@@ -2156,7 +2158,10 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 	
  	Write-Message  -Message  "Starting Mindcraft" -Type "INFO"
 	Start-Process -FilePath "$VARCD\node\node.exe" -WorkingDirectory ".\" -ArgumentList " main.js " 
-	
+
+ 	Write-Message  -Message  "Waiting to start bot viewer server prismarine-viewer on http://localhost:3000" -Type "INFO"
+	Start-Sleep 15
+	Start-Process "http://localhost:3000"
 	
 }
 
