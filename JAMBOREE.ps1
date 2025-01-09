@@ -2185,6 +2185,7 @@ difficulty=peaceful
 allow-cheats=true
 force-gamemode=false
 enable-command-block=true
+show_bot_views: true
 
 "@
 $properties | Out-File "$VARCD\mindcraft\MinecraftServer\server.properties" -encoding ascii
