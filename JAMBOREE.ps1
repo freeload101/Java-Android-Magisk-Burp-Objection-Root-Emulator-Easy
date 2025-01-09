@@ -2186,8 +2186,9 @@ server-ip=0.0.0.0
 server-port=25565
 online-mode=false
 eula=true
+gamemode=survival
 difficulty=normal
-allow-cheats=true
+allow-cheats=flase
 force-gamemode=false
 enable-command-block=true
 show_bot_views: true
@@ -2195,6 +2196,8 @@ prevent-proxy-connections=false
 view-distance=20
 pvp=true
 allow-nether=true
+bonus-chest=true
+
 
 "@
 $properties | Out-File "$VARCD\mindcraft\MinecraftServer\server.properties" -encoding ascii
