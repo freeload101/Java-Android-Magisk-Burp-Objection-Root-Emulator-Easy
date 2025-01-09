@@ -2186,11 +2186,15 @@ server-ip=0.0.0.0
 server-port=25565
 online-mode=false
 eula=true
-difficulty=peaceful
+difficulty=normal
 allow-cheats=true
 force-gamemode=false
 enable-command-block=true
 show_bot_views: true
+prevent-proxy-connections=false
+view-distance=20
+pvp=true
+allow-nether=true
 
 "@
 $properties | Out-File "$VARCD\mindcraft\MinecraftServer\server.properties" -encoding ascii
