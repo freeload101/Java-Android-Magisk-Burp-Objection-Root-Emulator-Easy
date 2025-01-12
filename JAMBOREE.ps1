@@ -2133,11 +2133,6 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 	Write-Message  -Message  "Installing mindcraft"  -Type "INFO"
 	Start-Process -FilePath "$VARCD\node\npm.cmd" -WorkingDirectory "$VARCD\mindcraft\mindcraft\" -ArgumentList " install  " -wait -NoNewWindow
 
-	}
-	Write-Message  -Message  "Changing working directory to $VARCD\mindcraft"  -Type "INFO"
-	New-Item -Path "$VARCD\mindcraft\mindcraft\" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
-	Set-Location -Path "$VARCD\mindcraft\mindcraft\" -ErrorAction SilentlyContinue |Out-Null
-
 	Write-Message  -Message  "Settings.js: show_bot_views to true bot viewer server prismarine-viewer on http://localhost:3000"  -Type "INFO"
 	(Get-Content $VARCD\mindcraft\mindcraft\settings.js).Replace("`"show_bot_views`": false", "`"show_bot_views`": true") | Set-Content $VARCD\mindcraft\mindcraft\settings.js
 
@@ -2155,6 +2150,13 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 	
 	Write-Message  -Message  ".\profiles\AlienAnthony.json: Downloading AlienAnthony.json profile "  -Type "INFO"
 	Invoke-WebRequest -Uri "https://github.com/freeload101/SCRIPTS/raw/refs/heads/master/MISC/AlienAnthony.json" -OutFile "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
+ 
+	}
+	Write-Message  -Message  "Changing working directory to $VARCD\mindcraft"  -Type "INFO"
+	New-Item -Path "$VARCD\mindcraft\mindcraft\" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+	Set-Location -Path "$VARCD\mindcraft\mindcraft\" -ErrorAction SilentlyContinue |Out-Null
+
+
 	
  	Write-Message  -Message  "Starting Mindcraft" -Type "INFO"
 	Start-Process -FilePath "$VARCD\node\node.exe" -WorkingDirectory ".\" -ArgumentList " main.js " 
