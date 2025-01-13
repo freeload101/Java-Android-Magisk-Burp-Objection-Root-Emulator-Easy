@@ -14,10 +14,10 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 |Core|Status|
 |--|--|
 |WSL [MINDcraft](https://github.com/kolbytn/mindcraft) / Ollama   |✔️|
-|WSL OpenWebUI NVIDIA|✔️|
-|RMS:Runtime Mobile Security|✔️|
-|Brida, Burp to Frida bridge|❌|
-|SaftyNet+ Bypass|❌|
+|WSL [OpenWebUI](https://openwebui.com/models)  NVIDIA|✔️|
+|[RMS:Runtime Mobile Security](https://github.com/m0bilesecurity/RMS-Runtime-Mobile-Security)|✔️|
+|[Brida, Burp to Frida bridge](https://www.youtube.com/watch?v=RawqXSslsQk) [WIP](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/issues/22) |❌|
+|[🔥SafetyNetBypass DG VM Emulation🔥](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/issues/49) |❌|
 |Burp Suite Pro / CloudFlare UserAgent Workaround-ish|✔️|
 |ZAP Using Burp|✔️|
 |Google Play|✔️|
