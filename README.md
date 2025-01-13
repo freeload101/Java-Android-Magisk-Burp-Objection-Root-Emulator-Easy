@@ -13,6 +13,7 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 
 |Core|Status|
 |--|--|
+|WSL [MINDcraft](https://github.com/kolbytn/mindcraft) / Ollama   |✔️|
 |WSL OpenWebUI NVIDIA|✔️|
 |RMS:Runtime Mobile Security|✔️|
 |Brida, Burp to Frida bridge|❌|
@@ -117,7 +118,7 @@ PhreakNIC 24: Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 # ScreenShots
 
 ### GUI-ish
-![image](https://github.com/user-attachments/assets/1d4e89b7-68fa-41cc-9c16-092a3290ab64)
+![image](https://github.com/user-attachments/assets/27b485fa-bdf6-40a4-93b1-8e6a6dce8166)
 
 ### SOCFortress CoPilot / Velociraptor / Wazuh	
 [![name](https://i.ytimg.com/an_webp/6I8ZsIO9aDI/mqdefault_6s.webp?du=3000&sqp=CJaUorgG&rs=AOn4CLCgJe7rVyNc1mXNc7C3qcueW5koWA)](https://youtu.be/6I8ZsIO9aDI)
