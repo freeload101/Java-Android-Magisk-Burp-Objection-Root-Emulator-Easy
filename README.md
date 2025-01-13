@@ -11,10 +11,8 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 
 ### Features / Request
 
-|Core|Status|
+|Android Core|Status|
 |--|--|
-|WSL [MINDcraft](https://github.com/kolbytn/mindcraft) / Ollama   |✔️|
-|WSL [OpenWebUI](https://openwebui.com/models)  NVIDIA|✔️|
 |[RMS:Runtime Mobile Security](https://github.com/m0bilesecurity/RMS-Runtime-Mobile-Security)|✔️|
 |[Brida, Burp to Frida bridge](https://www.youtube.com/watch?v=RawqXSslsQk) [WIP](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/issues/22) |❌|
 |[🔥SafetyNetBypass DG VM Emulation🔥](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/issues/49) |❌|
@@ -30,19 +28,25 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 |Python|✔️|
 |Frida|✔️|
 |Certs|✔️|
-|AUTOMATIC1111|✔️|
-|SD.Next Stable Diffusion implementation with advanced features|✔️|
-|AutoGPT|✔️|
-|Bloodhound|✔️|
-|PyCharm|✔️|
-|OracleLinux WSL|✔️|
-|Ubuntu/Olamma WSL|✔️|
-|Postgres No admin|✔️|
-|SillyTavern|✔️|
-|Volatility 3|✔️|
-|Arduino IDE / Duck2Spark|✔️|
-|Youtube Downloader Yt-dlp |✔️|
-|SOCFortress CoPilot /  Velociraptor / Wazuh  WSL |✔️|
+
+|Additional Feature |Status|
+|--|--|
+|WSL [MINDcraft](https://github.com/kolbytn/mindcraft) / Ollama   |✔️|
+|WSL [OpenWebUI](https://openwebui.com/models)  NVIDIA|✔️|
+|[AUTOMATIC1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui)|✔️|
+|[SD.Next Stable Diffusion](https://github.com/vladmandic/automatic)|✔️|
+|[AutoGPT](https://github.com/Significant-Gravitas/AutoGPT)|✔️|
+|[Bloodhound BloodHound-Legacy 4.3.1](https://github.com/SpecterOps) |✔️|
+|[PyCharm Portable](https://www.jetbrains.com/pycharm/)|✔️|
+|[OracleLinux WSL](https://apps.microsoft.com/detail/9mxq65hlmc27?hl=en-US&gl=US)|✔️|
+|[Ubuntu/Olamma WSL](https://ollama.com/library)|✔️|
+|[Postgres Portable No admin](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads)|✔️|
+|[SillyTavern](https://github.com/SillyTavern/SillyTavern)|✔️|
+|[Volatility 3](https://github.com/volatilityfoundation/volatility)|✔️|
+|[Arduino IDE](https://www.arduino.cc/en/software) / [Duck2Spark digiduck ](https://github.com/molatho/digiduck)|✔️|
+|[Yt-dlp Youtube Downloader](https://github.com/yt-dlp/yt-dlp) |✔️|
+|[SOCFortress CoPilot](https://github.com/socfortress/OSSIEM) /  Velociraptor / Wazuh  WSL |✔️|
+
 
 ### How it works:
 
