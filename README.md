@@ -11,41 +11,23 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 
 ### Features / Request
 
-|Android Core|Status|
-|--|--|
-|[RMS:Runtime Mobile Security](https://github.com/m0bilesecurity/RMS-Runtime-Mobile-Security)|✔️|
-|[Brida, Burp to Frida bridge](https://www.youtube.com/watch?v=RawqXSslsQk) [WIP](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/issues/22) |❌|
-|[🔥SafetyNetBypass DG VM Emulation🔥](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/issues/49) |❌|
-|Burp Suite Pro / CloudFlare UserAgent Workaround-ish|✔️|
-|ZAP Using Burp|✔️|
-|Google Play|✔️|
-|Java|✔️|
-|Android 11 API 30|✔️|
-|Magisk|✔️|
-|Burp|✔️|
-|Objection|✔️|
-|Root|✔️|
-|Python|✔️|
-|Frida|✔️|
-|Certs|✔️|
-
-|Additional Feature |Status|
-|--|--|
-|WSL [MINDcraft](https://github.com/kolbytn/mindcraft) / Ollama   |✔️|
-|WSL [OpenWebUI](https://openwebui.com/models)  NVIDIA|✔️|
-|[AUTOMATIC1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui)|✔️|
-|[SD.Next Stable Diffusion](https://github.com/vladmandic/automatic)|✔️|
-|[AutoGPT](https://github.com/Significant-Gravitas/AutoGPT)|✔️|
-|[Bloodhound BloodHound-Legacy 4.3.1](https://github.com/SpecterOps) |✔️|
-|[PyCharm Portable](https://www.jetbrains.com/pycharm/)|✔️|
-|[OracleLinux WSL](https://apps.microsoft.com/detail/9mxq65hlmc27?hl=en-US&gl=US)|✔️|
-|[Ubuntu/Olamma WSL](https://ollama.com/library)|✔️|
-|[Postgres Portable No admin](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads)|✔️|
-|[SillyTavern](https://github.com/SillyTavern/SillyTavern)|✔️|
-|[Volatility 3](https://github.com/volatilityfoundation/volatility)|✔️|
-|[Arduino IDE](https://www.arduino.cc/en/software) / [Duck2Spark digiduck ](https://github.com/molatho/digiduck)|✔️|
-|[Yt-dlp Youtube Downloader](https://github.com/yt-dlp/yt-dlp) |✔️|
-|[SOCFortress CoPilot](https://github.com/socfortress/OSSIEM) /  Velociraptor / Wazuh  WSL |✔️|
+|Android Core|Status|Additional Feature |Status|
+|--|--|--|--|
+|[RMS:Runtime Mobile Security](https://github.com/m0bilesecurity/RMS-Runtime-Mobile-Security)|✔️| WSL [MINDcraft](https://github.com/kolbytn/mindcraft) / Ollama   |✔️|
+|[Brida, Burp to Frida bridge](https://www.youtube.com/watch?v=RawqXSslsQk) [WIP](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/issues/22) |❌|WSL [OpenWebUI](https://openwebui.com/models)  NVIDIA|✔️|
+|[🔥SafetyNetBypass DG VM Emulation🔥](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/issues/49) |❌|[AUTOMATIC1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui)|✔️|
+|Burp Suite Pro / CloudFlare UserAgent Workaround-ish|✔️|[SD.Next Stable Diffusion](https://github.com/vladmandic/automatic)|✔️|
+|ZAP Using Burp|✔️|[AutoGPT](https://github.com/Significant-Gravitas/AutoGPT)|✔️|
+|Google Play|✔️|[Bloodhound BloodHound-Legacy 4.3.1](https://github.com/SpecterOps) |✔️|
+|Java|✔️|[PyCharm Portable](https://www.jetbrains.com/pycharm/)|✔️|
+|Android 11 API 30|✔️|[OracleLinux WSL](https://apps.microsoft.com/detail/9mxq65hlmc27?hl=en-US&gl=US)|✔️|
+|Magisk|✔️|[Ubuntu/Olamma WSL](https://ollama.com/library)|✔️|
+|Burp|✔️|[Postgres Portable No admin](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads)|✔️|
+|Objection|✔️|[SillyTavern](https://github.com/SillyTavern/SillyTavern)|✔️|
+|Root|✔️|[Volatility 3](https://github.com/volatilityfoundation/volatility)|✔️|
+|Python|✔️|[Arduino IDE](https://www.arduino.cc/en/software) / [Duck2Spark digiduck ](https://github.com/molatho/digiduck)|✔️|
+|Frida|✔️|[Yt-dlp Youtube Downloader](https://github.com/yt-dlp/yt-dlp) |✔️|
+|Certs|✔️|[SOCFortress CoPilot](https://github.com/socfortress/OSSIEM) /  Velociraptor / Wazuh  WSL |✔️|
 
 ### Simple Powershell UI
 ![image](https://github.com/user-attachments/assets/27b485fa-bdf6-40a4-93b1-8e6a6dce8166)
@@ -97,15 +79,11 @@ Update Video with 7minsec Podcast!
 
 [![name](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/707d686a-5a2e-49c9-b179-f32dd98e2168)](https://youtu.be/XdXleap0BiM)
 
-(Video Tutorial)
+(Video Tutorials)
 
 [https://youtu.be/pYv4UwP3BaU](https://youtu.be/pYv4UwP3BaU)
-
-[![name](https://user-images.githubusercontent.com/4307863/225742029-c7090555-049f-422d-bb61-59852bc35cda.png)](https://youtu.be/pYv4UwP3BaU)
-
+ 
 USB Rubber Ducky Scripts & Payloads Python 3 Arduino DigiSpark 
-
-[https://youtu.be/e8tKhFS0Tow](https://youtu.be/e8tKhFS0Tow)
 
 [![name](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/ad3e7efa-f97a-46f4-a72e-dbbaaa1fb438)](https://youtu.be/e8tKhFS0Tow)
 
@@ -117,9 +95,6 @@ PhreakNIC 24: Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 [https://www.youtube.com/watch?v=R1eu2Ui1ZLU](https://www.youtube.com/watch?v=R1eu2Ui1ZLU)
 
 [![name](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/5dfd94cc-c49f-466f-8157-363994d78326)](https://www.youtube.com/watch?v=R1eu2Ui1ZLU)
-
- 
-# ScreenShots
 
 ### SOCFortress CoPilot / Velociraptor / Wazuh	
 [![name](https://i.ytimg.com/an_webp/eFO4ZRVA_Y4/mqdefault_6s.webp?du=3000&sqp=CKSalLwG&rs=AOn4CLBj98QdjRGUZHxjydQhHFjM10njPg)](https://youtu.be/6I8ZsIO9aDI)
