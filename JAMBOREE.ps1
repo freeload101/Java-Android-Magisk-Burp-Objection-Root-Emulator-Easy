@@ -2097,7 +2097,7 @@ Function CheckGPU {
 	$VRAM = [math]::round($_."HardwareInformation.qwMemorySize"/1GB)
 		}
 		if (0 -eq $VRAM) {
-			Write-Message  -Message  "Dedicated GPU NOT FOUND !!! It does not look like you have a dedicated GPU with Dedicated GPU Memory this is differnet then Shared GPU memory or GPU Memory ! Check this site to help: https://huggingface.co/spaces/NyxKrage/LLM-Model-VRAM-Calculator "  -Type "ERROR"
+			Write-Message  -Message  "Dedicated GPU NOT FOUND !!! It does not look like you have a dedicated GPU with Dedicated GPU Memory this is differnet then Shared GPU memory or GPU Memory ! Check this site to help: https://huggingface.co/spaces/DavidAU/GGUF-Model-VRAM-Calculator "  -Type "ERROR"
 			Write-Message  -Message  "Please wait...and also read this message..."  -Type "INFO"
 			Start-Sleep 10
 			Write-Message  -Message  "No for real .. read it your likly wasting your time or look on youtube for google colab ollama"  -Type "INFO"
