@@ -2,7 +2,7 @@
 
 ### Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 
-JAMBOREE, originally an Android Testing Suite, has expanded. portable installer for a growing collection of Information Security and administrative tools, requiring no local admin rights. Check out the screenshots and support table below!
+JAMBOREE, originally an Android Testing Suite, has expanded. **Completely Portable** installer for a growing collection of Information Security and administrative tools, requiring no local admin rights. Check out the screenshots and support table below!
 
 Get a working portable Python/Git/Java environment on Windows in **SECONDS** without having local administrator, regardless of your broken Python or other environment variables. Our open-source script downloads directly from proper sources without any binaries. While the code may not be perfect, it includes many useful PowerShell tricks.
 
