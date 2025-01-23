@@ -1,6 +1,6 @@
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.2.3'
+$VerNum = 'JAMBOREE 4.2.4'
 $host.ui.RawUI.WindowTitle = $VerNum 
 
 function Write-Message  {
@@ -1972,9 +1972,9 @@ Start-Sleep 10
 		CheckImage
         # clone base image
         Write-Message "Cloning $wslImage to $wslImage.tar" -Type "INFO"
-        Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar`" " -NoNewWindow -Wait
+        Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar.gz`" " -NoNewWindow -Wait
         Write-Output "Cloaning base $wslImage to SOCFortress WSL image"
-        Start-Process -FilePath "wsl.exe" -ArgumentList " --import SOCFortress SOCFortress `"$VARCD\$wslImage.tar`" "  -NoNewWindow -Wait
+        Start-Process -FilePath "wsl.exe" -ArgumentList " --import SOCFortress SOCFortress `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
         
         # run install script ...
         Write-Message  -Message "Downloading / running SOCFortress_CoPilot_Fast.bash " -Type "INFO"
@@ -2027,9 +2027,9 @@ function WSLInstallOllama{
 	if ($pause -eq '6') {
 		# clone base image
 		Write-Message "Cloning $wslImage to $wslImage.tar" -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar`" " -NoNewWindow -Wait
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar.gz`" " -NoNewWindow -Wait
 		Write-Output "Cloaning base $wslImage to Ollama_WSL WSL image"
-		Start-Process -FilePath "wsl.exe" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar`" "  -NoNewWindow -Wait
+		Start-Process -FilePath "wsl.exe" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
 
 		# run install script ...
 		Write-Message  -Message "Downloading / running OpenWebUI_Fast.bash " -Type "INFO"
@@ -2042,9 +2042,9 @@ function WSLInstallOllama{
 	Elseif ($pause = '7') {
 		# clone base image
 		Write-Message "Cloning $wslImage to $wslImage.tar" -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar`" " -NoNewWindow -Wait
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar.gz`" " -NoNewWindow -Wait
 		Write-Output "Cloaning base $wslImage to Ollama_WSL WSL image"
-		Start-Process -FilePath "wsl.exe" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar`" "  -NoNewWindow -Wait
+		Start-Process -FilePath "wsl.exe" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
 		
 		Write-Message  -Message "Downloading Ollama Installer" -Type "INFO"
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"curl -fsSL https://ollama.com/install.sh | sh`" "   -wait  
