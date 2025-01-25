@@ -215,7 +215,7 @@ if (($wslInfo) -match  (".*OracleLinux_9_1.*")  -or ($wslInfo) -match  (".*O.r.a
 	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d OracleLinux_9_1 -u root"  
 } else {
 	Write-Message  -Message  "OracleLinux_9_1 NOT found ..." -Type "WARNING"
-	Write-Message  -Message  "Updating WSL -update " -Type "INFO"
+	Write-Message  -Message  "Updating WSL. You may need to reboot for changes to take effect " -Type "INFO"
 	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --update "  -wait -NoNewWindow
 
 	Write-Message  -Message  "Listing WSL options --list --online " -Type "INFO"
