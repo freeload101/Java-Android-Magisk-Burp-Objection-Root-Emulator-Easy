@@ -1,6 +1,6 @@
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.2.4'
+$VerNum = 'JAMBOREE 4.2.5'
 $host.ui.RawUI.WindowTitle = $VerNum 
 
 function Write-Message  {
@@ -144,7 +144,7 @@ $env:PYTHONHOME="$VARCD\python\tools"
 
 # wsl don't use system32 path !
 
-$env:WSLBIN= "c:\users\$env:USERNAME\AppData\Local\Microsoft\WindowsApps\wsl.exe"
+$env:WSLBIN= "c:\Program Files\WSL\wsl.exe"
 
 #init stuff
 Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
@@ -185,7 +185,7 @@ Function CheckAdmin {
 ############# WSLEnableUpdate
 Function WSLEnableUpdate {
  
-Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList  " --version"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
+Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --version"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
 Start-Sleep -Seconds 1
 $wslInfo = Get-Content -Path "RedirectStandardOutput.txt" 
 if (($wslInfo) -match  (".*:.2.*")  -or ($wslInfo) -match  (".*W.S.L. .v.e.r.s.i.o.n.:. .2.*"))  {
@@ -197,8 +197,8 @@ if (($wslInfo) -match  (".*:.2.*")  -or ($wslInfo) -match  (".*W.S.L. .v.e.r.s.i
 	dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
 	dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
 	
-    Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList "--update "  -Wait
-    Start-Process -FilePath "c:\Program Files\WSL\wsl.exe" -ArgumentList "--set-default-version 2 "  
+    Start-Process -FilePath "$env:WSLBIN" -ArgumentList "--update "  -Wait
+    Start-Process -FilePath "$env:WSLBIN" -ArgumentList "--set-default-version 2 "  
 }
 
  }
@@ -1974,7 +1974,7 @@ Start-Sleep 10
         Write-Message "Cloning $wslImage to $wslImage.tar" -Type "INFO"
         Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar.gz`" " -NoNewWindow -Wait
         Write-Output "Cloaning base $wslImage to SOCFortress WSL image"
-        Start-Process -FilePath "wsl.exe" -ArgumentList " --import SOCFortress SOCFortress `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
+        Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --import SOCFortress SOCFortress `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
         
         # run install script ...
         Write-Message  -Message "Downloading / running SOCFortress_CoPilot_Fast.bash " -Type "INFO"
@@ -2029,7 +2029,7 @@ function WSLInstallOllama{
 		Write-Message "Cloning $wslImage to $wslImage.tar" -Type "INFO"
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar.gz`" " -NoNewWindow -Wait
 		Write-Output "Cloaning base $wslImage to Ollama_WSL WSL image"
-		Start-Process -FilePath "wsl.exe" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
 
 		# run install script ...
 		Write-Message  -Message "Downloading / running OpenWebUI_Fast.bash " -Type "INFO"
@@ -2044,7 +2044,7 @@ function WSLInstallOllama{
 		Write-Message "Cloning $wslImage to $wslImage.tar" -Type "INFO"
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar.gz`" " -NoNewWindow -Wait
 		Write-Output "Cloaning base $wslImage to Ollama_WSL WSL image"
-		Start-Process -FilePath "wsl.exe" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
 		
 		Write-Message  -Message "Downloading Ollama Installer" -Type "INFO"
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"curl -fsSL https://ollama.com/install.sh | sh`" "   -wait  
