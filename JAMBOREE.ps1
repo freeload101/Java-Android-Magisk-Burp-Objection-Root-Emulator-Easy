@@ -1,6 +1,6 @@
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.2.5'
+$VerNum = 'JAMBOREE 4.2.6'
 $host.ui.RawUI.WindowTitle = $VerNum 
 
 function Write-Message  {
@@ -1833,12 +1833,12 @@ Start-Process "notepad" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\ytdl
     Get-Content "$VARCD\ytdlp\LIST.txt" | ForEach-Object { 
     Write-Message  -Message  "Downloading $_" -Type "INFO"
 
-    $GetDate = Get-Date -Format yyyyMMddTHHmmss 
+   $GetDate = Get-Date -Format yyyyMMddTHHmmss 
     Write-Message  -Message  " --ffmpeg-location `"$VARCD\ytdlp\ffmpeg-master-latest-win64-gpl-shared\bin`" -o `"$GetDate %(upload_date)s - %(title)s.%(ext)s`"  `"$_`"     " -Type "INFO"
     
     Start-Process "$VARCD\ytdlp\yt-dlp.exe" -WorkingDirectory "$VARCD\ytdlp" -ArgumentList " --ffmpeg-location `"$VARCD\ytdlp\ffmpeg-master-latest-win64-gpl-shared\bin`" -o `"$GetDate %(upload_date)s - %(title)s.%(ext)s`"  `"$_`"     " -wait -NoNewWindow
   
-    Invoke-Item "$VARCD\ytdlp"
+    
     
     # old multi stream downloading script don't use because multi threaded downloads do not always work ...  
 	# wget -q -U "rmccurdy.com" -q -P aria2  -e robots=off  -nd -r  "https://github.com/aria2/aria2/releases/latest" --max-redirect 1 -l 1 -A "latest,aria*win*64*.zip" -R '*.gz,release*.*' --regex-type pcre --accept-regex "aria2-.*-win-64bit-build1.zip"
@@ -1846,7 +1846,7 @@ Start-Process "notepad" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\ytdl
     # start "aria2c !UUID!"	 cmd /c yt-dlp.exe -w --no-continue  --merge-output-format mkv --ffmpeg-location .\ -o ".\downloads\%%(uploader)s - %%(title)s - %%(id)s_!UUID!.%%(ext)s" -i   --external-downloader aria2c --external-downloader-args " -x 16 -s 16 -k 1M" "%%A"  ^& pause
     
     }
-
+    Invoke-Item "$VARCD\ytdlp"
 }
 
 ############# WSLShrink
