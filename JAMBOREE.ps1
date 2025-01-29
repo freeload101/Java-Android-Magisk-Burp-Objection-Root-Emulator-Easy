@@ -1,6 +1,6 @@
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.2.6'
+$VerNum = 'JAMBOREE 4.2.7'
 $host.ui.RawUI.WindowTitle = $VerNum 
 
 function Write-Message  {
@@ -2049,8 +2049,9 @@ function WSLInstallOllama{
 		Write-Message  -Message "Downloading Ollama Installer" -Type "INFO"
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"curl -fsSL https://ollama.com/install.sh | sh`" "   -wait  
 		
-		Write-Message  -Message  "Downloading small base model " -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"ollama pull dorian2b/vera `" "   -wait -NoNewWindow
+		Write-Message  -Message  "Downloading small base models " -Type "INFO"
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"ollama pull nomic-embed-text`" "   -wait -NoNewWindow
+  		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"ollama pull Sweaterdog/Andy-3.5 `" "   -wait -NoNewWindow
 	  
 		Write-Message  -Message "Setting up Ollama systemd to start listening on 0.0.0.0" -Type "INFO"
 		Start-Process -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"  sed -i `'/ExecStart/a Environment=OLLAMA_HOST=0.0.0.0`'   /etc/systemd/system/ollama.service `" "   -wait -NoNewWindow
