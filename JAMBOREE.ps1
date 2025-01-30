@@ -1,6 +1,6 @@
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.2.7'
+$VerNum = 'JAMBOREE 4.2.8'
 $host.ui.RawUI.WindowTitle = $VerNum 
 
 function Write-Message  {
@@ -2035,8 +2035,16 @@ function WSLInstallOllama{
 		Write-Message  -Message "Downloading / running OpenWebUI_Fast.bash " -Type "INFO"
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"wget -O OpenWebUI_Fast.bash  https://raw.githubusercontent.com/freeload101/SCRIPTS/refs/heads/master/Bash/OpenWebUI_Fast.bash`" "   -wait 
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"bash OpenWebUI_Fast.bash `" "  -NoNewWindow
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList ' -d Ollama_WSL -u root while true;do echo Keep this running for Ollama WSL;date;sleep 10;done'  -WindowStyle minimized
+
+   		# Run on boot for windows / persistance
+     		$action1 = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-Command `"Start-Process -FilePath 'wsl.exe' -ArgumentList ' -d OpenWebUI_WSL_MASTER --exec dbus-launch true' -WindowStyle minimized`""
+		$action2 = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-Command `"Start-Process -FilePath 'wsl.exe' -ArgumentList '--distribution OpenWebUI_WSL' -WindowStyle minimized`""
+		$trigger = New-ScheduledTaskTrigger -AtStartup
+		$principal = New-ScheduledTaskPrincipal -UserId (Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty UserName) -RunLevel Highest
+		Register-ScheduledTask -TaskName "WSL_OpenWebUI_Boot" -Action @($action1, $action2) -Trigger $trigger -Principal $principal -Force
 		
+  		Copy-Item "$env:USERPROFILE\.wslconfig" "$env:USERPROFILE\.wslconfig.bak" -ErrorAction SilentlyContinue; "[wsl2]`nvmIdleTimeout=-1" | Out-File "$env:USERPROFILE\.wslconfig" -Encoding ASCII
+
 
 	}
 	Elseif ($pause = '7') {
