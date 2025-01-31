@@ -1958,7 +1958,7 @@ WSLEnableUpdate
 		# check for existing $wslImage
         if (($wslInfo) -match (".*$wslImage.*"))  {
 			
-			if ( $Global:NOGUI -eq $null ) {
+			if ( $Global:NOGUI -ne '1' ) {
 			$wshell = New-Object -ComObject Wscript.Shell
 			$pause = $wshell.Popup("Do you want to use $wslImage as your base clean image for JAMBOREE?", 0, "Wait!", 4)
 				if ($pause -eq '6') {
@@ -1976,6 +1976,7 @@ WSLEnableUpdate
             Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --install -d $wslImage " -wait 
         }
 }
+
 
 ############# SOCFortressCoPilotFast
 function SOCFortressCoPilotFast{
@@ -2044,61 +2045,62 @@ function WSLCheckOllama{
 
 ############# WSLInstallOllama
 function WSLInstallOllama{
-	$wshell = New-Object -ComObject Wscript.Shell
-	$pause = $wshell.Popup("Do you want to also install OpenWebUI ?", 0, "Wait!", 4)
-	if ($pause -eq '6') {
-		# clone base image
-		Write-Message "Cloning $wslImage to $wslImage.tar" -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar.gz`" " -NoNewWindow -Wait
-		Write-Output "Cloaning base $wslImage to Ollama_WSL WSL image"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
+		if ( $Global:NOGUI -ne '1' ) {
+		$wshell = New-Object -ComObject Wscript.Shell
+		$pause = $wshell.Popup("Do you want to also install OpenWebUI ?", 0, "Wait!", 4)
+		if ($pause -eq '6') {
+			# clone base image
+			Write-Message "Cloning $wslImage to $wslImage.tar" -Type "INFO"
+			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar.gz`" " -NoNewWindow -Wait
+			Write-Output "Cloaning base $wslImage to Ollama_WSL WSL image"
+			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
 
-		# run install script ...
-		Write-Message  -Message "Downloading / running OpenWebUI_Fast.bash " -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"wget -O OpenWebUI_Fast.bash  https://raw.githubusercontent.com/freeload101/SCRIPTS/refs/heads/master/Bash/OpenWebUI_Fast.bash`" "   -wait 
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"bash OpenWebUI_Fast.bash `" "  -NoNewWindow
+			# run install script ...
+			Write-Message  -Message "Downloading / running OpenWebUI_Fast.bash " -Type "INFO"
+			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"wget -O OpenWebUI_Fast.bash  https://raw.githubusercontent.com/freeload101/SCRIPTS/refs/heads/master/Bash/OpenWebUI_Fast.bash`" "   -wait 
+			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"bash OpenWebUI_Fast.bash `" "  -NoNewWindow
 
-   		# Run on boot for windows / persistance
-		Register-ScheduledTask -Force -TaskName 'StartOpenWebUI' -Trigger (New-ScheduledTaskTrigger -AtStartup) -Action (New-ScheduledTaskAction -Execute 'wsl' -Argument "-d OpenWebUI_WSL_MASTER --exec dbus-launch true") -User $env:username -Password (Get-Credential $env:username).GetNetworkCredential().Password -EA Stop
+			# Run on boot for windows / persistance
+			Register-ScheduledTask -Force -TaskName 'StartOpenWebUI' -Trigger (New-ScheduledTaskTrigger -AtStartup) -Action (New-ScheduledTaskAction -Execute 'wsl' -Argument "-d OpenWebUI_WSL_MASTER --exec dbus-launch true") -User $env:username -Password (Get-Credential $env:username).GetNetworkCredential().Password -EA Stop
 
-		
-  		Copy-Item "$env:USERPROFILE\.wslconfig" "$env:USERPROFILE\.wslconfig.bak" -ErrorAction SilentlyContinue; "[wsl2]`nvmIdleTimeout=-1" | Out-File "$env:USERPROFILE\.wslconfig" -Encoding ASCII
+			
+			Copy-Item "$env:USERPROFILE\.wslconfig" "$env:USERPROFILE\.wslconfig.bak" -ErrorAction SilentlyContinue; "[wsl2]`nvmIdleTimeout=-1" | Out-File "$env:USERPROFILE\.wslconfig" -Encoding ASCII
 
 
-	}
-	Elseif ($pause = '7') {
-		# clone base image
-		Write-Message "Cloning $wslImage to $wslImage.tar" -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar.gz`" " -NoNewWindow -Wait
-		Write-Output "Cloaning base $wslImage to Ollama_WSL WSL image"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
-		
-		Write-Message  -Message "Downloading Ollama Installer" -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"curl -fsSL https://ollama.com/install.sh | sh`" "   -wait  
-		
-		Write-Message  -Message  "Downloading small base models " -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"ollama pull nomic-embed-text`" "   -wait -NoNewWindow
-  		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"ollama pull Sweaterdog/Andy-3.5 `" "   -wait -NoNewWindow
-	  
-		Write-Message  -Message "Setting up Ollama systemd to start listening on 0.0.0.0" -Type "INFO"
-		Start-Process -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"  sed -i `'/ExecStart/a Environment=OLLAMA_HOST=0.0.0.0`'   /etc/systemd/system/ollama.service `" "   -wait -NoNewWindow
-		Start-Process -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"  systemctl daemon-reload `" "   -wait -NoNewWindow
-		Write-Message  -Message "Restarting Ollama" -Type "INFO"
-		Start-Process -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `" systemctl restart ollama.service `" "   -wait -NoNewWindow
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList ' -d Ollama_WSL -u root while true;do echo Keep this running for Ollama WSL;date;sleep 10;done'  -WindowStyle minimized
-	}
-	
-		#port fwd
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `" ip route get 1.1.1.1  `" " -NoNewWindow -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
-		Start-Sleep 10
-		Get-Content RedirectStandardOutput.txt
+		}
+		Elseif ($pause = '7') {
+			# clone base image
+			Write-Message "Cloning $wslImage to $wslImage.tar" -Type "INFO"
+			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar.gz`" " -NoNewWindow -Wait
+			Write-Output "Cloaning base $wslImage to Ollama_WSL WSL image"
+			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
+			
+			Write-Message  -Message "Downloading Ollama Installer" -Type "INFO"
+			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"curl -fsSL https://ollama.com/install.sh | sh`" "   -wait  
+			
+			Write-Message  -Message  "Downloading small base models " -Type "INFO"
+			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"ollama pull nomic-embed-text`" "   -wait -NoNewWindow
+			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"ollama pull Sweaterdog/Andy-3.5 `" "   -wait -NoNewWindow
+		  
+			Write-Message  -Message "Setting up Ollama systemd to start listening on 0.0.0.0" -Type "INFO"
+			Start-Process -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"  sed -i `'/ExecStart/a Environment=OLLAMA_HOST=0.0.0.0`'   /etc/systemd/system/ollama.service `" "   -wait -NoNewWindow
+			Start-Process -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"  systemctl daemon-reload `" "   -wait -NoNewWindow
+			Write-Message  -Message "Restarting Ollama" -Type "INFO"
+			Start-Process -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `" systemctl restart ollama.service `" "   -wait -NoNewWindow
+			Start-Process -FilePath "$env:WSLBIN" -ArgumentList ' -d Ollama_WSL -u root while true;do echo Keep this running for Ollama WSL;date;sleep 10;done'  -WindowStyle minimized
+		}
 
-		$INTERNETIP = Get-Content RedirectStandardOutput.txt | ForEach-Object { $elements = $_ -split ' '; $elements[6] }
-		Set-Content -Path NetSh.txt -Value "You need to run the following as administrator to reach the services from outside the host mashine exclude port 8080 if you are not running OpenWebUI" 
-		Add-Content -Path NetSh.txt -Value "netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=8080 connectaddress=$INTERNETIP"
-		Add-Content -Path NetSh.txt -Value "netsh interface portproxy add v4tov4 listenport=11434 listenaddress=0.0.0.0 connectport=11434 connectaddress=$INTERNETIP"
-		Invoke-Item -Path NetSh.txt
-	
+			#port fwd
+			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `" ip route get 1.1.1.1  `" " -NoNewWindow -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+			Start-Sleep 10
+			Get-Content RedirectStandardOutput.txt
+
+			$INTERNETIP = Get-Content RedirectStandardOutput.txt | ForEach-Object { $elements = $_ -split ' '; $elements[6] }
+			Set-Content -Path NetSh.txt -Value "You need to run the following as administrator to reach the services from outside the host mashine exclude port 8080 if you are not running OpenWebUI" 
+			Add-Content -Path NetSh.txt -Value "netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=8080 connectaddress=$INTERNETIP"
+			Add-Content -Path NetSh.txt -Value "netsh interface portproxy add v4tov4 listenport=11434 listenaddress=0.0.0.0 connectport=11434 connectaddress=$INTERNETIP"
+			Invoke-Item -Path NetSh.txt
+		}
 }
 
 ############# WipeForwardRules
@@ -2118,20 +2120,19 @@ Function WipeForwardRules {
 
 ############# CheckGPU
 Function CheckGPU {
-	Get-ItemProperty -Path "HKLM:\SYSTEM\ControlSet001\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0*"   | Where-Object {$_."HardwareInformation.qwMemorySize" -gt 0} | ForEach-Object {
-	$DriverDesc = $_.DriverDesc
-	$VRAM = [math]::round($_."HardwareInformation.qwMemorySize"/1GB)
-		}
-		if (0 -eq $VRAM) {
+	$GPUList = Get-ItemProperty -Path "HKLM:\SYSTEM\ControlSet001\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0*"   | Where-Object {$_."HardwareInformation.qwMemorySize" -gt 0} 
+	if ($GPUList -eq $null) {
 			Write-Message  -Message  "Dedicated GPU NOT FOUND !!! It does not look like you have a dedicated GPU with Dedicated GPU Memory this is differnet then Shared GPU memory or GPU Memory ! Check this site to help: https://huggingface.co/spaces/DavidAU/GGUF-Model-VRAM-Calculator or look on youtube for google colab ollama " -Type "ERROR"
 			$Global:GPUVRAM = 0
-			Start-Sleep 10
-			(Get-WmiObject -Namespace root\CIMV2 -Class CIM_VideoController)  | Select-Object Name,Description,Caption,DeviceID,VideoMemoryType  | Format-Table -AutoSize  
-		} else {
-			Write-Message  -Message  "Dedicated GPU: $DriverDesc with $VRAM GB of VRAM" -Type "INFO"
-			$Global:GPUVRAM = 1 # DEBUG 0
-			WSLCheckOllama
-		}
+			# DEBUG Start-Sleep 10
+			(Get-WmiObject -Namespace root\CIMV2 -Class CIM_VideoController)  | Select-Object Name,Description,Caption,DeviceID,VideoMemoryType  | Format-Table -AutoSize
+	} else {
+	$DriverDesc = $_.DriverDesc
+	$VRAM = [math]::round($_."HardwareInformation.qwMemorySize"/1GB)	
+	Write-Message  -Message  "Dedicated GPU: $DriverDesc with $VRAM GB of VRAM" -Type "INFO"
+	$Global:GPUVRAM = 1 # DEBUG 0
+	WSLCheckOllama
+		}	
 }
 
 ############# mindcraft
@@ -2754,8 +2755,6 @@ $Button.Add_Click({UpdateJAMBO})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-
-
 if ($Headless) {
 	Write-Message  -Message  "Running in headless mode" -Type "WARNING"
 	$Global:NOGUI = 1
@@ -2763,7 +2762,5 @@ if ($Headless) {
 	exit
 }
 
-
 ############# SHOW FORM
 $main_form.ShowDialog()
-
