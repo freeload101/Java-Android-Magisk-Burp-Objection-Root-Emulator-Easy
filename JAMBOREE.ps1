@@ -1,6 +1,14 @@
+param(
+    [Parameter(Mandatory=$false)]
+    [string]$RunFunction
+)
+
+
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.2.8'
+$VerNum = 'JAMBOREE 4.3.8'
+
+
 $host.ui.RawUI.WindowTitle = $VerNum 
 
 function Write-Message  {
@@ -165,20 +173,19 @@ $vShift = 0
 ############# CheckAdmin
 Function CheckAdmin {
 	
-	If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]"Administrator")) {
-		if ($PSCommandPath -eq $null) { function GetPSCommandPath() { return $MyInvocation.PSCommandPath; } $PSCommandPath = GetPSCommandPath }
+	If ((!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]"Administrator")) -and ( $Global:NOGUI -eq $null )) {
+		Write-Message  -Message  "Not running as admin" -Type "ERROR"
+		if (($PSCommandPath -eq $null ) ) { function GetPSCommandPath() { return $MyInvocation.PSCommandPath; } $PSCommandPath = GetPSCommandPath }
 			$wshell = New-Object -ComObject Wscript.Shell
-			$pause = $wshell.Popup("Need to esclate to administrator to run the current Function!", 0, "Wait!", 48+1)
-				
+			$pause = $wshell.Popup("Need to esclate to administrator to run the current Function!", 0, "Wait!", 48+1)	
 			if ($pause -eq '1') {
 				Write-Message  -Message  "Restarting $PSCommandPath as admin... " -Type "INFO"
 				Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" " -WorkingDirectory "$VARCD" -Verb RunAs
 			}
 			Elseif ($pause = '2') {
-				Write-Message  -Message  "Not running as admin" -Type "INFO"
+				Write-Message  -Message  "Not running as admin" -Type "ERROR"
 				return
 			}
-		Exit
 	}
 }
 
@@ -1688,7 +1695,7 @@ Write-Message  -Message  "Checking for Arduino" -Type "INFO"
 			try {
 				Start-Process -FilePath "$VARCD\Digistump Drivers\Install Drivers.exe" -WorkingDirectory "$VARCD" -ErrorAction SilentlyContinue
 			} catch {
-				Write-Message  -Message  "Not running as admin or driver faild install" -Type "ERROR"
+				Write-Message  -Message  "Not running as admin or driver faild install" -Type "WARNING"
 			}
 
             # add Digistump board to Arduino
@@ -2731,6 +2738,15 @@ $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({UpdateJAMBO})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
+
+
+
+if ($RunFunction) {
+	Write-Message  -Message  "Running in headless mode" -Type "WARNING"
+	$Global:NOGUI = 1
+    & $RunFunction
+}
+
 
 ############# SHOW FORM
 $main_form.ShowDialog()
