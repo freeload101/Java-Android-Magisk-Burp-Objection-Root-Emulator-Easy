@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory=$false)]
-    [string]$RunFunction
+    [string]$Headless
 )
 
 
@@ -871,9 +871,10 @@ Function AVDPoweroff {
     $varadb=CheckADB
 	$env:ANDROID_SERIAL=$varadb
 	
+	
 	$wshell = New-Object -ComObject Wscript.Shell
 	$pause = $wshell.Popup("Are you sure you want to shutdown?", 0, "Wait!", 48+1)
-
+	
 	if ($pause -eq '1') {
 		Write-Message  -Message  "Powering Off AVD" -Type "INFO"
 		Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell -t  `"reboot -p`"" -Wait -NoNewWindow
@@ -1942,19 +1943,22 @@ WSLEnableUpdate
     Start-Sleep -Seconds 1
     
     $wslInfo = Get-Content -Path "RedirectStandardOutput.txt"
-        # check for existing $wslImage
+        
+		# check for existing $wslImage
         if (($wslInfo) -match (".*$wslImage.*"))  {
-
-        $wshell = New-Object -ComObject Wscript.Shell
-        $pause = $wshell.Popup("Do you want to use $wslImage as your base clean image for JAMBOREE?", 0, "Wait!", 4)
-            if ($pause -eq '6') {
-            return
-            }
-            Elseif ($pause = '7') {
-            Write-Message  -Message  "You will need to create a base image $wslImage for JAMBOREE!" -Type "ERROR"
-            Start-Sleep 10
-            [Environment]::Exit(1)
-            }
+			
+			if ( $Global:NOGUI -eq $null ) {
+			$wshell = New-Object -ComObject Wscript.Shell
+			$pause = $wshell.Popup("Do you want to use $wslImage as your base clean image for JAMBOREE?", 0, "Wait!", 4)
+				if ($pause -eq '6') {
+				return
+				}
+				Elseif ($pause = '7') {
+				Write-Message  -Message  "You will need to create a base image $wslImage for JAMBOREE!" -Type "ERROR"
+				Start-Sleep 10
+				[Environment]::Exit(1)
+				}
+			}
         } ELSE {
         # create base image 
             Write-Message "No $wslImage image found. Installing base $wslImage WSL image" -Type "WARNING"
@@ -2741,12 +2745,14 @@ $vShift = $vShift + 30
 
 
 
-if ($RunFunction) {
+if ($Headless) {
 	Write-Message  -Message  "Running in headless mode" -Type "WARNING"
 	$Global:NOGUI = 1
-    & $RunFunction
+    & $Headless
+	exit
 }
 
 
 ############# SHOW FORM
 $main_form.ShowDialog()
+
