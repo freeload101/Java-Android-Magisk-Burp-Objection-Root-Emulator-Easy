@@ -6,4 +6,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          powershell -ExecutionPolicy Bypass -Command "iwr https://raw.githubusercontent.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/refs/heads/main/JAMBOREE.ps1 | iex"
+          powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/refs/heads/main/JAMBOREE.ps1' -UseBasicParsing).Content)) -Headless KillADB"
