@@ -1,0 +1,9 @@
+name: Run JAMBOREE PowerShell Script
+on: [push, workflow_dispatch]
+jobs:
+  run-script:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          powershell -ExecutionPolicy Bypass -Command "iwr https://raw.githubusercontent.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/refs/heads/main/JAMBOREE.ps1 | iex"
