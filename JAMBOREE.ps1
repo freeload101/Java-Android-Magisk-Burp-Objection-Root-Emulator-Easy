@@ -2037,11 +2037,8 @@ function WSLInstallOllama{
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"bash OpenWebUI_Fast.bash `" "  -NoNewWindow
 
    		# Run on boot for windows / persistance
-     		$action1 = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-Command `"Start-Process -FilePath 'wsl.exe' -ArgumentList ' -d OpenWebUI_WSL_MASTER --exec dbus-launch true' -WindowStyle minimized`""
-		$action2 = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-Command `"Start-Process -FilePath 'wsl.exe' -ArgumentList '--distribution OpenWebUI_WSL' -WindowStyle minimized`""
-		$trigger = New-ScheduledTaskTrigger -AtStartup
-		$principal = New-ScheduledTaskPrincipal -UserId (Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty UserName) -RunLevel Highest
-		Register-ScheduledTask -TaskName "WSL_OpenWebUI_Boot" -Action @($action1, $action2) -Trigger $trigger -Principal $principal -Force
+		Register-ScheduledTask -Force -TaskName 'StartOpenWebUI' -Trigger (New-ScheduledTaskTrigger -AtStartup) -Action (New-ScheduledTaskAction -Execute 'wsl' -Argument "-d OpenWebUI_WSL_MASTER --exec dbus-launch true") -User $env:username -Password (Get-Credential $env:username).GetNetworkCredential().Password -EA Stop
+
 		
   		Copy-Item "$env:USERPROFILE\.wslconfig" "$env:USERPROFILE\.wslconfig.bak" -ErrorAction SilentlyContinue; "[wsl2]`nvmIdleTimeout=-1" | Out-File "$env:USERPROFILE\.wslconfig" -Encoding ASCII
 
