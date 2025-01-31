@@ -6,7 +6,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.3.8'
+$VerNum = 'JAMBOREE 4.3.0'
 
 
 $host.ui.RawUI.WindowTitle = $VerNum 
@@ -2124,11 +2124,11 @@ Function CheckGPU {
 	if ($GPUList -eq $null) {
 			Write-Message  -Message  "Dedicated GPU NOT FOUND !!! It does not look like you have a dedicated GPU with Dedicated GPU Memory this is differnet then Shared GPU memory or GPU Memory ! Check this site to help: https://huggingface.co/spaces/DavidAU/GGUF-Model-VRAM-Calculator or look on youtube for google colab ollama " -Type "ERROR"
 			$Global:GPUVRAM = 0
-			# DEBUG Start-Sleep 10
+			Start-Sleep 10
 			(Get-WmiObject -Namespace root\CIMV2 -Class CIM_VideoController)  | Select-Object Name,Description,Caption,DeviceID,VideoMemoryType  | Format-Table -AutoSize
 	} else {
-	$DriverDesc = $_.DriverDesc
-	$VRAM = [math]::round($_."HardwareInformation.qwMemorySize"/1GB)	
+	$DriverDesc = $GPUList.DriverDesc
+	$VRAM = [math]::round($GPUList."HardwareInformation.qwMemorySize"/1GB)	
 	Write-Message  -Message  "Dedicated GPU: $DriverDesc with $VRAM GB of VRAM" -Type "INFO"
 	$Global:GPUVRAM = 1 # DEBUG 0
 	WSLCheckOllama
