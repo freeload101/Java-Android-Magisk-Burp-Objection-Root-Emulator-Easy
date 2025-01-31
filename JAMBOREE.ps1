@@ -1073,6 +1073,17 @@ Function AVDWipeData {
 
 ############# CHECK BURP
 Function CheckBurp {
+
+Write-Message  -Message  "Setting up inital burp configs" -Type "INFO"
+New-Item -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Force
+Set-ItemProperty -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Name "free.suite.alertsdisabledforjre-1817240865" -Value "true" -Type String
+Set-ItemProperty -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Name "eulacommunity" -Value "4" -Type String
+Set-ItemProperty -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Name "free.suite.feedback/Reporting/Enabled" -Value "false" -Type String
+Set-ItemProperty -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Name "free.suite.suppressupdatedialog" -Value "false" -Type String
+New-Item -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp\community -Force
+New-Item -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp\community\detached-frames -Force
+
+
 Write-Message  -Message  "Creating folders for custom CloudFlare bypass and ZAP support" -Type "INFO"
 New-Item -Path "$env:USERPROFILE\AppData\Roaming\BurpSuite\ConfigLibrary\" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 CheckJava
@@ -1110,7 +1121,7 @@ Function StartBurp {
     CheckBurp
 	Write-Message  -Message  "Setting $env:USERPROFILE back to $USERPROFILE_BACKUP to fix open dialog for Burp Suite" -Type "INFO"
 	$env:USERPROFILE="$USERPROFILE_BACKUP"
-    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --use-defaults  && "  
+    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar` --use-defaults  --disable-auto-update " --use-defaults  && "  
 	Write-Message  -Message  "Waiting for Burp Suite to download cert" -Type "INFO"
 	Retry{PullCert "Error PullCert"} # -maxAttempts 10
 }
@@ -1120,7 +1131,7 @@ Function StartBurpSocks {
     CheckBurp
 	Write-Message  -Message  "Setting $env:USERPROFILE back to $USERPROFILE_BACKUP to fix open dialog for Burp Suite" -Type "INFO"
 	$env:USERPROFILE="$USERPROFILE_BACKUP"
-	Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m   -jar `"$VARCD\burpsuite_community.jar`"  --user-config-file=`"$VARCD\AppData\Roaming\BurpSuite\BurpConfigProxy.json`"    && " 
+	Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m   -jar `"$VARCD\burpsuite_community.jar`"  --use-defaults  --disable-auto-update --user-config-file=`"$VARCD\AppData\Roaming\BurpSuite\BurpConfigProxy.json` --use-defaults  --disable-auto-update "    && " 
 	Write-Message  -Message  "Waiting for Burp Suite to download cert" -Type "INFO"
 	Retry{PullCert "Error PullCert"} # -maxAttempts 10
 }
