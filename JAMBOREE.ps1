@@ -6,7 +6,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.3.2'
+$VerNum = 'JAMBOREE 4.3.3'
 
 
 $host.ui.RawUI.WindowTitle = $VerNum 
