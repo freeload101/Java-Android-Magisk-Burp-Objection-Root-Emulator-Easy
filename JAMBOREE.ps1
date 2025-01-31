@@ -6,7 +6,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.3.3'
+$VerNum = 'JAMBOREE 4.3.34'
 
 
 $host.ui.RawUI.WindowTitle = $VerNum 
@@ -2034,7 +2034,7 @@ function WSLCheckOllama{
      # check for existing Ollama_WSL image
         if (($wslInfo) -match (".*Ollama_WSL.*"))  {
 		Write-Message "Existing Ollama_WSL Image found starting Ollama" -Type "INFO"
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList ' -d Ollama_WSL -u root while true;do echo Keep this running for Ollama WSL;date;sleep 10;done'  -WindowStyle minimized
+		Start-Process -FilePath "$env:WSLBIN" -ArgumentList ' -d Ollama_WSL -u root journalctl  -f -n 999999 --no-pager -u ollama.service'  -WindowStyle minimized
 		
         } ELSE {
 		WSLEnableUpdate
@@ -2087,7 +2087,7 @@ function WSLInstallOllama{
 			Start-Process -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"  systemctl daemon-reload `" "   -wait -NoNewWindow
 			Write-Message  -Message "Restarting Ollama" -Type "INFO"
 			Start-Process -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `" systemctl restart ollama.service `" "   -wait -NoNewWindow
-			Start-Process -FilePath "$env:WSLBIN" -ArgumentList ' -d Ollama_WSL -u root while true;do echo Keep this running for Ollama WSL;date;sleep 10;done'  -WindowStyle minimized
+			Start-Process -FilePath "$env:WSLBIN" -ArgumentList ' -d Ollama_WSL -u root journalctl  -f -n 999999 --no-pager -u ollama.service'  -WindowStyle minimized
 		}
 
 			#port fwd
