@@ -6,7 +6,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.3.0'
+$VerNum = 'JAMBOREE 4.3.2'
 
 
 $host.ui.RawUI.WindowTitle = $VerNum 
@@ -2122,10 +2122,11 @@ Function WipeForwardRules {
 Function CheckGPU {
 	$GPUList = Get-ItemProperty -Path "HKLM:\SYSTEM\ControlSet001\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0*"   | Where-Object {$_."HardwareInformation.qwMemorySize" -gt 0} 
 	if ($GPUList -eq $null) {
-			Write-Message  -Message  "Dedicated GPU NOT FOUND !!! It does not look like you have a dedicated GPU with Dedicated GPU Memory this is differnet then Shared GPU memory or GPU Memory ! Check this site to help: https://huggingface.co/spaces/DavidAU/GGUF-Model-VRAM-Calculator or look on youtube for google colab ollama " -Type "ERROR"
+			Write-Message  -Message  "Dedicated GPU NOT FOUND !!! It does not look like you have a dedicated GPU with Dedicated GPU Memory this is differnet then Shared GPU memory or GPU Memory ! We can use public Ollama servers or see FAQ for Mindcraft to setup APIs" -Type "ERROR"
 			$Global:GPUVRAM = 0
-			Start-Sleep 10
 			(Get-WmiObject -Namespace root\CIMV2 -Class CIM_VideoController)  | Select-Object Name,Description,Caption,DeviceID,VideoMemoryType  | Format-Table -AutoSize
+			Start-Sleep 10
+			
 	} else {
 	$DriverDesc = $GPUList.DriverDesc
 	$VRAM = [math]::round($GPUList."HardwareInformation.qwMemorySize"/1GB)	
@@ -2192,7 +2193,8 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 		OllamaGapeFind
 		Write-Message  -Message  "AlienAnthony.json: Updating Global:OllamaValidIP: $Global:OllamaValidIP  and  OllamaValidModel: $Global:OllamaValidModel  "  -Type "ERROR"
 		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json").Replace("localhost", "$Global:OllamaValidIP") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
-		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json").Replace("dorian2b/vera:latest", "$Global:OllamaValidModel") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
+		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json").Replace("`"model`": `"Sweaterdog/Andy-3.5`",", "`"model`": `"$Global:OllamaValidModel`"") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
+		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json").Replace("`"embedding`": `"nomic-embed-text`"", "") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
 	}
 	
  	Write-Message  -Message  "Starting Mindcraft" -Type "INFO"
