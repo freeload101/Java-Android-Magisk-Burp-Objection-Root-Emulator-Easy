@@ -2191,7 +2191,7 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 		Write-Message  -Message  ".\profiles\AlienAnthony.json: No GPU VRAM found Downloading AlienAnthony.json" -Type "ERROR"
 		Invoke-WebRequest -Uri "https://raw.githubusercontent.com/freeload101/SCRIPTS/refs/heads/master/MISC/AlienAnthony.json" -OutFile "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
 		OllamaGapeFind
-		Write-Message  -Message  "AlienAnthony.json: Updating Global:OllamaValidIP: $Global:OllamaValidIP  and  OllamaValidModel: $Global:OllamaValidModel  "  -Type "ERROR"
+		Write-Message  -Message  "AlienAnthony.json: Updating Global:OllamaValidIP: $Global:OllamaValidIP  and  OllamaValidModel: $Global:OllamaValidModel  "  -Type "INFO"
 		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json").Replace("localhost", "$Global:OllamaValidIP") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
 		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json").Replace("`"model`": `"Sweaterdog/Andy-3.5`",", "`"model`": `"$Global:OllamaValidModel`"") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
 		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json").Replace("`"embedding`": `"nomic-embed-text`"", "") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
