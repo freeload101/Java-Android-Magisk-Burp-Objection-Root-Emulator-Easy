@@ -6,7 +6,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.3.34'
+$VerNum = 'JAMBOREE 4.3.35'
 
 
 $host.ui.RawUI.WindowTitle = $VerNum 
@@ -2172,14 +2172,14 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 	Write-Message  -Message  "Settings.js: Replace the Mindcraft port with less common port I have stuff runnning on 8080 so change to 8881" -Type "INFO"
 	(Get-Content "$VARCD\mindcraft\mindcraft\settings.js").Replace("8080", "8881") | Set-Content "$VARCD\mindcraft\mindcraft\settings.js"
 
-	Write-Message  -Message  "Settings.js: Replace andy with moded AlienAnthony profile for ollama" -Type "INFO"
-	(Get-Content "$VARCD\mindcraft\mindcraft\settings.js").Replace("andy", "profiles/AlienAnthony") | Set-Content "$VARCD\mindcraft\mindcraft\settings.js"
+	Write-Message  -Message  "Settings.js: Replace andy with moded Andy profile for ollama" -Type "INFO"
+	(Get-Content "$VARCD\mindcraft\mindcraft\settings.js").Replace("andy", "profiles/Andy") | Set-Content "$VARCD\mindcraft\mindcraft\settings.js"
 	
 	Write-Message  -Message  ".\src\server\mind_server.js: Replace the port with common Minecraft port " -Type "INFO"
 	(Get-Content "$VARCD\mindcraft\mindcraft\src\server\mind_server.js").Replace("8080", "8082") | Set-Content "$VARCD\mindcraft\mindcraft\src\server\mind_server.js"
 	
-	Write-Message  -Message  ".\profiles\AlienAnthony.json: Downloading AlienAnthony.json profile " -Type "INFO"
-	Invoke-WebRequest -Uri "https://github.com/freeload101/SCRIPTS/raw/refs/heads/master/MISC/AlienAnthony.json" -OutFile "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
+	Write-Message  -Message  ".\profiles\Andy.json: Downloading Andy.json profile " -Type "INFO"
+	Invoke-WebRequest -Uri "https://github.com/freeload101/SCRIPTS/raw/refs/heads/master/MISC/Andy.json" -OutFile "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
  
 	}
 	Write-Message  -Message  "Changing working directory to $VARCD\mindcraft" -Type "INFO"
@@ -2188,13 +2188,13 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 
 
 	if($Global:GPUVRAM -match "0"){
-		Write-Message  -Message  ".\profiles\AlienAnthony.json: No GPU VRAM found Downloading AlienAnthony.json" -Type "ERROR"
-		Invoke-WebRequest -Uri "https://raw.githubusercontent.com/freeload101/SCRIPTS/refs/heads/master/MISC/AlienAnthony.json" -OutFile "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
+		Write-Message  -Message  ".\profiles\Andy.json: No GPU VRAM found Downloading Andy.json" -Type "ERROR"
+		Invoke-WebRequest -Uri "https://raw.githubusercontent.com/freeload101/SCRIPTS/refs/heads/master/MISC/Andy.json" -OutFile "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
 		OllamaGapeFind
-		Write-Message  -Message  "AlienAnthony.json: Updating Global:OllamaValidIP: $Global:OllamaValidIP  and  OllamaValidModel: $Global:OllamaValidModel  "  -Type "INFO"
-		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json").Replace("localhost", "$Global:OllamaValidIP") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
-		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json").Replace("`"model`": `"Sweaterdog/Andy-3.5`",", "`"model`": `"$Global:OllamaValidModel`"") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
-		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json").Replace("`"embedding`": `"nomic-embed-text`"", "") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\AlienAnthony.json"
+		Write-Message  -Message  "Andy.json: Updating Global:OllamaValidIP: $Global:OllamaValidIP  and  OllamaValidModel: $Global:OllamaValidModel  "  -Type "INFO"
+		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json").Replace("localhost", "$Global:OllamaValidIP") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
+		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json").Replace("`"model`": `"Sweaterdog/Andy-3.5`",", "`"model`": `"$Global:OllamaValidModel`"") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
+		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json").Replace("`"embedding`": `"nomic-embed-text`"", "") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
 	}
 	
  	Write-Message  -Message  "Starting Mindcraft" -Type "INFO"
