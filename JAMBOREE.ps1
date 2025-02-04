@@ -1121,7 +1121,7 @@ Function StartBurp {
     CheckBurp
 	Write-Message  -Message  "Setting $env:USERPROFILE back to $USERPROFILE_BACKUP to fix open dialog for Burp Suite" -Type "INFO"
 	$env:USERPROFILE="$USERPROFILE_BACKUP"
-    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar` --disable-auto-update --use-defaults  && "  
+    Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$VARCD\burpsuite_community.jar`" --disable-auto-update --use-defaults  && "  
 	Write-Message  -Message  "Waiting for Burp Suite to download cert" -Type "INFO"
 	Retry{PullCert "Error PullCert"} # -maxAttempts 10
 }
