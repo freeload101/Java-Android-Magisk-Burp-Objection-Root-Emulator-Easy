@@ -152,7 +152,7 @@ $env:PYTHONHOME="$VARCD\python\tools"
 
 # wsl don't use system32 path !
 
-$env:WSLBIN= "c:\Program Files\WSL\wsl.exe"
+$env:WSLBIN= "C:\Windows\System32\wsl.exe"
 
 #init stuff
 Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
