@@ -6,7 +6,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.3.35'
+$VerNum = 'JAMBOREE 4.3.36'
 
 
 $host.ui.RawUI.WindowTitle = $VerNum 
@@ -2132,7 +2132,7 @@ Function CheckGPU {
 	$VRAM = [math]::round($GPUList."HardwareInformation.qwMemorySize"/1GB)	
 	Write-Message  -Message  "Dedicated GPU: $DriverDesc with $VRAM GB of VRAM" -Type "INFO"
 	$Global:GPUVRAM = 1 # DEBUG 0
-	WSLCheckOllama
+	# WSLCheckOllama
 		}	
 }
 
@@ -2363,6 +2363,16 @@ function OllamaGapeFind {
         }
     }
 }
+
+#################### mindcraftStart
+function mindcraftStart {
+	Write-Message  -Message  "Starting Mindcraft" -Type "INFO"
+	Set-Location -Path "$VARCD\mindcraft\mindcraft\" -ErrorAction SilentlyContinue |Out-Null
+	Remove-Item -Path "$VARCD\mindcraft\mindcraft\bots\Andy" -Force -ErrorAction SilentlyContinue  -Confirm:$false -Recurse |Out-Null
+	Start-Process -FilePath "$VARCD\node\node.exe" -WorkingDirectory ".\" -ArgumentList " main.js "
+}
+
+
 
 ######################################################################################################################### FUNCTIONS END
 
@@ -2675,6 +2685,16 @@ $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({mindcraft})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
+
+############# mindcraftStart
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "MindcraftReStart"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({mindcraftStart})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
 
 ############# WSLShrink
 $Button = New-Object System.Windows.Forms.Button
