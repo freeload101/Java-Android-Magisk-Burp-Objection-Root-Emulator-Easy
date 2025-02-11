@@ -2368,9 +2368,11 @@ function OllamaGapeFind {
 
 #################### mindcraftStart
 function mindcraftStart {
-	Write-Message  -Message  "Starting Mindcraft" -Type "INFO"
 	Set-Location -Path "$VARCD\mindcraft\mindcraft\" -ErrorAction SilentlyContinue |Out-Null
-	Remove-Item -Path "$VARCD\mindcraft\mindcraft\bots\Andy" -Force -ErrorAction SilentlyContinue  -Confirm:$false -Recurse |Out-Null
+ 
+	Write-Message  -Message  "Removing Andy memory folder $VARCD\mindcraft\mindcraft\bots\Andy " -Type "INFO"
+ 	Remove-Item -Path "$VARCD\mindcraft\mindcraft\bots\Andy" -Force -ErrorAction SilentlyContinue  -Confirm:$false -Recurse |Out-Null
+	Write-Message  -Message  "Starting Mindcraft" -Type "INFO"
 	Start-Process -FilePath "$VARCD\node\node.exe" -WorkingDirectory ".\" -ArgumentList " main.js "
 }
 
