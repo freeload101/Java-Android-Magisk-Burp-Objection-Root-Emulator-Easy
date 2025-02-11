@@ -2132,7 +2132,7 @@ Function CheckGPU {
 	$VRAM = [math]::round($GPUList."HardwareInformation.qwMemorySize"/1GB)	
 	Write-Message  -Message  "Dedicated GPU: $DriverDesc with $VRAM GB of VRAM" -Type "INFO"
 	$Global:GPUVRAM = 1 # DEBUG 0
-	# WSLCheckOllama
+	WSLCheckOllama
 		}	
 }
 
