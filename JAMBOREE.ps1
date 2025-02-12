@@ -2142,7 +2142,7 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json").Replace("`"embedding`": `"nomic-embed-text`"", "") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
 	}
 	Write-Message  -Message  "Installing prismarine-viewer@1.28.0 to fix broken repo" -Type "INFO"
-	Start-Process -FilePath "$VARCD\node\node.exe" -WorkingDirectory ".\" -ArgumentList " install prismarine-viewer@1.28.0 " 
+	Start-Process -FilePath "$VARCD\node\npm.cmd" -WorkingDirectory ".\" -ArgumentList " install prismarine-viewer@1.28.0 " 
  
  	Write-Message  -Message  "Starting Mindcraft" -Type "INFO"
 	Start-Process -FilePath "$VARCD\node\node.exe" -WorkingDirectory ".\" -ArgumentList " main.js " 
