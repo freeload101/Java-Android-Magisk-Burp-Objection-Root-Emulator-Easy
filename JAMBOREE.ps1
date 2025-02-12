@@ -6,7 +6,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.3.36'
+$VerNum = 'JAMBOREE 4.3.38'
 
 
 $host.ui.RawUI.WindowTitle = $VerNum 
@@ -1871,9 +1871,7 @@ Start-Process "notepad" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\ytdl
 ############# WSLShrink
 Function WSLShrink {
 CheckAdmin
-# Credit Johan Arwidmark
-# https://www.deploymentresearch.com/optimizing-vhdx-files-in-a-hyper-v-lab/ https://www.deploymentresearch.com/author/admin/ 
-
+ 
 # set WSL image
 $env:WSL_UTF8 = 1
 $distributionNames =  wsl --list | %{ ($_ -split "\s")[0]} | Select -Skip 1
@@ -1886,63 +1884,10 @@ Start-Sleep -Seconds 10
 Write-Message  -Message  "Shutting down wsl" -Type "INFO"
 Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d $WSLName --shutdown " -wait -NoNewWindow
 Start-Sleep -Seconds 10
-
-Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All
-
-$VirtualDisks = Get-ChildItem -Path "$env:USERPROFILE\AppData\Local\Packages" -Filter *.vhdx -Recurse
-
-$Time = Measure-Command {
-    [System.Collections.ArrayList]$VHDXInfo = @()
-    foreach ($VHDX in $VirtualDisks) {
-       
-        $DiskSizeBeforeInGB = [math]::Round($(Get-Item -Path $VHDX.FullName).length/1GB)
-
-        $Mount = Mount-VHD -Path $VHDX.FullName -Passthru
-        $Volumes = $Mount | Get-Disk | Get-Partition | Get-Volume | Select-Object -Property DriveLetter, FileSystem, Drivetype | Where-Object {$_.DriveLetter -notin '',$null} 
-
-        # Defrag each volume
-        foreach ($Volume in $Volumes){
-
-            $DriveLetter = $Volume.DriveLetter+":"
-            # Code for VHDX stored on SSD drives (not using /d)
-            defrag $DriveLetter /x
-            defrag $DriveLetter /k /l
-            defrag $DriveLetter /x # repeated
-            defrag $DriveLetter /k # repeated, but without trim (/l)
-        }
-        
-        Dismount-VHD -Path $VHDX.FullName
-        
-        # Mount the VHDX file read-only, not mapping any drive letters
-        Mount-VHD -Path $VHDX.FullName -NoDriveLetter -ReadOnly
-        Optimize-VHD -Path $VHDX.FullName -Mode Full
-        Dismount-VHD -Path $VHDX.FullName
-
-        $DiskSizeAfterInGB = [math]::Round($(Get-Item -Path $VHDX.FullName).length/1GB)
-
-        $obj = [PSCustomObject]@{
-
-            # Add values to arraylist
-            DiskSizeBeforeInGB = $DiskSizeBeforeInGB
-            DiskSizeAfterInGB = $DiskSizeAfterInGB
-        }
-
-        # Add all the values
-        $VHDXInfo.Add($obj)|Out-Null
-    }
-
-    $TotalDiskSizeBeforeInGB = ($VHDXInfo.DiskSizeBeforeInGB | Measure-Object -Sum).Sum
-    $TotalDiskSizeAfterInGB = ($VHDXInfo.DiskSizeAfterInGB | Measure-Object -Sum).Sum
-    $SavingsInGB = $TotalDiskSizeBeforeInGB -  $TotalDiskSizeAfterInGB
-    Write-Host "Total disk size before optimization: $TotalDiskSizeBeforeInGB GB"
-    Write-Host "Total disk size after optimization: $TotalDiskSizeAfterInGB GB"
-    Write-Host "Total savings after optimization is: $SavingsInGB GB"
+Write-Message  -Message  "Optimize-VHD $VARCD *.vhd*  " -Type "INFO"
+gci -File -Filter *.vhd* -Path "$VARCD" -Recurse | % {Mount-VHD $_.FullName -ReadOnly; Optimize-VHD $_.FullName -Mode full; Dismount-VHD $_.FullName}
 
 }
-
-Write-Host "Optimization runtime was $($Time.Minutes) minutes and $($Time.Seconds) Seconds"
-}
-
 ############# CheckImage
 function CheckImage{
 WSLEnableUpdate
