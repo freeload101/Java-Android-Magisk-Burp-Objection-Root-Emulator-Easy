@@ -2210,6 +2210,9 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 
 ############# MinecraftServer
 Function MinecraftServer {
+		Write-Message  -Message  "Killing Java and Javaw " -Type "INFO"
+		Stop-process -name java -Force -ErrorAction SilentlyContinue |Out-Null
+		Stop-process -name javaw -Force -ErrorAction SilentlyContinue |Out-Null
 	Write-Message  -Message  "Running MinecraftServer" -Type "INFO"
 if (-not(Test-Path -Path "$VARCD\mindcraft\MinecraftServer" )) {
 
@@ -2219,11 +2222,8 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\MinecraftServer" )) {
 	
 	Write-Message  -Message  "Downloading MinecraftServer" -Type "INFO"
 	downloadFile "https://piston-data.mojang.com/v1/objects/8dd1a28015f51b1803213892b50b7b4fc76e594d/server.jar" "$VARCD\mindcraft\MinecraftServer\server.jar"
-	
-}
+	# Create and configure server.properties
 
-
-# Create and configure server.properties
 $properties = @"
 server-ip=0.0.0.0
 server-port=25565
@@ -2245,16 +2245,31 @@ bonus-chest=true
 "@
 $properties | Out-File "$VARCD\mindcraft\MinecraftServer\server.properties" -encoding ascii
 
+
+
 # Create eula.txt
 out-file -filepath .\eula.txt -encoding ascii -inputobject "eula=true`n"
 
-# Run the server
-Start-Process -FilePath "java.exe" -WorkingDirectory "$VARCD\mindcraft\MinecraftServer" -ArgumentList " -Xmx2G -jar server.jar nogui  " 
-
-Write-Message  -Message  "Waiting for MinecraftServer to start... " -Type "INFO"
-Start-Sleep 30
 
 }
+ 
+# Run the server
+Start-Process -FilePath "java.exe" -WorkingDirectory "$VARCD\mindcraft\MinecraftServer" -ArgumentList " -Xmx2G -jar server.jar nogui  " -RedirectStandardOutput "server.log"
+
+
+while ($true) {
+    if (Get-Content "server.log" -Tail 1 | Select-String "Done") {
+		Write-Message  -Message  "Minecraft server world loaded!" -Type "INFO"
+		Start-Sleep -Seconds 2
+        return
+    }
+	Write-Message  -Message  "Waiting for world to load.." -Type "INFO"
+    Start-Sleep -Seconds 2
+}
+ 
+
+}
+
 
 ############# lowerright
 Function lowerright {
