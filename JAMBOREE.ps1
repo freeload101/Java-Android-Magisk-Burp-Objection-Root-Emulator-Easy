@@ -6,7 +6,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.3.38'
+$VerNum = 'JAMBOREE 4.4.0'
 
 
 $host.ui.RawUI.WindowTitle = $VerNum 
@@ -2022,10 +2022,6 @@ function WSLInstallOllama{
 			
 			Write-Message  -Message "Downloading Ollama Installer" -Type "INFO"
 			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"curl -fsSL https://ollama.com/install.sh | sh`" "   -wait  
-			
-			Write-Message  -Message  "Downloading small base models " -Type "INFO"
-			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"ollama pull nomic-embed-text`" "   -wait -NoNewWindow
-			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"ollama pull Sweaterdog/Andy-3.5 `" "   -wait -NoNewWindow
 		  
 			Write-Message  -Message "Setting up Ollama systemd to start listening on 0.0.0.0" -Type "INFO"
 			Start-Process -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"  sed -i `'/ExecStart/a Environment=OLLAMA_HOST=0.0.0.0`'   /etc/systemd/system/ollama.service `" "   -wait -NoNewWindow
@@ -2063,6 +2059,162 @@ Function WipeForwardRules {
 			Write-Message  -Message  "Cleared interface portproxy rules..." -Type "INFO"
 }
 
+
+############# lowerright
+Function lowerright {
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+
+public class Win32 {
+    [DllImport("user32.dll")]
+    public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+
+    public struct RECT {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+}
+"@
+
+$handle = [Win32]::GetForegroundWindow()
+$screen = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
+$rect = New-Object Win32+RECT
+[Win32]::GetWindowRect($handle, [ref]$rect)  |Out-Null
+$width = $rect.Right - $rect.Left
+$height = $rect.Bottom - $rect.Top
+# Position window in lower right
+$x = $screen.Right - $width
+$y = $screen.Bottom - $height
+[Win32]::MoveWindow($handle, $x, $y, $width, $height, $true) |Out-Null
+}
+
+ 
+############# EXECheckOllama
+function EXECheckOllama{
+  if (-not(Test-Path -Path "$VARCD\Ollama" )) {
+	try {
+		Write-Message "Downloading Ollama" -Type "INFO"
+		New-Item -Path "$VARCD\Ollama\" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+		downloadFile "https://ollama.com/download/OllamaSetup.exe" "$VARCD\Ollama\OllamaSetup.exe"
+		Write-Message "Installing Ollama to $VARCD\Ollama" -Type "INFO"
+		Start-Process -FilePath "$VARCD\Ollama\OllamaSetup.exe" -WorkingDirectory "$VARCD\Ollama\" -ArgumentList " /SILENT /NORESTART /DIR=`"$VARCD\Ollama`" "  -NoNewWindow
+		
+		Write-Message "Waiting for Ollama to start" -Type "INFO"
+		while(!(Get-Process "ollama app" -ErrorAction SilentlyContinue)){Start-Sleep -Seconds 5};Write-Message "Waiting for Ollama to start" -Type "INFO"
+
+		Write-Message "Installing base models" -Type "INFO"
+		Start-Process -FilePath "$VARCD\Ollama\Ollama.exe" -WorkingDirectory "$VARCD\Ollama\" -ArgumentList " pull nomic-embed-text " -wait -NoNewWindow
+		Start-Process -FilePath "$VARCD\Ollama\Ollama.exe" -WorkingDirectory "$VARCD\Ollama\" -ArgumentList " pull Sweaterdog/Andy-3.5 " -wait -NoNewWindow
+		
+		Remove-Item -Path "$env:USERPROFILE\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\Ollama.lnk" -Force -ErrorAction SilentlyContinue |Out-Null
+		}
+			catch {
+				throw $_.Exception.Message
+		}
+		}
+	else {
+		Write-Message "Starting Ollama ...." -Type "INFO"
+		Stop-process -name ollama -Force -ErrorAction SilentlyContinue |Out-Null
+		Stop-process -name "ollama app" -Force -ErrorAction SilentlyContinue |Out-Null
+		Start-Sleep -Seconds 1
+		Start-Process -FilePath "$VARCD\Ollama\ollama app.exe" -WorkingDirectory "$VARCD\Ollama\"
+		while(!(Get-Process "ollama app" -ErrorAction SilentlyContinue)){Start-Sleep -Seconds 5};Write-Message "Waiting for Ollama to start" -Type "INFO"
+		Start-Sleep -Seconds 2
+		}
+}
+
+############# OllamaGape
+function OllamaGape {
+    param(
+        $OllamaIP
+    )
+
+    Write-Message  -Message  "Checking: $OllamaIP" -Type "INFO"
+    $OllamaIP = $OllamaIP -replace ',.*',''
+    try {
+
+        $Global:OllamaCheck = Invoke-RestMethod -Uri "http://${OllamaIP}:11434/api/tags" -TimeoutSec 2 | Select-Object -ExpandProperty models | Select-Object name,size,modified  | Sort-Object -Property Size  | Select-Object name -First 1
+        $Global:OlammaModel = $OllamaCheck.name
+    } catch {
+        throw  "Error: $_"
+      }
+       
+      #Write-Host "OllamaIP: " $OllamaIP "OllamaCheck: " $OllamaCheck.name 
+ 
+    if([string]::IsNullOrWhiteSpace($OllamaCheck) -or ($OllamaCheck -match "smollm")){
+        return
+    }else{
+        $uri = "http://${OllamaIP}:11434/api/chat"
+        $headers = @{"Content-Type"="application/json"}
+        $body = @{
+            model="${OlammaModel}"
+            messages=@(@{role="user";content="What's the default port for a Minecraft server?. be sure to only respond with a single word or token"})
+            stream=$false
+        } | ConvertTo-Json
+
+        try {
+             $CSV = $OllamaIP + "," + $OlammaModel +  "," + (Invoke-RestMethod -Uri $uri -TimeoutSec 15 -Method Post -Headers $headers -Body $body -ContentType "application/json").message.content # | Out-File -FilePath "OllamaGape.txt" -Encoding UTF8 -Append
+             if(($CSV -match "25565")){
+                   return $CSV
+                 } else {
+                    throw  "Error: null or not 25565 $CSV"
+                 }
+            
+        } catch {
+           throw  "Error: $_"
+        }
+    }
+      
+}
+
+
+#################### OllamaGapeFind
+function OllamaGapeFind {
+	Write-Message  -Message  "Downloading latest Public Ollama Server list" -Type "INFO"
+	Invoke-WebRequest -Uri "https://raw.githubusercontent.com/freeload101/SCRIPTS/refs/heads/master/MISC/OllamaGape.csv" -OutFile "$VARCD\mindcraft\OllamaGape.txt"
+		
+    $maxAttempts = 10  # Maximum number of attempts
+    $attempt = 1      # Current attempt counter
+    $success = $false # Success flag
+
+    while (-not $success -and $attempt -le $maxAttempts) {
+        try {
+        
+            $OllamaCSV = OllamaGape (Get-Content "$VARCD\mindcraft\OllamaGape.txt" | Get-Random )
+			$Global:OllamaValidIP = $OllamaCSV -replace ',.*',''  -replace '\r',''  -replace '\n','' -replace '\s',''
+            $Global:OllamaValidModel = $Global:OlammaModel
+			
+       		Write-Message  -Message  "Attempt $attempt Operation successful $OllamaCSV IP $Global:OllamaValidIP Model $Global:OllamaValidModel" -Type "INFO"  
+            $success = $true  # Set success flag to exit loop
+        
+        }
+        catch {
+            Write-Message  -Message  "Attempt $attempt failed with error: $($_.Exception.Message)" -Type "WARNING"
+            $attempt++
+        }
+    }
+}
+
+#################### mindcraftStart
+function mindcraftStart {
+	Set-Location -Path "$VARCD\mindcraft\mindcraft\" -ErrorAction SilentlyContinue |Out-Null
+ 
+	Write-Message  -Message  "Removing Andy memory folder $VARCD\mindcraft\mindcraft\bots\Andy " -Type "INFO"
+ 	Remove-Item -Path "$VARCD\mindcraft\mindcraft\bots\Andy" -Force -ErrorAction SilentlyContinue  -Confirm:$false -Recurse |Out-Null
+	Write-Message  -Message  "Starting Mindcraft" -Type "INFO"
+	Start-Process -FilePath "$VARCD\node\node.exe" -WorkingDirectory ".\" -ArgumentList " main.js "
+}
+
+
 ############# CheckGPU
 Function CheckGPU {
 	$GPUList = Get-ItemProperty -Path "HKLM:\SYSTEM\ControlSet001\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0*"   | Where-Object {$_."HardwareInformation.qwMemorySize" -gt 0} 
@@ -2077,7 +2229,7 @@ Function CheckGPU {
 	$VRAM = [math]::round($GPUList."HardwareInformation.qwMemorySize"/1GB)	
 	Write-Message  -Message  "Dedicated GPU: $DriverDesc with $VRAM GB of VRAM" -Type "INFO"
 	$Global:GPUVRAM = 1 # DEBUG 0
-	WSLCheckOllama
+	EXECheckOllama
 		}	
 }
 
@@ -2091,9 +2243,9 @@ CheckGit
 CheckJava
 CheckNode
 
+
 MinecraftServer
- 
-start-sleep 10
+
 	
 if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 	
@@ -2126,6 +2278,9 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 	Write-Message  -Message  ".\profiles\Andy.json: Downloading Andy.json profile " -Type "INFO"
 	Invoke-WebRequest -Uri "https://github.com/freeload101/SCRIPTS/raw/refs/heads/master/MISC/Andy.json" -OutFile "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
  
+ 	Write-Message  -Message  "Installing prismarine-viewer@1.28.0 to fix broken repo" -Type "INFO"
+	Start-Process -FilePath "$VARCD\node\npm.cmd" -WorkingDirectory ".\" -ArgumentList " install prismarine-viewer@1.28.0 " -wait -NoNewWindow
+ 
 	}
 	Write-Message  -Message  "Changing working directory to $VARCD\mindcraft" -Type "INFO"
 	New-Item -Path "$VARCD\mindcraft\mindcraft\" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
@@ -2141,9 +2296,7 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json").Replace("`"model`": `"Sweaterdog/Andy-3.5`",", "`"model`": `"$Global:OllamaValidModel`"") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
 		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json").Replace("`"embedding`": `"nomic-embed-text`"", "") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
 	}
-	Write-Message  -Message  "Installing prismarine-viewer@1.28.0 to fix broken repo" -Type "INFO"
-	Start-Process -FilePath "$VARCD\node\npm.cmd" -WorkingDirectory ".\" -ArgumentList " install prismarine-viewer@1.28.0 " 
- 
+
  	Write-Message  -Message  "Starting Mindcraft" -Type "INFO"
 	Start-Process -FilePath "$VARCD\node\node.exe" -WorkingDirectory ".\" -ArgumentList " main.js " 
  
@@ -2199,142 +2352,24 @@ out-file -filepath .\eula.txt -encoding ascii -inputobject "eula=true`n"
 }
  
 # Run the server
-Start-Process -FilePath "java.exe" -WorkingDirectory "$VARCD\mindcraft\MinecraftServer" -ArgumentList " -Xmx2G -jar server.jar nogui  " -RedirectStandardOutput "server.log"
+Start-Process -FilePath "java.exe" -WorkingDirectory "$VARCD\mindcraft\MinecraftServer" -ArgumentList " -Xmx2G -jar server.jar nogui  " -RedirectStandardOutput "server.log" -WindowStyle hidden
 
 
 while ($true) {
     if (Get-Content "server.log" -Tail 1 | Select-String "Done") {
 		Write-Message  -Message  "Minecraft server world loaded!" -Type "INFO"
 		Start-Sleep -Seconds 2
+		Start-Process powershell -ArgumentList "-NoExit", "-Command", "Get-Content `"$VARCD\mindcraft\MinecraftServer\logs\latest.log`" -Wait -Tail 50"
+
         return
     }
 	Write-Message  -Message  "Waiting for world to load.." -Type "INFO"
     Start-Sleep -Seconds 2
 }
- 
+
 
 }
 
-
-############# lowerright
-Function lowerright {
-Add-Type -TypeDefinition @"
-using System;
-using System.Runtime.InteropServices;
-
-public class Win32 {
-    [DllImport("user32.dll")]
-    public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
-
-    [DllImport("user32.dll")]
-    public static extern IntPtr GetForegroundWindow();
-
-    [DllImport("user32.dll")]
-    public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
-
-    public struct RECT {
-        public int Left;
-        public int Top;
-        public int Right;
-        public int Bottom;
-    }
-}
-"@
-
-$handle = [Win32]::GetForegroundWindow()
-$screen = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
-$rect = New-Object Win32+RECT
-[Win32]::GetWindowRect($handle, [ref]$rect)  |Out-Null
-$width = $rect.Right - $rect.Left
-$height = $rect.Bottom - $rect.Top
-# Position window in lower right
-$x = $screen.Right - $width
-$y = $screen.Bottom - $height
-[Win32]::MoveWindow($handle, $x, $y, $width, $height, $true) |Out-Null
-}
-############# OllamaGape
-function OllamaGape {
-    param(
-        $OllamaIP
-    )
-
-    Write-Message  -Message  "Checking: $OllamaIP" -Type "INFO"
-    $OllamaIP = $OllamaIP -replace ',.*',''
-    try {
-
-        $Global:OllamaCheck = Invoke-RestMethod -Uri "http://${OllamaIP}:11434/api/tags" -TimeoutSec 2 | Select-Object -ExpandProperty models | Select-Object name,size,modified  | Sort-Object -Property Size  | Select-Object name -First 1
-        $Global:OlammaModel = $OllamaCheck.name
-    } catch {
-        throw  "Error: $_"
-      }
-       
-      #Write-Host "OllamaIP: " $OllamaIP "OllamaCheck: " $OllamaCheck.name 
- 
-    if([string]::IsNullOrWhiteSpace($OllamaCheck) -or ($OllamaCheck -match "smollm")){
-        return
-    }else{
-        $uri = "http://${OllamaIP}:11434/api/chat"
-        $headers = @{"Content-Type"="application/json"}
-        $body = @{
-            model="${OlammaModel}"
-            messages=@(@{role="user";content="What's the default port for a Minecraft server?. be sure to only respond with a single word or token"})
-            stream=$false
-        } | ConvertTo-Json
-
-        try {
-             $CSV = $OllamaIP + "," + $OlammaModel +  "," + (Invoke-RestMethod -Uri $uri -TimeoutSec 15 -Method Post -Headers $headers -Body $body -ContentType "application/json").message.content # | Out-File -FilePath "OllamaGape.txt" -Encoding UTF8 -Append
-             if(($CSV -match "25565")){
-                   return $CSV
-                 } else {
-                    throw  "Error: null or not 25565 $CSV"
-                 }
-            
-        } catch {
-           throw  "Error: $_"
-        }
-    }
-      
-}
- 
-
-
-
-#################### OllamaGapeFind
-function OllamaGapeFind {
-	Write-Message  -Message  "Downloading latest Public Ollama Server list" -Type "INFO"
-	Invoke-WebRequest -Uri "https://raw.githubusercontent.com/freeload101/SCRIPTS/refs/heads/master/MISC/OllamaGape.csv" -OutFile "$VARCD\mindcraft\OllamaGape.txt"
-		
-    $maxAttempts = 10  # Maximum number of attempts
-    $attempt = 1      # Current attempt counter
-    $success = $false # Success flag
-
-    while (-not $success -and $attempt -le $maxAttempts) {
-        try {
-        
-            $OllamaCSV = OllamaGape (Get-Content "$VARCD\mindcraft\OllamaGape.txt" | Get-Random )
-			$Global:OllamaValidIP = $OllamaCSV -replace ',.*',''  -replace '\r',''  -replace '\n','' -replace '\s',''
-            $Global:OllamaValidModel = $Global:OlammaModel
-			
-       		Write-Message  -Message  "Attempt $attempt Operation successful $OllamaCSV IP $Global:OllamaValidIP Model $Global:OllamaValidModel" -Type "INFO"  
-            $success = $true  # Set success flag to exit loop
-        
-        }
-        catch {
-            Write-Message  -Message  "Attempt $attempt failed with error: $($_.Exception.Message)" -Type "WARNING"
-            $attempt++
-        }
-    }
-}
-
-#################### mindcraftStart
-function mindcraftStart {
-	Set-Location -Path "$VARCD\mindcraft\mindcraft\" -ErrorAction SilentlyContinue |Out-Null
- 
-	Write-Message  -Message  "Removing Andy memory folder $VARCD\mindcraft\mindcraft\bots\Andy " -Type "INFO"
- 	Remove-Item -Path "$VARCD\mindcraft\mindcraft\bots\Andy" -Force -ErrorAction SilentlyContinue  -Confirm:$false -Recurse |Out-Null
-	Write-Message  -Message  "Starting Mindcraft" -Type "INFO"
-	Start-Process -FilePath "$VARCD\node\node.exe" -WorkingDirectory ".\" -ArgumentList " main.js "
-}
 
 
 
