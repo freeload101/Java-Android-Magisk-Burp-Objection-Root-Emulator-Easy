@@ -30,7 +30,8 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 |Certs|✔️|[SOCFortress CoPilot](https://github.com/socfortress/OSSIEM) /  Velociraptor / Wazuh  WSL |✔️|
 
 ### Simple Powershell UI
-![image](https://github.com/user-attachments/assets/27b485fa-bdf6-40a4-93b1-8e6a6dce8166)
+![image](https://github.com/user-attachments/assets/d3412a14-e1b8-4ce2-b57a-ef804fab3fdd)
+
 
 ### How it works:
 
