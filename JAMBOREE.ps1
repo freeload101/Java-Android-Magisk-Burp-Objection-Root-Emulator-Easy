@@ -2113,7 +2113,7 @@ function EXECheckOllama{
 
 		Write-Message "Installing base models" -Type "INFO"
 		Start-Process -FilePath "$VARCD\Ollama\Ollama.exe" -WorkingDirectory "$VARCD\Ollama\" -ArgumentList " pull nomic-embed-text " -wait -NoNewWindow
-		Start-Process -FilePath "$VARCD\Ollama\Ollama.exe" -WorkingDirectory "$VARCD\Ollama\" -ArgumentList " pull Sweaterdog/Andy-3.5 " -wait -NoNewWindow
+		Start-Process -FilePath "$VARCD\Ollama\Ollama.exe" -WorkingDirectory "$VARCD\Ollama\" -ArgumentList " pull hf.co/Sweaterdog/Andy-3.6:Q4_K_M " -wait -NoNewWindow
 		
 		Remove-Item -Path "$env:USERPROFILE\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\Ollama.lnk" -Force -ErrorAction SilentlyContinue |Out-Null
 		}
@@ -2294,7 +2294,7 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 		OllamaGapeFind
 		Write-Message  -Message  "Andy.json: Updating Global:OllamaValidIP: $Global:OllamaValidIP  and  OllamaValidModel: $Global:OllamaValidModel  "  -Type "INFO"
 		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json").Replace("localhost", "$Global:OllamaValidIP") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
-		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json").Replace("`"model`": `"Sweaterdog/Andy-3.5`",", "`"model`": `"$Global:OllamaValidModel`",") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
+		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json").Replace("`"model`": `"hf.co/Sweaterdog/Andy-3.6:Q4_K_M`",", "`"model`": `"$Global:OllamaValidModel`",") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
 		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json").Replace("`"model`": `"nomic-embed-text`"", "`"model`": `"$Global:OllamaValidModel`"") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
 	}
 
