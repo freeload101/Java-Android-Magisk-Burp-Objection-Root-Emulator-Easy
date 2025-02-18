@@ -2218,16 +2218,16 @@ function mindcraftStart {
 
 ############# CheckGPU
 Function CheckGPU {
-	$GPUList = Get-ItemProperty -Path "HKLM:\SYSTEM\ControlSet001\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0*"   | Where-Object {$_."HardwareInformation.qwMemorySize" -gt 0} 
-	if ($GPUList -eq $null) {
-			Write-Message  -Message  "Dedicated GPU NOT FOUND !!! It does not look like you have a dedicated GPU with Dedicated GPU Memory this is differnet then Shared GPU memory or GPU Memory ! We can use public Ollama servers or see FAQ for Mindcraft to setup APIs" -Type "ERROR"
+	$GPUList = Get-ItemProperty -Path "HKLM:\SYSTEM\ControlSet001\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0*"   | Where-Object {$_."HardwareInformation.qwMemorySize" -gt 0}  	
+	$VRAM = [math]::round($GPUList."HardwareInformation.qwMemorySize"/1GB)	
+
+	if ($VRAM -lt 5) {
+			Write-Message  -Message  "Dedicated GPU Less then 5 GB VRAM. Dedicated GPU Memory this is differnet then Shared GPU memory or GPU Memory ! We can use public Ollama servers or see FAQ for Mindcraft to setup APIs" -Type "ERROR"
 			$Global:GPUVRAM = 0
 			(Get-WmiObject -Namespace root\CIMV2 -Class CIM_VideoController)  | Select-Object Name,Description,Caption,DeviceID,VideoMemoryType  | Format-Table -AutoSize
-			Start-Sleep 10
 			
 	} else {
 	$DriverDesc = $GPUList.DriverDesc
-	$VRAM = [math]::round($GPUList."HardwareInformation.qwMemorySize"/1GB)	
 	Write-Message  -Message  "Dedicated GPU: $DriverDesc with $VRAM GB of VRAM" -Type "INFO"
 	$Global:GPUVRAM = 1 # DEBUG 0
 	EXECheckOllama
@@ -2294,8 +2294,8 @@ if (-not(Test-Path -Path "$VARCD\mindcraft\mindcraft" )) {
 		OllamaGapeFind
 		Write-Message  -Message  "Andy.json: Updating Global:OllamaValidIP: $Global:OllamaValidIP  and  OllamaValidModel: $Global:OllamaValidModel  "  -Type "INFO"
 		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json").Replace("localhost", "$Global:OllamaValidIP") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
-		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json").Replace("`"model`": `"Sweaterdog/Andy-3.5`",", "`"model`": `"$Global:OllamaValidModel`"") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
-		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json").Replace("`"embedding`": `"nomic-embed-text`"", "") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
+		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json").Replace("`"model`": `"Sweaterdog/Andy-3.5`",", "`"model`": `"$Global:OllamaValidModel`",") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
+		(Get-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json").Replace("`"model`": `"nomic-embed-text`"", "`"model`": `"$Global:OllamaValidModel`"") | Set-Content "$VARCD\mindcraft\mindcraft\profiles\Andy.json"
 	}
 
  	Write-Message  -Message  "Starting Mindcraft" -Type "INFO"
