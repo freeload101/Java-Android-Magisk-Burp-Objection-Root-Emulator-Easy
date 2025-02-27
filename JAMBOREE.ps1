@@ -181,10 +181,12 @@ Function CheckAdmin {
 			if ($pause -eq '1') {
 				Write-Message  -Message  "Restarting $PSCommandPath as admin... " -Type "INFO"
 				Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" " -WorkingDirectory "$VARCD" -Verb RunAs
+    				exit
 			}
 			Elseif ($pause = '2') {
 				Write-Message  -Message  "Not running as admin" -Type "ERROR"
-				return
+    				Start-Sleep -Seconds 5
+    				exit
 			}
 	}
 }
@@ -1871,21 +1873,28 @@ Start-Process "notepad" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\ytdl
 ############# WSLShrink
 Function WSLShrink {
 CheckAdmin
+$distroNameArray = @()
+Get-ChildItem "HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss" | 
+
+
+ForEach-Object {
+    $distroName = (Get-ItemProperty $_.PSPath).DistributionName
+    $basePath = (Get-ItemProperty $_.PSPath).BasePath
+    $distroNameArray += $distroName + "," + $basePath
+}
+
+
+$distroSelect  = ($distroNameArray  | Out-GridView -Title "Select WSL image to Shrink"  -OutputMode Single)
+$Global:distroSelectPath = $distroSelect -replace '.*,','' -replace '\\\\\?\\',''
  
-# set WSL image
-$env:WSL_UTF8 = 1
-$distributionNames =  wsl --list | %{ ($_ -split "\s")[0]} | Select -Skip 1
-$WSLName = wsl --list | %{ ($_ -split "\s")[0]} | Select -Skip 1   | Out-GridView -Title "Select WSL image to Shrink"  -OutputMode Single
-
-
-Write-Message  -Message  "Running docker image prune -a -f to reclaime disk space" -Type "INFO"
-Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d $WSLName -u root -e bash -c `"docker image prune -a -f`" " -wait -NoNewWindow -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+Write-Message -Message  "Global:distroSelectPath: $Global:distroSelectPath" -Type "INFO"
+Write-Message -Message  "Shutting down wsl" -Type "INFO"
+Start-Process -FilePath "wsl" -ArgumentList "  --shutdown " -wait -NoNewWindow
 Start-Sleep -Seconds 10
-Write-Message  -Message  "Shutting down wsl" -Type "INFO"
-Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d $WSLName --shutdown " -wait -NoNewWindow
-Start-Sleep -Seconds 10
-Write-Message  -Message  "Optimize-VHD $VARCD *.vhd*  " -Type "INFO"
-gci -File -Filter *.vhd* -Path "$VARCD" -Recurse | % {Mount-VHD $_.FullName -ReadOnly; Optimize-VHD $_.FullName -Mode full; Dismount-VHD $_.FullName}
+
+Write-Message  -Message "Optimize-VHD $Global:distroSelectPath *.vhd* " -Type "INFO" 
+Get-ChildItem -Path  "$distroSelectPath" -Filter *.vhdx -Recurse | Select-Object FullName | % {Mount-VHD $_.FullName -ReadOnly; Optimize-VHD $_.FullName -Mode full; Dismount-VHD $_.FullName}
+ 
 
 }
 ############# CheckImage
