@@ -395,6 +395,7 @@ Function StartSillyTavern {
 	if (-not(Test-Path -Path "$VARCD\SillyTavern" )) {
 	try {
 		Write-Message  -Message  "Running git clone https://github.com/SillyTavern/SillyTavern -b staging" -Type "INFO"
+  		# -b staging broke TTS Autogen!
 		Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/SillyTavern/SillyTavern`" -b staging " -wait -NoNewWindow
 		}
 			catch {
