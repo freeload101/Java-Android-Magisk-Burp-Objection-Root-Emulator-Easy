@@ -2691,25 +2691,6 @@ $Button.Add_Click({WSLCheckOllama})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# mindcraft
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Mindcraft"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({mindcraft})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# mindcraftStart
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "MindcraftReStart"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({mindcraftStart})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-
 ############# WSLShrink
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
