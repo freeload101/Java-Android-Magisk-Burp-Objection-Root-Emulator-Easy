@@ -1835,6 +1835,7 @@ if (-not(Test-Path -Path "$VARCD\ytdlp" )) {
     Write-Message  -Message  "Downloading Latest yt-dlp" -Type "INFO"
     $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest").assets | Where-Object name -like yt-dlp.exe ).browser_download_url
     downloadFile "$downloadUri" "$VARCD\ytdlp\yt-dlp.exe"
+    Copy-Item "$VARCD\ytdlp\yt-dlp.exe" "$USERPROFILE_BACKUP\AppData\Local\Microsoft\WindowsApps\yt-dlp.exe" -ErrorAction SilentlyContinue 
     Write-Message  -Message  "Downloading Latest ffmpeg-master-latest-win64-gpl-shared.zip" -Type "INFO"
     downloadFile "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip" "$VARCD\ytdlp\ffmpeg-master-latest-win64-gpl-shared.zip"
     Add-Type -AssemblyName System.IO.Compression.FileSystem
