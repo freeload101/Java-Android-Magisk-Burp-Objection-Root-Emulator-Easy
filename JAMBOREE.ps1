@@ -1896,7 +1896,9 @@ Start-Sleep -Seconds 10
 
 Write-Message  -Message "Optimize-VHD $Global:distroSelectPath *.vhd* " -Type "INFO" 
 Get-ChildItem -Path  "$distroSelectPath" -Filter *.vhdx -Recurse | Select-Object FullName | % {Mount-VHD $_.FullName -ReadOnly; Optimize-VHD $_.FullName -Mode full; Dismount-VHD $_.FullName}
- 
+
+Write-Message  -Message "COMPLETE: Optimize-VHD $Global:distroSelectPath *.vhd* " -Type "INFO" 
+
 
 }
 ############# CheckImage
