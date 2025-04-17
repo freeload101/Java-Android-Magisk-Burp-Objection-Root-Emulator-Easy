@@ -471,7 +471,7 @@ Function CheckJavaNeo4j {
         try {
             Write-Message  -Message  "Downloading Java" -Type "INFO"
             # does not work for neo4j bloodhound wants java11 ... downloadFile "https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.zip" "$VARCD\openjdk.zip"
-            downloadFile "https://cfdownload.adobe.com/pub/adobe/coldfusion/java/java11/java11018/jdk-11.0.18_windows-x64_bin.zip" "$VARCD\jdk_neo4j.zip"
+            downloadFile "https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_windows-x64_bin.zip" "$VARCD\jdk_neo4j.zip"
 			Write-Message  -Message  "Extracting Java" -Type "INFO"
 			Add-Type -AssemblyName System.IO.Compression.FileSystem
             Add-Type -AssemblyName System.IO.Compression
@@ -495,7 +495,7 @@ Function CheckJava {
 Write-Message  -Message  "Checking for Java" -Type "INFO"
    if (-not(Test-Path -Path "$VARCD\jdk" )) {
             Write-Message  -Message  "Downloading Java" -Type "INFO"
-            downloadFile "https://download.oracle.com/java/23/latest/jdk-23_windows-x64_bin.zip" "$VARCD\jdk.zip"
+            downloadFile "https://download.java.net/java/GA/jdk24/1f9ff9062db4449d8ca828c504ffae90/36/GPL/openjdk-24_windows-x64_bin.zip" "$VARCD\jdk.zip"
             Write-Message  -Message  "Extracting Java" -Type "INFO"
 			Add-Type -AssemblyName System.IO.Compression.FileSystem
             Add-Type -AssemblyName System.IO.Compression
