@@ -3,13 +3,11 @@ param(
     [string]$Headless
 )
 
-
 # function for messages
 #$ErrorActionPreference="Continue"
-$VerNum = 'JAMBOREE 4.4.1'
+$Global:VerNum = 'JAMBOREE 4.4.2'
 
-
-$host.ui.RawUI.WindowTitle = $VerNum 
+$host.ui.RawUI.WindowTitle = $Global:VerNum 
 
 function Write-Message  {
     <#
@@ -168,6 +166,7 @@ $vShift = 0
 
 ### MAIN ###
 
+write-host "functoins"
 ################################# FUNCTIONS
  
 ############# CheckAdmin
@@ -2388,12 +2387,42 @@ while ($true) {
 
 }
 
+############# CheckVer
+Function CheckVer {
+	Write-Message  -Message  "Checking for updates.." -Type "INFO"
+    # Download the PS1 file content from GitHub
+    $scriptContent = Invoke-WebRequest -Uri "https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/raw/refs/heads/main/JAMBOREE.ps1" -UseBasicParsing | Select-Object -ExpandProperty Content
 
+
+    if ($scriptContent -match '\$VerNum\s+\=\s+''(.*)''') {
+        $VerNum = $matches[1]
+
+        # Compare versions
+        if ($VerNum -ne $Global:VerNum) {
+		Write-Message  -Message  "Version mismatch! Current version: $VerCurrent, Latest version: $Global:VerNum" -Type "WARNING"
+		$wshell = New-Object -ComObject Wscript.Shell
+		$pause = $wshell.Popup("Version mismatch! Current version: $VerCurrent, Latest version: $Global:VerNum . Would you like to Update JAMBOREE?", 0, "Update JAMBOREE?", 48+1)
+			if ($pause -eq '1') {
+			UpdateJAMBO
+			}
+			Elseif ($pause = '2') {
+			Write-Message  -Message  "Not Updating JAMBOREE" -Type "WARNING"
+			return
+			}
+
+			} else {
+			Write-Message  -Message  "Running Latest $VerNum !" -Type "INFO"
+			}
+    } else {
+        Write-Message  -Message  "Could not find `$VerNum in the downloaded script" -Type "ERROR"
+ 
+    }
+}
 
 
 ######################################################################################################################### FUNCTIONS END
-
 lowerright
+CheckVer
 
 ############# accel
 $pname=(Get-WMIObject win32_Processor | Select-Object name)
