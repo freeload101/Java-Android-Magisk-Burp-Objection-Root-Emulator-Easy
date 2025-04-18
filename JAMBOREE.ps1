@@ -2029,13 +2029,13 @@ Function CheckVer {
 
 
     if ($scriptContent -match '\$Global:VerNum\s+\=\s+''(.*)''') {
-        $VerNum = $matches[1]
+        $VerNumLatest = $matches[1]
 
         # Compare versions
-        if ($VerNum -ne $Global:VerNum) {
-		Write-Message  -Message  "Version mismatch! Current version: $VerCurrent, Latest version: $Global:VerNum" -Type "WARNING"
+        if ($VerNumLatest -ne $Global:VerNum) {
+		Write-Message  -Message  "Version mismatch! Current version: $Global:VerNum, Latest version: $VerNumLatest" -Type "WARNING"
 		$wshell = New-Object -ComObject Wscript.Shell
-		$pause = $wshell.Popup("Version mismatch! Current version: $VerCurrent, Latest version: $Global:VerNum . Would you like to Update JAMBOREE?", 0, "Update JAMBOREE?", 48+1)
+		$pause = $wshell.Popup("Version mismatch! Current version: $Global:VerNum, Latest version: $VerNumLatest . Would you like to Update JAMBOREE?", 0, "Update JAMBOREE?", 48+1)
 			if ($pause -eq '1') {
 			UpdateJAMBO
 			}
@@ -2045,7 +2045,7 @@ Function CheckVer {
 			}
 
 			} else {
-			Write-Message  -Message  "Running Latest $VerNum !" -Type "INFO"
+			Write-Message  -Message  "Running Latest $Global:VerNum !" -Type "INFO"
 			}
     } else {
         Write-Message  -Message  "Could not find `$VerNum in the downloaded script" -Type "ERROR"
