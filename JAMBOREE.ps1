@@ -5,7 +5,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.4.2'
+$Global:VerNum = 'JAMBOREE 4.4.3'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -357,21 +357,52 @@ Function CheckNode {
 			}
 }
 
+############# CheckNodeRMS
+Function CheckNodeRMS {
+Write-Message  -Message  "Checking for node 22.9.0" -Type "WARNING"
+$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\PG\bin;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools\Lib\venv\scripts\;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\nodeRMS"
+
+ 
+   if (-not(Test-Path -Path "$VARCD\nodeRMS" )) {
+        try {
+			Write-Message  -Message  "Downloading 22.9.0 node" -Type "INFO"
+			$downloadUri = $downloadUri = (Invoke-RestMethod -Method GET -Uri "https://nodejs.org/dist/latest/")  -split '"' -match '.*node-.*-win-x64.zip.*' | ForEach-Object {$_ -ireplace '^\/','https://nodejs.org/' } | select -first 1
+            downloadFile "https://nodejs.org/dist/v22.9.0/node-v22.9.0-win-x64.zip" "$VARCD\node.zip"
+			Write-Message  -Message  "Extracting Node" -Type "INFO"
+			Add-Type -AssemblyName System.IO.Compression.FileSystem
+            Add-Type -AssemblyName System.IO.Compression
+            [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\node.zip", "$VARCD")
+			Get-ChildItem "$VARCD\node-*"  | Rename-Item -NewName "nodeRMS"
+			Write-Message  -Message  "Updating npm" -Type "INFO"
+			Start-Process -FilePath "$VARCD\nodeRMS\npm.cmd" -WorkingDirectory "$VARCD\nodeRMS" -ArgumentList " install -g npm " -wait -NoNewWindow
+			}
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+			Write-Message  -Message  "$VARCD\nodeRMS already Exist" -Type "WARNING"
+			}
+}
+
+
+
+
 ############# StartRMS
 Function StartRMS {
 	CheckPython
-	CheckNode
+	CheckNodeRMS
 	
-	if (-not(Test-Path -Path "$VARCD\node\rms.cmd" )) {
+	if (-not(Test-Path -Path "$VARCD\nodeRMS\rms.cmd" )) {
 	try {
-		Start-Process -FilePath "$VARCD\node\npm.cmd" -WorkingDirectory "$VARCD\node" -ArgumentList " install -g rms-runtime-mobile-security " -wait -NoNewWindow
+		Start-Process -FilePath "$VARCD\nodeRMS\npm.cmd" -WorkingDirectory "$VARCD\nodeRMS" -ArgumentList " install -g rms-runtime-mobile-security " -wait -NoNewWindow
 		}
 			catch {
 				throw $_.Exception.Message
 		}
 		}
 	else {
-		Write-Message  -Message  "$VARCD\node\rms.cmd already exist" -Type "INFO"
+		Write-Message  -Message  "$VARCD\nodeRMS\rms.cmd already exist" -Type "INFO"
 	}
 	
 StartFrida
@@ -379,7 +410,7 @@ Write-Message  -Message  "Killing node " -Type "INFO"
 Stop-process -name node -Force -ErrorAction SilentlyContinue |Out-Null
 
 Write-Message  -Message  "Starting rms-runtime-mobile-security please wait....." -Type "INFO"
-Start-Process -FilePath "$VARCD\node\rms.cmd"    -WorkingDirectory "$VARCD\node" -NoNewWindow
+Start-Process -FilePath "$VARCD\nodeRMS\rms.cmd"    -WorkingDirectory "$VARCD\nodeRMS" -NoNewWindow
 Start-Sleep -Seconds 5
 Start-Process "http://127.0.0.1:5491/"
 }
