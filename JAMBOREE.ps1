@@ -5,7 +5,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.4.3'
+$Global:VerNum = 'JAMBOREE 4.4.4'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -2082,6 +2082,61 @@ Function CheckVer {
         Write-Message  -Message  "Could not find `$VerNum in the downloaded script" -Type "ERROR"
  
     }
+}
+
+############# EXECheckOllama
+function EXECheckOllama{
+  if (-not(Test-Path -Path "$VARCD\Ollama" )) {
+	try {
+		Write-Message "Downloading Ollama" -Type "INFO"
+		New-Item -Path "$VARCD\Ollama\" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+		downloadFile "https://ollama.com/download/OllamaSetup.exe" "$VARCD\Ollama\OllamaSetup.exe"
+		Write-Message "Installing Ollama to $VARCD\Ollama" -Type "INFO"
+		Start-Process -FilePath "$VARCD\Ollama\OllamaSetup.exe" -WorkingDirectory "$VARCD\Ollama\" -ArgumentList " /SILENT /NORESTART /DIR=`"$VARCD\Ollama`" "  -NoNewWindow
+		
+		Write-Message "Waiting for Ollama to start" -Type "INFO"
+		while(!(Get-Process "ollama app" -ErrorAction SilentlyContinue)){Start-Sleep -Seconds 5};Write-Message "Waiting for Ollama to start" -Type "INFO"
+
+		Write-Message "Installing base models" -Type "INFO"
+		Start-Process -FilePath "$VARCD\Ollama\Ollama.exe" -WorkingDirectory "$VARCD\Ollama\" -ArgumentList " pull nomic-embed-text " -wait -NoNewWindow
+		Start-Process -FilePath "$VARCD\Ollama\Ollama.exe" -WorkingDirectory "$VARCD\Ollama\" -ArgumentList " pull hf.co/Sweaterdog/Andy-3.6:Q4_K_M " -wait -NoNewWindow
+		
+		Remove-Item -Path "$env:USERPROFILE\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\Ollama.lnk" -Force -ErrorAction SilentlyContinue |Out-Null
+		
+		Write-Message "Setting .ollama OLLAMA_MODELS System.Environment to $VARCD\Ollama\ and listen on 0.0.0.0" -Type "INFO"
+		[System.Environment]::SetEnvironmentVariable("OLLAMA_MODELS", "$VARCD\Ollama\.ollama", [System.EnvironmentVariableTarget]::Machine)
+		[System.Environment]::SetEnvironmentVariable("OLLAMA_HOST", "0.0.0.0", [System.EnvironmentVariableTarget]::Machine)
+		[System.Environment]::SetEnvironmentVariable("OLLAMA_KEEP_ALIVE", "-1", [System.EnvironmentVariableTarget]::Machine)
+		
+		
+		}
+			catch {
+				throw $_.Exception.Message
+		}
+		}
+	else {
+		
+		Stop-process -name ollama -Force -ErrorAction SilentlyContinue |Out-Null
+		Stop-process -name "ollama app" -Force -ErrorAction SilentlyContinue |Out-Null
+		
+		Write-Message "Downloading Latetst binary from github" -Type "INFO"
+		$downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/ollama/ollama/releases/latest").assets | Where-Object name -like ollama-windows-amd64.zip ).browser_download_url
+		downloadFile  $downloadUri "$VARCD\ollama-windows-amd64.zip"
+		Write-Message  -Message  "Extracting ollama-windows-amd64.zip" -Type "INFO"
+		Add-Type -AssemblyName System.IO.Compression.FileSystem
+		Add-Type -AssemblyName System.IO.Compression
+		[System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\ollama-windows-amd64.zip", "$VARCD\Ollama\")
+		
+		
+		Write-Message "Starting Ollama ...." -Type "INFO"
+		Stop-process -name ollama -Force -ErrorAction SilentlyContinue |Out-Null
+		Stop-process -name "ollama app" -Force -ErrorAction SilentlyContinue |Out-Null
+		Start-Sleep -Seconds 1
+		Start-Process -FilePath "$VARCD\Ollama\ollama app.exe" -WorkingDirectory "$VARCD\Ollama\"
+		while(!(Get-Process "ollama app" -ErrorAction SilentlyContinue)){Start-Sleep -Seconds 5};Write-Message "Waiting for Ollama to start" -Type "INFO"
+		Start-Sleep -Seconds 2
+  		Remove-Item -Path "$env:USERPROFILE\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\Ollama.lnk" -Force -ErrorAction SilentlyContinue |Out-Null
+		}
 }
 
 
