@@ -2434,6 +2434,15 @@ $Button.Add_Click({SOCFortressCoPilotFast})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
+############# EXECheckOllama
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Ollama Windows EXE"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({EXECheckOllama})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
 ############# WSLCheckOllama
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
@@ -2497,7 +2506,7 @@ $Button.Add_Click({Ytdlp})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# Ytdlp
+############# CheckVolatility3
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
 $Button.Text = "Volatility 3"
