@@ -1426,7 +1426,7 @@ function Retry()
 Function SecListsCheck {
     if (-not(Test-Path -Path "$VARCD\SecLists.zip" )) {
         try {
-            Write-Message  -Message  "Downloading SecLists.zip" -Type "INFO"
+            Write-Message  -Message  "Downloading SecLists.zip PLEASE WAIT..." -Type "INFO"
             downloadFile "https://github.com/danielmiessler/SecLists/archive/refs/heads/master.zip" "$VARCD\SecLists.zip"
             Write-Message  -Message  "Extracting SecLists.zip" -Type "INFO"
 
