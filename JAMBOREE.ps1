@@ -547,7 +547,7 @@ Function CheckFrida {
             # for Frida Android Binary
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait -NoNewWindow
 			Write-Message  -Message  "Installing frida-tools" -Type "INFO"
-			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install frida-tools " -wait -NoNewWindow
+			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install frida-tools==13.7.1 frida==16.7.19 " -wait -NoNewWindow
 }			
 
 ############# CHECK PYTHON
@@ -704,13 +704,13 @@ CheckPython
 CheckFrida
    if (-not(Test-Path -Path "$VARCD\frida-server" )) {
         try {
-            Write-Message  -Message  "Downloading Latest $downloadUri " -Type "INFO"
+            Write-Message  -Message  "Downloading  16.7.19 $downloadUri " -Type "INFO"
 			
             # latest is broken ? $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/frida/frida/releases/latest").assets | Where-Object name -like frida-server-*-android-x86.xz ).browser_download_url
             #downloadFile  $downloadUri "$VARCD\frida-server-android_LATEST.xz"
 			
 			# fix this ..static binary bad !
-			downloadFile  "https://github.com/frida/frida/releases/download/16.1.8/frida-server-16.1.8-android-x86.xz" "$VARCD\frida-server-android_LATEST.xz"
+			downloadFile  "https://github.com/frida/frida/releases/download/16.7.19/frida-server-16.7.19-android-x86.xz" "$VARCD\frida-server-android_LATEST.xz"
             Write-Message  -Message  "Extracting $downloadUri" -Type "INFO"
 # don't mess with spaces for these lines for python ...
 $PythonXZ = @'
