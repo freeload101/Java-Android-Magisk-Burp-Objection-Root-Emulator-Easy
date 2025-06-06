@@ -2107,7 +2107,7 @@ function EXECheckOllama{
 		[System.Environment]::SetEnvironmentVariable("OLLAMA_MODELS", "$VARCD\Ollama\.ollama", [System.EnvironmentVariableTarget]::Machine)
 		[System.Environment]::SetEnvironmentVariable("OLLAMA_HOST", "0.0.0.0", [System.EnvironmentVariableTarget]::Machine)
 		[System.Environment]::SetEnvironmentVariable("OLLAMA_KEEP_ALIVE", "-1", [System.EnvironmentVariableTarget]::Machine)
-		
+		[System.Environment]::SetEnvironmentVariable("OLLAMA_FLASH_ATTENTION", "1", [System.EnvironmentVariableTarget]::Machine)
 		
 		}
 			catch {
