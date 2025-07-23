@@ -5,7 +5,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.4.5'
+$Global:VerNum = 'JAMBOREE 4.4.6'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -1137,8 +1137,9 @@ BurpConfigProxy
 			   if (-not(Test-Path -Path "$VARCD\burpsuite_pro.jar" )) {
         try {
             Write-Message  -Message  "Downloading Burpsuite Pro" -Type "INFO"
-            downloadFile "https://portswigger-cdn.net/burp/releases/download?product=pro&type=Jar" "$VARCD\burpsuite_pro.jar"
-           }
+	    $downloadUri = (Invoke-RestMethod -Method GET -Uri "https://portswigger.net/burp/releases/community/latest")  -split '<li><a download="release" href=' -match '.*startdownload.*pro.*type=jar.*' | ForEach-Object {$_ -ireplace '\/burp\/releases','https://portswigger.net/burp/releases' -ireplace '>.*','' } | select -first 1
+            downloadFile "$downloadUri" "$VARCD\burpsuite_pro.jar"
+	    }
                 catch {
                     throw $_.Exception.Message
             }
