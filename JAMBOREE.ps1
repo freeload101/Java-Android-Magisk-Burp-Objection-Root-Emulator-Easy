@@ -1124,7 +1124,7 @@ BurpConfigProxy
    if (-not(Test-Path -Path "$VARCD\burpsuite_community.jar" )) {
         try {
             Write-Message  -Message  "Downloading Burpsuite Community" -Type "INFO"
-            downloadFile "https://portswigger-cdn.net/burp/releases/download?product=community&type=Jar" "$VARCD\burpsuite_community.jar"
+            downloadFile "https://portswigger.net/burp/releases/download?product=community&type=Jar" "$VARCD\burpsuite_community.jar"
            }
                 catch {
                     throw $_.Exception.Message
