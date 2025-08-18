@@ -305,7 +305,7 @@ WSLEnableUpdate
 
 Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
 Start-Sleep -Seconds 1
-$wslInfo = Get-Content -Path "RedirectStandardOutput.txt" 
+$wslInfo = (Get-Content -Path "RedirectStandardOutput.txt" | select -first 15)
 if (($wslInfo) -match  (".*Ubuntu.*")  -or ($wslInfo) -match  (".*U.b.u.n.t.u.*"))  {
 		Write-Message  -Message  "Ubuntu found Starting bash shell" -Type "INFO"
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ubuntu -u root -e bash "  
@@ -2543,3 +2543,4 @@ if ($Headless) {
 
 ############# SHOW FORM
 $main_form.ShowDialog()
+
