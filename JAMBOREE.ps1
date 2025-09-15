@@ -5,7 +5,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.4.6'
+$Global:VerNum = 'JAMBOREE 4.4.7'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -1514,6 +1514,7 @@ Function BloodhoundRun {
             Write-Message  -Message  "$VARCD\BloodHound-win32-x64 already exists" -Type "WARNING"
             }
 	Write-Message  -Message  "Starting BloodHound" -Type "INFO"
+ 	Write-Message  -Message  "Use the creds you changed from neo4j" -Type "WARNING"
 	Start-Process -FilePath "$VARCD\BloodHound-win32-x64\BloodHound.exe" -WorkingDirectory "$VARCD\"
 }
 
@@ -2543,6 +2544,7 @@ if ($Headless) {
 
 ############# SHOW FORM
 $main_form.ShowDialog()
+
 
 
 
