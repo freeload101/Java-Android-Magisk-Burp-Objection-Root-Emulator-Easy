@@ -1450,7 +1450,7 @@ Function SecListsCheck {
 
 ############# SharpHoundRun
 Function SharpHoundRun {
-	Write-Message  -Message  "Example Runas Usage: runas /user:"nr.ad.COMPANY.com\USERNAME" /netonly cmd" -Type "INFO"
+	Write-Message  -Message  'Example Runas Usage: runas /user:"nr.ad.COMPANY.com\USERNAME" /netonly cmd' -Type "INFO"
     if (-not(Test-Path -Path "$VARCD\SharpHound.exe" )) {
         try {
             Write-Message  -Message  "Sharphound Missing Downloading" -Type "INFO"
@@ -2543,4 +2543,5 @@ if ($Headless) {
 
 ############# SHOW FORM
 $main_form.ShowDialog()
+
 
