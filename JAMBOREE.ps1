@@ -1487,7 +1487,7 @@ Function Neo4jRun {
             }
 	Write-Message  -Message  "Starting Neo4j" -Type "INFO"
 	Start-Process -FilePath "$VARCD\jdk_neo4j\bin\java.exe" -WorkingDirectory "$VARCD\neo4j\lib"  -ArgumentList "  -cp `"$VARCD\neo4j/lib/*`" -Dbasedir=`"$VARCD\neo4j`" org.neo4j.server.startup.Neo4jCommand `"console`"  "
-	Write-Message  -Message  "Wait for Neo4j You must change password at http://localhost:7474" -Type "INFO"
+	Write-Message  -Message  "Wait for Neo4j You must change password at http://localhost:7474 Login/Pw is neo4j:neo4j" -Type "WARNING"
 }
 
 ############# BloodhoundRun
@@ -2543,5 +2543,6 @@ if ($Headless) {
 
 ############# SHOW FORM
 $main_form.ShowDialog()
+
 
 
