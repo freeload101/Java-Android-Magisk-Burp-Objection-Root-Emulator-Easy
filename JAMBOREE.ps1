@@ -5,7 +5,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.4.7'
+$Global:VerNum = 'JAMBOREE 4.4.8'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -1381,6 +1381,9 @@ Function StartZAP {
     $ZAPJarPath = (Get-ChildItem "$VARCD\ZAP\*.jar")
     Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$ZAPJarPath`" -config network.localServers.mainProxy.address=localhost -config network.localServers.mainProxy.port=8081 "
 	#Start-Process -FilePath "$VARCD\jdk\bin\javaw.exe" -WorkingDirectory "$VARCD\jdk\"  -ArgumentList " -Xms4000m -Xmx4000m  -jar `"$ZAPJarPath`" -config network.localServers.mainProxy.address=localhost -config network.localServers.mainProxy.port=8081 -config network.connection.httpProxy.host=localhost -config network.connection.httpProxy.port=8080 -config network.connection.httpProxy.enabled=true"
+	Write-Message  -Message  "Waiting 20 seconds to download smaller dirbuster file raft-small-directories-lowercase.txt" -Type "INFO"
+	Start-Sleep -Seconds 20
+	Invoke-WebRequest -Uri "https://github.com/fuzzdb-project/fuzzdb/raw/refs/heads/master/discovery/predictable-filepaths/filename-dirname-bruteforce/raft-small-directories-lowercase.txt" -OutFile "$env:USERPROFILE\ZAP_D\fuzzers\dirbuster\raft-small-directories-lowercase.txt"
 }
 
 ############# Retry
@@ -2544,6 +2547,7 @@ if ($Headless) {
 
 ############# SHOW FORM
 $main_form.ShowDialog()
+
 
 
 
