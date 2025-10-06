@@ -5,7 +5,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.4.8'
+$Global:VerNum = 'JAMBOREE 4.4.9'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -100,6 +100,8 @@ Set-Location -Path "$VARCD"
 Write-Message  -Message  "Setting base path for HOMEPATH,USERPROFILE,APPDATA,LOCALAPPDATA,TEMP and TMP to $VARCD" -Type "INFO"
 $env:HOMEPATH="$VARCD"
 $env:USERPROFILE="$VARCD"
+
+New-Item -Path "$VARCD\Deskop" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 
 New-Item -Path "$VARCD\AppData\Roaming" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 $env:APPDATA="$VARCD\AppData\Roaming"
@@ -2547,6 +2549,7 @@ if ($Headless) {
 
 ############# SHOW FORM
 $main_form.ShowDialog()
+
 
 
 
