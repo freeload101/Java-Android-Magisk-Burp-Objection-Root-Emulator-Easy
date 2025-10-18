@@ -9,6 +9,41 @@ Get a working portable Python/Git/Java environment on Windows in **SECONDS** wit
 * Run Android apps and pentest without the adware and malware of BlueStacks or NOX. 
 
 
+
+Portable, no-admin installer that provisions a Windows environment for Android app testing (AVD + Magisk + Frida + Objection + Burp) and a growing collection of adjacent security/admin tools. JAMBOREE builds a working portable Python/Git/Java stack in seconds without requiring local administrator access.
+
+- Small, script-driven, open-source PowerShell setup
+- No bundled binaries — downloads from upstream sources
+- Designed to work even when system Python/Java paths are broken
+
+Table of contents
+- Features
+- Quick start
+- Examples (commands + screenshots)
+- Requirements
+- How it works
+- Usage notes
+- Videos & demos
+- Credits
+- Contributing & License
+
+Features
+- Android AVD (Android 11 / API 30) with Magisk and root support
+- Frida / Objection preconfigured for app runtime testing
+- Burp Suite / ZAP integration and proxy configs
+- Portable Python (nuget), PortableGit and Java provisioning
+- Optional tools collection: BloodHound (portable), PyCharm Portable, AUTOMATIC1111, AutoGPT, Volatility3, yt-dlp, Postgres (no-admin), SOCFortress/Velociraptor/Wazuh (WSL)
+- Simple PowerShell UI for launching tools and AVDs
+- Included Burp crawl config: `%USERPROFILE%\AppData\Roaming\BurpSuite\ConfigLibrary_JAMBOREE_Crawl_Level_01.json`
+
+Quick start
+1. Download `JAMBOREE.ps1` into an empty folder, or run directly from a shell.
+2. Right-click the script and select Run with PowerShell — or run from CMD/PowerShell using the single-line installer below.
+3. Use the JAMBOREE PowerShell UI to start Burp and the AVD, then install and test target apps.
+
+[![Watch the demo](https://img.youtube.com/vi/XdXleap0BiM/maxresdefault.jpg)](https://youtu.be/XdXleap0BiM)
+
+
 ### Features / Request
 
 |Android Core|Status|Additional Feature |Status|
