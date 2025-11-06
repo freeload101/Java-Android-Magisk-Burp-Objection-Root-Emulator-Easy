@@ -5,7 +5,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.4.9'
+$Global:VerNum = 'JAMBOREE 4.5.0'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -1108,16 +1108,21 @@ Function AVDWipeData {
 ############# CHECK BURP
 Function CheckBurp {
 
-Write-Message  -Message  "Setting up inital burp configs" -Type "INFO"
-New-Item -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Force
-Set-ItemProperty -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Name "free.suite.alertsdisabledforjre-1817240865" -Value "true" -Type String
-Set-ItemProperty -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Name "eulacommunity" -Value "4" -Type String
-Set-ItemProperty -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Name "free.suite.feedback/Reporting/Enabled" -Value "false" -Type String
-Set-ItemProperty -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Name "free.suite.suppressupdatedialog" -Value "false" -Type String
-New-Item -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp\community -Force
-New-Item -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp\community\detached-frames -Force
+    $burpPath = "HKCU:\SOFTWARE\JavaSoft\Prefs\burp"
 
-
+    if (Test-Path $burpPath) {
+        Write-Message -Message "Burp path HKCU:\SOFTWARE\JavaSoft\Prefs\burp already exist not clobbering it" -Type "INFO"
+    }
+    else {
+        Write-Message -Message "Setting up initial burp configs" -Type "INFO"
+        New-Item -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Force
+        Set-ItemProperty -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Name "free.suite.alertsdisabledforjre-1817240865" -Value "true" -Type String
+        Set-ItemProperty -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Name "eulacommunity" -Value "4" -Type String
+        Set-ItemProperty -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Name "free.suite.feedback/Reporting/Enabled" -Value "false" -Type String
+        Set-ItemProperty -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Name "free.suite.suppressupdatedialog" -Value "false" -Type String
+        New-Item -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp\community -Force
+        New-Item -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp\community\detached-frames -Force
+    }
 Write-Message  -Message  "Creating folders for custom CloudFlare bypass and ZAP support" -Type "INFO"
 New-Item -Path "$env:USERPROFILE\AppData\Roaming\BurpSuite\ConfigLibrary\" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 CheckJava
@@ -2549,6 +2554,7 @@ if ($Headless) {
 
 ############# SHOW FORM
 $main_form.ShowDialog()
+
 
 
 
