@@ -5,7 +5,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.5.0'
+$Global:VerNum = 'JAMBOREE 4.5.1'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -2068,7 +2068,7 @@ $y = $screen.Bottom - $height
 Function CheckVer {
 	Write-Message  -Message  "Checking for updates.." -Type "INFO"
     # Download the PS1 file content from GitHub
-    $scriptContent = Invoke-WebRequest -Uri "https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/raw/refs/heads/main/JAMBOREE.ps1" -UseBasicParsing | Select-Object -ExpandProperty Content
+    $scriptContent = Invoke-WebRequest -Uri "https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/raw/refs/heads/main/JAMBOREE.ps1" -UseBasicParsing -TimeoutSec 3 | Select-Object -ExpandProperty Content
 
 
     if ($scriptContent -match '\$Global:VerNum\s+\=\s+''(.*)''') {
@@ -2554,6 +2554,7 @@ if ($Headless) {
 
 ############# SHOW FORM
 $main_form.ShowDialog()
+
 
 
 
