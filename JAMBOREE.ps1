@@ -5,7 +5,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.5.1'
+$Global:VerNum = 'JAMBOREE 4.5.2'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -805,16 +805,8 @@ function StartADB {
 ############# AVDDownload
 Function AVDDownload {
 
-    if (-not(Test-Path -Path "$VARCD\emulator" )) {
-            Write-Message  -Message  "Downloading Android Command Line Tools" -Type "INFO"
-            downloadFile "https://dl.google.com/android/repository/commandlinetools-win-9477386_latest.zip" "$VARCD\commandlinetools-win.zip"
-            Write-Message  -Message  "Extracting AVD" -Type "INFO"
-            Expand-Archive -Path  "$VARCD\commandlinetools-win.zip" -DestinationPath "$VARCD" -Force
-            Write-Message  -Message  "Setting path to latest that AVD wants ..." -Type "INFO"
-            Rename-Item -Path "$VARCD\cmdline-tools" -NewName "$VARCD\latest"
-            New-Item -Path "$VARCD\cmdline-tools" -ItemType Directory
-            Move-Item "$VARCD\latest" "$VARCD\cmdline-tools\"
-			
+    if (-not(Test-Path -Path "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" )) {
+			ADBCheckBin
 			CheckJava
 			CheckPython
 			Write-Message  -Message  "Creating licenses Files" -Type "INFO"
@@ -922,6 +914,7 @@ Function AVDPoweroff {
 
 ############# CMDPrompt
 Function CMDPrompt {
+	ADBCheckBin
 	CheckJava
 	CheckGit
 	CheckPython
@@ -2151,6 +2144,144 @@ function EXECheckOllama{
 		}
 }
 
+############# ADBDumpDisplayName
+function ADBDumpDisplayName{
+    param(
+        [string]$OutputPath = "apps.csv",
+        [int]$MaxThreads = 30
+    )
+	ADBCheckBin
+    # Configuration
+    $aapt2Url = "https://github.com/JonForShort/android-tools/raw/master/build/android-11.0.0_r33/aapt2/armeabi-v7a/bin/aapt2"
+    $devicePath = "/data/local/tmp/aapt2"
+    $localPath = "$env:TEMP\aapt2"
+
+    # Check if aapt2 exists on device
+    Write-Host "Checking for aapt2 on device..."
+    $aapt2Exists = adb shell "test -f $devicePath && echo 'exists' || echo 'missing'"
+
+    if ($aapt2Exists -match "missing") {
+        Write-Host "aapt2 not found. Downloading and deploying..."
+
+        try {
+            Invoke-WebRequest -Uri $aapt2Url -OutFile $localPath -UseBasicParsing
+            Write-Host "Downloaded aapt2"
+        } catch {
+            Write-Host "Error downloading aapt2: $_"
+            return
+        }
+
+        adb push $localPath $devicePath | Out-Null
+        adb shell "chmod 777 $devicePath" | Out-Null
+        Write-Host "aapt2 deployed successfully"
+
+        Remove-Item $localPath -ErrorAction SilentlyContinue
+    } else {
+        Write-Host "aapt2 already exists on device"
+    }
+
+    # Get package list
+    Write-Host "Getting package list..."
+    $packages = adb shell pm list packages -3 | ForEach-Object { ($_ -replace 'package:', '').Trim() } | Where-Object { $_ }
+
+    Write-Host "Extracting display names for $($packages.Count) apps using $MaxThreads threads..."
+
+    # Create runspace pool
+    $runspacePool = [runspacefactory]::CreateRunspacePool(1, $MaxThreads)
+    $runspacePool.Open()
+
+    # Script block for each thread
+    $scriptBlock = {
+        param($package, $devicePath)
+
+        try {
+            $apkPath = (adb shell pm path $package) -replace 'package:', '' | Select-Object -First 1
+            $apkPath = $apkPath.Trim()
+
+            if ($apkPath) {
+                $badging = adb shell "$devicePath dump badging '$apkPath' 2>/dev/null" | Select-String "application-label:"
+
+                if ($badging -match "application-label:'([^']+)'") {
+                    $label = $matches[1]
+                } else {
+                    $label = $package
+                }
+            } else {
+                $label = $package
+            }
+
+            [PSCustomObject]@{
+                PackageName = $package
+                DisplayName = $label
+            }
+        } catch {
+            [PSCustomObject]@{
+                PackageName = $package
+                DisplayName = $package
+            }
+        }
+    }
+
+    # Create jobs
+    $jobs = @()
+    foreach ($package in $packages) {
+        $powershell = [powershell]::Create().AddScript($scriptBlock).AddArgument($package).AddArgument($devicePath)
+        $powershell.RunspacePool = $runspacePool
+
+        $jobs += [PSCustomObject]@{
+            Pipe = $powershell
+            Result = $powershell.BeginInvoke()
+        }
+    }
+
+    # Collect results
+    $apps = @()
+    $completed = 0
+    foreach ($job in $jobs) {
+        $apps += $job.Pipe.EndInvoke($job.Result)
+        $job.Pipe.Dispose()
+
+        $completed++
+        Write-Progress -Activity "Processing apps" -Status "$completed of $($packages.Count)" -PercentComplete (($completed / $packages.Count) * 100)
+    }
+
+    Write-Progress -Activity "Processing apps" -Completed
+
+    # Cleanup
+    $runspacePool.Close()
+    $runspacePool.Dispose()
+
+    # Export to CSV
+    $apps | Export-Csv -Path $OutputPath -NoTypeInformation -Encoding UTF8
+
+    Write-Host "`nExported $($apps.Count) apps to $OutputPath"
+	Invoke-Item "$OutputPath"
+}
+
+
+
+
+############# ADBCheckBin
+function ADBCheckBin{
+	if (-not(Test-Path -Path "$VARCD\cmdline-tools" )) { 
+		Write-Message  -Message  "Downloading Android Command Line Tools" -Type "INFO"
+		downloadFile "https://dl.google.com/android/repository/commandlinetools-win-9477386_latest.zip" "$VARCD\commandlinetools-win.zip"
+		Write-Message  -Message  "Extracting AVD" -Type "INFO"
+		Expand-Archive -Path  "$VARCD\commandlinetools-win.zip" -DestinationPath "$VARCD" -Force
+		Write-Message  -Message  "Setting path to latest that AVD wants ..." -Type "INFO"
+		Rename-Item -Path "$VARCD\cmdline-tools" -NewName "$VARCD\latest"
+		New-Item -Path "$VARCD\cmdline-tools" -ItemType Directory
+		Move-Item "$VARCD\latest" "$VARCD\cmdline-tools\"
+		Write-Message  -Message  "Creating licenses Files" -Type "INFO"
+				$licenseContentBase64 = "UEsDBBQAAAAAAKNK11IAAAAAAAAAAAAAAAAJAAAAbGljZW5zZXMvUEsDBAoAAAAAAJ1K11K7n0IrKgAAACoAAAAhAAAAbGljZW5zZXMvYW5kcm9pZC1nb29nbGV0di1saWNlbnNlDQo2MDEwODViOTRjZDc3ZjBiNTRmZjg2NDA2OTU3MDk5ZWJlNzljNGQ2UEsDBAoAAAAAAKBK11LzQumJKgAAACoAAAAkAAAAbGljZW5zZXMvYW5kcm9pZC1zZGstYXJtLWRidC1saWNlbnNlDQo4NTlmMzE3Njk2ZjY3ZWYzZDdmMzBhNTBhNTU2MGU3ODM0YjQzOTAzUEsDBAoAAAAAAKFK11IKSOJFKgAAACoAAAAcAAAAbGljZW5zZXMvYW5kcm9pZC1zZGstbGljZW5zZQ0KMjQzMzNmOGE2M2I2ODI1ZWE5YzU1MTRmODNjMjgyOWIwMDRkMWZlZVBLAwQKAAAAAACiStdSec1a4SoAAAAqAAAAJAAAAGxpY2Vuc2VzL2FuZHJvaWQtc2RrLXByZXZpZXctbGljZW5zZQ0KODQ4MzFiOTQwOTY0NmE5MThlMzA1NzNiYWI0YzljOTEzNDZkOGFiZFBLAwQKAAAAAACiStdSk6vQKCoAAAAqAAAAGwAAAGxpY2Vuc2VzL2dvb2dsZS1nZGstbGljZW5zZQ0KMzNiNmEyYjY0NjA3ZjExYjc1OWYzMjBlZjlkZmY0YWU1YzQ3ZDk3YVBLAwQKAAAAAACiStdSrE3jESoAAAAqAAAAJAAAAGxpY2Vuc2VzL2ludGVsLWFuZHJvaWQtZXh0cmEtbGljZW5zZQ0KZDk3NWY3NTE2OThhNzdiNjYyZjEyNTRkZGJlZWQzOTAxZTk3NmY1YVBLAwQKAAAAAACjStdSkb1vWioAAAAqAAAAJgAAAGxpY2Vuc2VzL21pcHMtYW5kcm9pZC1zeXNpbWFnZS1saWNlbnNlDQplOWFjYWI1YjVmYmI1NjBhNzJjZmFlY2NlODk0Njg5NmZmNmFhYjlkUEsBAj8AFAAAAAAAo0rXUgAAAAAAAAAAAAAAAAkAJAAAAAAAAAAQAAAAAAAAAGxpY2Vuc2VzLwoAIAAAAAAAAQAYACIHOBcRaNcBIgc4FxFo1wHBTVQTEWjXAVBLAQI/AAoAAAAAAJ1K11K7n0IrKgAAACoAAAAhACQAAAAAAAAAIAAAACcAAABsaWNlbnNlcy9hbmRyb2lkLWdvb2dsZXR2LWxpY2Vuc2UKACAAAAAAAAEAGACUEFUTEWjXAZQQVRMRaNcB6XRUExFo1wFQSwECPwAKAAAAAACgStdS80LpiSoAAAAqAAAAJAAkAAAAAAAAACAAAACQAAAAbGljZW5zZXMvYW5kcm9pZC1zZGstYXJtLWRidC1saWNlbnNlCgAgAAAAAAABABgAsEM0FBFo1wGwQzQUEWjXAXb1MxQRaNcBUEsBAj8ACgAAAAAAoUrXUgpI4kUqAAAAKgAAABwAJAAAAAAAAAAgAAAA/AAAAGxpY2Vuc2VzL2FuZHJvaWQtc2RrLWxpY2Vuc2UKACAAAAAAAAEAGAAsMGUVEWjXASwwZRURaNcB5whlFRFo1wFQSwECPwAKAAAAAACiStdSec1a4SoAAAAqAAAAJAAkAAAAAAAAACAAAABgAQAAbGljZW5zZXMvYW5kcm9pZC1zZGstcHJldmlldy1saWNlbnNlCgAgAAAAAAABABgA7s3WFRFo1wHuzdYVEWjXAfGm1hURaNcBUEsBAj8ACgAAAAAAokrXUpOr0CgqAAAAKgAAABsAJAAAAAAAAAAgAAAAzAEAAGxpY2Vuc2VzL2dvb2dsZS1nZGstbGljZW5zZQoAIAAAAAAAAQAYAGRDRxYRaNcBZENHFhFo1wFfHEcWEWjXAVBLAQI/AAoAAAAAAKJK11KsTeMRKgAAACoAAAAkACQAAAAAAAAAIAAAAC8CAABsaWNlbnNlcy9pbnRlbC1hbmRyb2lkLWV4dHJhLWxpY2Vuc2UKACAAAAAAAAEAGADGsq0WEWjXAcayrRYRaNcBxrKtFhFo1wFQSwECPwAKAAAAAACjStdSkb1vWioAAAAqAAAAJgAkAAAAAAAAACAAAACbAgAAbGljZW5zZXMvbWlwcy1hbmRyb2lkLXN5c2ltYWdlLWxpY2Vuc2UKACAAAAAAAAEAGAA4LjgXEWjXATguOBcRaNcBIgc4FxFo1wFQSwUGAAAAAAgACACDAwAACQMAAAAA"
+				$licenseContent = [System.Convert]::FromBase64String($licenseContentBase64)
+				Set-Content -Path "$VARCD\android-sdk-licenses.zip" -Value $licenseContent -Encoding Byte
+				Expand-Archive  "$VARCD\android-sdk-licenses.zip"  -DestinationPath "$VARCD\"  -Force
+				
+		Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platform-tools" -Verbose -Wait -NoNewWindow
+	}
+}		
+			
 
 ######################################################################################################################### FUNCTIONS END
 lowerright
@@ -2337,12 +2468,12 @@ $Button.Add_Click({InstallAPKS})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# Debloat
+############# ADBDumpDisplayName
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "Debloat UI Tool"
+$Button.Text = "Dump App Names"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({Debloat})
+$Button.Add_Click({ADBDumpDisplayName})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
@@ -2554,11 +2685,3 @@ if ($Headless) {
 
 ############# SHOW FORM
 $main_form.ShowDialog()
-
-
-
-
-
-
-
-
