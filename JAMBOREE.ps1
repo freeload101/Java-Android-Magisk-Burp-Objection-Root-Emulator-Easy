@@ -5,7 +5,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.5.2'
+$Global:VerNum = 'JAMBOREE 4.5.3'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -615,8 +615,6 @@ downloadFile "$downloadUri" "$VARCD\APKS\AppManager.apk"
 Write-Message  -Message  "Downloading AndroGoat.apk" -Type "INFO"
 downloadFile "https://github.com/satishpatnayak/MyTest/raw/master/AndroGoat.apk" "$VARCD\APKS\AndroGoat.apk"
 
-SecListsCheck
-
 $varadb=CheckADB
 $env:ANDROID_SERIAL=$varadb
 
@@ -1133,8 +1131,33 @@ BurpConfigProxy
         else {
             Write-Message  -Message  "$VARCD\Burpsuite already exists" -Type "WARNING"
             }
-			
-			   if (-not(Test-Path -Path "$VARCD\burpsuite_pro.jar" )) {
+}
+
+
+############# CheckBurpPro
+Function CheckBurpPro {
+
+    $burpPath = "HKCU:\SOFTWARE\JavaSoft\Prefs\burp"
+
+    if (Test-Path $burpPath) {
+        Write-Message -Message "Burp path HKCU:\SOFTWARE\JavaSoft\Prefs\burp already exist not clobbering it" -Type "INFO"
+    }
+    else {
+        Write-Message -Message "Setting up initial burp configs" -Type "INFO"
+        New-Item -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Force
+        Set-ItemProperty -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Name "free.suite.alertsdisabledforjre-1817240865" -Value "true" -Type String
+        Set-ItemProperty -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Name "eulacommunity" -Value "4" -Type String
+        Set-ItemProperty -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Name "free.suite.feedback/Reporting/Enabled" -Value "false" -Type String
+        Set-ItemProperty -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp -Name "free.suite.suppressupdatedialog" -Value "false" -Type String
+        New-Item -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp\community -Force
+        New-Item -Path HKCU:\SOFTWARE\JavaSoft\Prefs\burp\community\detached-frames -Force
+    }
+Write-Message  -Message  "Creating folders for custom CloudFlare bypass and ZAP support" -Type "INFO"
+New-Item -Path "$env:USERPROFILE\AppData\Roaming\BurpSuite\ConfigLibrary\" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+CheckJava
+BurpConfigPush
+BurpConfigProxy
+    if (-not(Test-Path -Path "$VARCD\burpsuite_pro.jar" )) {
         try {
             Write-Message  -Message  "Downloading Burpsuite Pro" -Type "INFO"
 	    # don't need this I don't think $downloadUri = (Invoke-RestMethod -Method GET -Uri "https://portswigger.net/burp/releases/community/latest")  -split '<li><a download="release" href=' -match '.*startdownload.*pro.*type=jar.*' | ForEach-Object {$_ -ireplace '\/burp\/releases','https://portswigger.net/burp/releases' -ireplace '>.*','' } | select -first 1
@@ -1147,7 +1170,9 @@ BurpConfigProxy
         else {
             Write-Message  -Message  "$VARCD\Burpsuite Pro already exists" -Type "WARNING"
             }
+SecListsCheck			
 }
+
 
 ############# StartBurp
 Function StartBurp {
@@ -1344,7 +1369,7 @@ Function PullCert {
 ############# ZAPCheck
 Function ZAPCheck {
     CheckJava
-    if (-not(Test-Path -Path "$VARCD\ZAP.zip" )) {
+    if (-not(Test-Path -Path "$VARCD\ZAP" )) {
         try {
             Write-Message  -Message  "Downloading ZAP" -Type "INFO"
             $xmlResponseIWR = Invoke-WebRequest -Method GET -Uri 'https://raw.githubusercontent.com/zaproxy/zap-admin/master/ZapVersions.xml' -OutFile ZapVersions.xml
@@ -1366,7 +1391,7 @@ Function ZAPCheck {
             }
             }
         else {
-            Write-Message  -Message  "$VARCD\ZAP.zip already exists" -Type "WARNING"
+            Write-Message  -Message  "$VARCD\ZAP already exists" -Type "WARNING"
             }
  
    
@@ -1428,7 +1453,7 @@ function Retry()
 
 ############# SecListsCheck
 Function SecListsCheck {
-    if (-not(Test-Path -Path "$VARCD\SecLists.zip" )) {
+    if (-not(Test-Path -Path "$VARCD\SecLists-master" )) {
         try {
             Write-Message  -Message  "Downloading SecLists.zip PLEASE WAIT..." -Type "INFO"
             downloadFile "https://github.com/danielmiessler/SecLists/archive/refs/heads/master.zip" "$VARCD\SecLists.zip"
@@ -1444,7 +1469,7 @@ Function SecListsCheck {
             }
             }
         else {
-            Write-Message  -Message  "$VARCD\SecLists.zip already exists" -Type "WARNING"
+            Write-Message  -Message  "$VARCD\SecLists-master already exists" -Type "WARNING"
             }
  
    
@@ -2287,43 +2312,6 @@ function ADBCheckBin{
 lowerright
 CheckVer
 
-############# accel
-$pname=(Get-WMIObject win32_Processor | Select-Object name)
-if ($pname -like "*AMD*") {
-    Write-Message  -Message  "AMD Processor detected" -Type "INFO"
-    ############# Button
-    ############# AMD PROCESSOR DETECTED
-    $Button = New-Object System.Windows.Forms.Button
-    $Button.AutoSize = $true
-    $hyperv = Get-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V-All -Online
-    # Check if Hyper-V is enabled
-        if($hyperv.State -eq "Enabled") {
-            Write-Message  -Message  "[!] Hyper-V is already enabled." -Type "INFO"
-            # Already installed, disable button   
-            $Button.Text = "2. Hyper-V Already Installed"
-            $Button.Enabled = $false
-        } else {
-
-        $Button.Text = "Hyper-V Install (Reboot?)" # Install Hyper-V
-        $Button.Enabled = $true
-        }
-    $Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-    $Button.Add_Click({HyperVInstall})
-    $main_form.Controls.Add($Button)
-	$vShift = $vShift + 30
-}
-else {
-    ############# Button
-    ############# INTEL PROCESSOR DETECTED
-    $Button = New-Object System.Windows.Forms.Button
-    $Button.AutoSize = $true
-    $Button.Text = "HAXM Install" #HAXMInstall
-    $Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-    $Button.Add_Click({HAXMInstall})
-    $main_form.Controls.Add($Button)
-	$vShift = $vShift + 30
-}
-
 ############# StartBurp
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
@@ -2664,15 +2652,6 @@ $Button.AutoSize = $true
 $Button.Text = "Clear netsh portproxy rules"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({WipeForwardRules})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# UpdateJAMBO
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Update JAMBOREE"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({UpdateJAMBO})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
