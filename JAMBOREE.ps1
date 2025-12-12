@@ -5,7 +5,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.5.3'
+$Global:VerNum = 'JAMBOREE 4.5.4'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -168,8 +168,66 @@ $vShift = 0
 
 ### MAIN ###
 
+
+
+
 ################################# FUNCTIONS
- 
+function Test-WindowsHypervisorPlatform {
+    [CmdletBinding()]
+    param()
+	Write-Message -Message "Checking for Hyper-V Windows Hypervisor Platform (WHPX)..." -Type "INFO"
+    try {
+        # Check using registry - doesn't require admin
+        $regPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Virtualization"
+
+        if (Test-Path $regPath) {
+            $hypervisorPresent = Get-ItemProperty -Path $regPath -Name "HypervisorEnforcedCodeIntegrity" -ErrorAction SilentlyContinue
+
+            if ($hypervisorPresent) {
+                Write-Message -Message "Windows Hypervisor Platform is ENABLED" -Type "INFO"
+                return
+            }
+        }
+
+        # Fallback: Check using systeminfo (no admin required)
+
+        $systemInfo = systeminfo
+        $hypervisorLine = $systemInfo | Select-String "Hyper-V Requirements"
+
+        if ($hypervisorLine) {
+            $hypervisorRunning = $systemInfo | Select-String "A hypervisor has been detected"
+
+            if ($hypervisorRunning) {
+                Write-Message -Message "Windows Hypervisor Platform is ENABLED" -Type "INFO"
+                return
+            }
+        }
+        Write-Message -Message "Windows Hypervisor Platform is NOT ENABLED" -Type "ERROR"
+    }
+    catch {
+        Write-Message -Message "Unable to check Windows Hypervisor Platform status" -Type "ERROR"
+        Write-Host $_.Exception.Message -ForegroundColor Red
+    }
+}
+
+function Test-PathLength {
+    <#
+    .SYNOPSIS
+        Checks if the current path exceeds 100 characters and displays an error message
+    .DESCRIPTION
+        Validates the current working directory path length and alerts the user if it exceeds 100 characters
+    #>
+    [CmdletBinding()]
+    param()
+
+    $currentPath = (Get-Location).Path
+
+    if ($currentPath.Length -gt 100) {
+        Write-Message -Type "ERROR" -Message "Current path is $($currentPath.Length) characters long. Please move to a base folder (e.g., C:\JAMBOREE) to avoid path length issues."
+    }
+}
+
+
 ############# CheckAdmin
 Function CheckAdmin {
 	
@@ -2311,6 +2369,8 @@ function ADBCheckBin{
 ######################################################################################################################### FUNCTIONS END
 lowerright
 CheckVer
+Test-WindowsHypervisorPlatform
+Test-PathLength
 
 ############# StartBurp
 $Button = New-Object System.Windows.Forms.Button
