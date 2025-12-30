@@ -5,7 +5,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.5.4'
+$Global:VerNum = 'JAMBOREE 4.6.1'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -142,7 +142,7 @@ $env:JAVA_HOME = "$VARCD\jdk"
 
 Write-Message  -Message  "Setting rootAVD ENV Paths $VARCD" -Type "INFO"
 #Use this if you want to keep your %PATH% ...
-#$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd"
+#$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\cmdline-tools\latest\bin"
 
 Write-Message  -Message  "Resetting Path variables to not use local python,java,node,adb,git,java,postgres ..." -Type "WARNING"
 $env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\PG\bin;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools\Lib\venv\scripts\;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\node"
@@ -600,6 +600,7 @@ Write-Message  -Message  "Checking for Java" -Type "INFO"
 
 ############# CHECK Frida tools
 Function CheckFrida {
+	 if (-not(Test-Path -Path "$VARCD\python" )) {
 			# for frida/AVD
 			Write-Message  -Message  "Installing objection and python-xz needed for AVD" -Type "INFO"
 			
@@ -607,8 +608,10 @@ Function CheckFrida {
             # for Frida Android Binary
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait -NoNewWindow
 			Write-Message  -Message  "Installing frida-tools" -Type "INFO"
-			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install frida-tools==13.7.1 frida==16.7.19 " -wait -NoNewWindow
-}			
+			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install frida==17.5.1 " -wait -NoNewWindow
+			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install frida-tools " -wait -NoNewWindow
+	 }
+}				
 
 ############# CHECK PYTHON
 Function CheckPython {
@@ -762,13 +765,10 @@ CheckPython
 CheckFrida
    if (-not(Test-Path -Path "$VARCD\frida-server" )) {
         try {
-            Write-Message  -Message  "Downloading  16.7.19 $downloadUri " -Type "INFO"
-			
-            # latest is broken ? $downloadUri = ((Invoke-RestMethod -Method GET -Uri "https://api.github.com/repos/frida/frida/releases/latest").assets | Where-Object name -like frida-server-*-android-x86.xz ).browser_download_url
-            #downloadFile  $downloadUri "$VARCD\frida-server-android_LATEST.xz"
-			
+            Write-Message  -Message  "Downloading Frida 17.5.1 for x86_64" -Type "INFO"
+		
 			# fix this ..static binary bad !
-			downloadFile  "https://github.com/frida/frida/releases/download/16.7.19/frida-server-16.7.19-android-x86.xz" "$VARCD\frida-server-android_LATEST.xz"
+			downloadFile  "https://github.com/frida/frida/releases/download/17.5.1/frida-server-17.5.1-android-x86_64.xz" "$VARCD\frida-server-android_LATEST.xz"
             Write-Message  -Message  "Extracting $downloadUri" -Type "INFO"
 # don't mess with spaces for these lines for python ...
 $PythonXZ = @'
@@ -783,7 +783,7 @@ with xz.open('frida-server-android_LATEST.xz') as f:
 
             Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\frida-server-extract.py`" " -NoNewWindow 
             $PythonXZ | Out-File -FilePath frida-server-extract.py
-            # change endoding from Windows-1252 to UTF-8
+            # change endoding from Windows-125R2 to UTF-8
             Set-Content -Path "$VARCD\frida-server-extract.py" -Value $PythonXZ -Encoding UTF8 -PassThru -Force
 
             }
@@ -792,7 +792,7 @@ with xz.open('frida-server-android_LATEST.xz') as f:
             }
             }
         else {
-            Write-Message  -Message  "$VARCD\frida-server already exists" -Type "WARNING"
+            Write-Message  -Message  "Issues extracting $VARCD\frida-server" -Type "WARNING"
             }
 
 $varadb=CheckADB
@@ -804,8 +804,9 @@ Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp -R /sdcard/frida-server /data/local/tmp`" " -NoNewWindow -Wait
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chmod 777 /data/local/tmp/frida-server`" "  -NoNewWindow -Wait
 Write-Message  -Message  "Starting /data/local/tmp/frida-server" -Type "INFO"
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c /data/local/tmp/frida-server &`" "  -NoNewWindow 
-
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c /data/local/tmp/frida-server --version`" "  -NoNewWindow 
+Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c /data/local/tmp/frida-server & `" "  -NoNewWindow 
+Write-Message  -Message  "THIS ISE HTE END OF StartFrida " -Type "ERROR"
 }
 
 Function StartJAMBOREE_SSL_N_ANTIROOT {
@@ -874,12 +875,12 @@ Function AVDDownload {
 			
 			# now we are using latest cmdline-tools ...!?
 			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platform-tools" -Verbose -Wait -NoNewWindow
-			# No Longer supported Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "extras;intel;Hardware_Accelerated_Execution_Manager" -Verbose -Wait -NoNewWindow
+			#Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "extras;intel;Hardware_Accelerated_Execution_Manager" -Verbose -Wait -NoNewWindow
 			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platforms;android-30" -Verbose -Wait -NoNewWindow
 			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "emulator" -Verbose -Wait -NoNewWindow
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "system-images;android-30;google_apis_playstore;x86" -Verbose -Wait -NoNewWindow
+			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "system-images;android-30;google_apis_playstore;x86_64" -Verbose -Wait -NoNewWindow
 			Write-Message  -Message  "AVD Install Complete Creating AVD Device" -Type "INFO"
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-30;google_apis_playstore;x86`"  -d `"pixel_2`" --force" -Wait -Verbose -NoNewWindow
+			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-30;google_apis_playstore;x86_64`"  -d `"pixel_2`" --force" -Wait -Verbose -NoNewWindow
 			Start-Sleep -Seconds 2
             }
         else {
@@ -1133,7 +1134,7 @@ if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
 
 	cd "$VARCD\rootAVD-master"
 	Write-Message  -Message  "Running installing magisk via rootAVD to ramdisk.img" -Type "INFO"
-	Start-Process -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "system-images\android-30\google_apis_playstore\x86\ramdisk.img FAKEBOOTIMG" -WorkingDirectory "$VARCD\rootAVD-master\"  -NoNewWindow
+	Start-Process -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "system-images\android-30\google_apis_playstore\x86_64\ramdisk.img FAKEBOOTIMG " -WorkingDirectory "$VARCD\rootAVD-master\"  -NoNewWindow
 
     Write-Message  -Message  "rootAVD Finished if the emulator did not close/poweroff try again" -Type "INFO"
 }
@@ -2420,6 +2421,15 @@ $vShift = $vShift + 30
 ############# StartFrida
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
+$Button.Text = "Start Frida-Server"
+$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
+$Button.Add_Click({StartFrida})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# StartFrida/SSLDepinning
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
 $Button.Text = "Frida/AntiRoot/SSLDepinning"
 $Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button.Add_Click({StartJAMBOREE_SSL_N_ANTIROOT})
@@ -2724,4 +2734,3 @@ if ($Headless) {
 
 ############# SHOW FORM
 $main_form.ShowDialog()
-
