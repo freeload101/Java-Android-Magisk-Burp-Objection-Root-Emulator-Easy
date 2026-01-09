@@ -806,7 +806,6 @@ Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `
 Write-Message  -Message  "Starting /data/local/tmp/frida-server" -Type "INFO"
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c /data/local/tmp/frida-server --version`" "  -NoNewWindow 
 Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c /data/local/tmp/frida-server & `" "  -NoNewWindow 
-Write-Message  -Message  "THIS ISE HTE END OF StartFrida " -Type "ERROR"
 }
 
 Function StartJAMBOREE_SSL_N_ANTIROOT {
@@ -2734,3 +2733,4 @@ if ($Headless) {
 
 ############# SHOW FORM
 $main_form.ShowDialog()
+
