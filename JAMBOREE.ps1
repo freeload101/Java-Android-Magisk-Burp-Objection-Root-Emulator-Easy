@@ -600,7 +600,7 @@ Write-Message  -Message  "Checking for Java" -Type "INFO"
 
 ############# CHECK Frida tools
 Function CheckFrida {
-	 if (-not(Test-Path -Path "$VARCD\python" )) {
+	 if (-not(Test-Path -Path "$VARCD\python\tools\Lib\site-packages\frida" )) {
 			# for frida/AVD
 			Write-Message  -Message  "Installing objection and python-xz needed for AVD" -Type "INFO"
 			
@@ -2733,4 +2733,5 @@ if ($Headless) {
 
 ############# SHOW FORM
 $main_form.ShowDialog()
+
 
