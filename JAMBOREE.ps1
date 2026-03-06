@@ -526,32 +526,39 @@ function KillADB {
 }
 
 ############# downloadFile
-function downloadFile($url, $targetFile)
-{
-    "Downloading $url"
-    $uri = New-Object "System.Uri" "$url"
-    $request = [System.Net.HttpWebRequest]::Create($uri)
-    $request.set_Timeout(15000) #15 second timeout
-    $response = $request.GetResponse()
-    $totalLength = [System.Math]::Floor($response.get_ContentLength()/1024)
-    $responseStream = $response.GetResponseStream()
-    $targetStream = New-Object -TypeName System.IO.FileStream -ArgumentList $targetFile, Create
-    $buffer = new-object byte[] 10KB
-    $count = $responseStream.Read($buffer,0,$buffer.length)
-    $downloadedBytes = $count
-    while ($count -gt 0)
-    {
-        #[System.Console]::CursorLeft = 0
-        #[System.Console]::Write("Downloaded {0}K of {1}K", [System.Math]::Floor($downloadedBytes/1024), $totalLength)
-        $targetStream.Write($buffer, 0, $count)
-        $count = $responseStream.Read($buffer,0,$buffer.length)
-        $downloadedBytes = $downloadedBytes + $count
+function downloadFile($url, $file) {
+    $req = [System.Net.HttpWebRequest]::Create($url)
+    $req.AllowAutoRedirect = $true
+    $req.Timeout = 600000
+    $req.ReadWriteTimeout = 600000
+    $req.UserAgent = "Mozilla/5.0"
+    $webRes = $req.GetResponse()
+    $expectedLen = $webRes.ContentLength
+    if ($expectedLen -gt 0) { Write-Host "  Expected size   : $([math]::Round($expectedLen / 1MB)) MB" }
+    $res = $webRes.GetResponseStream()
+    $fs  = [System.IO.FileStream]::new($file, 'Create')
+    $buf = [byte[]]::new(256KB)
+    $totalRead = [long]0
+    $lastPct   = -1
+    while (($c = $res.Read($buf, 0, $buf.Length)) -gt 0) {
+        $fs.Write($buf, 0, $c)
+        $totalRead += $c
+        if ($expectedLen -gt 0) {
+            $pct = [math]::Floor($totalRead * 100 / $expectedLen)
+            if ($pct -ne $lastPct -and $pct % 10 -eq 0) {
+                Write-Host "  Downloaded      : $pct% ($([math]::Round($totalRead / 1MB)) MB)" -ForegroundColor DarkGray
+                $lastPct = $pct
+            }
+        }
     }
-    "Finished Download"
-    $targetStream.Flush()
-    $targetStream.Close()
-    $targetStream.Dispose()
-    $responseStream.Dispose()
+    $fs.Flush(); $fs.Close(); $res.Close(); $webRes.Close()
+    $actualLen = (Get-Item $file).Length
+    Write-Host "  Actual size     : $([math]::Round($actualLen / 1MB)) MB"
+    if ($expectedLen -gt 0 -and $actualLen -ne $expectedLen) {
+        Write-Error "Download INCOMPLETE: expected $expectedLen bytes, got $actualLen bytes"
+        Remove-Item $file -Force -ErrorAction SilentlyContinue
+        throw "Download verification failed for $file"
+    }
 }
 
 ############# CHECK JAVA FOR NEO4J
@@ -2733,5 +2740,6 @@ if ($Headless) {
 
 ############# SHOW FORM
 $main_form.ShowDialog()
+
 
 
