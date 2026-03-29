@@ -1,11 +1,6 @@
-param(
-    [Parameter(Mandatory=$false)]
-    [string]$Headless
-)
-
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.6.1'
+$Global:VerNum = 'JAMBOREE 4.6.2'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -140,12 +135,10 @@ $env:PGLOG = "$VARCD\PG\postgres.log"
 Write-Message  -Message  "Setting JAVA ENV Paths $VARCD" -Type "INFO"
 $env:JAVA_HOME = "$VARCD\jdk"
 
-Write-Message  -Message  "Setting rootAVD ENV Paths $VARCD" -Type "INFO"
-#Use this if you want to keep your %PATH% ...
-#$env:Path = "$env:Path;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\cmdline-tools\latest\bin"
-
+W
 Write-Message  -Message  "Resetting Path variables to not use local python,java,node,adb,git,java,postgres ..." -Type "WARNING"
-$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\PG\bin;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools\Lib\venv\scripts\;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\node"
+$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\PG\bin;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools\Lib\venv\scripts\;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\nodeRMS;$VARCD\node;$VARCD\w64devkit\bin"
+
 
 # python
 $env:PYTHONHOME="$VARCD\python\tools"
@@ -171,7 +164,24 @@ $vShift = 0
 
 
 
-################################# FUNCTIONS
+################################# w64devkit
+function w64devkit {
+    $installPath = "$VARCD\w64devkit"
+
+    # Step 1: Check if the path already exists
+    if (Test-Path -Path $installPath) {
+        Write-Message -Message "w64devkit is already present at $installPath. Skipping installation." -Type "INFO"
+    } else {
+		Write-Message -Message "Downloading w64devkit..." -Type "INFO"
+        downloadFile "https://github.com/skeeto/w64devkit/releases/download/v2.6.0/w64devkit-x64-2.6.0.7z.exe" "$VARCD\w64devkit.exe"
+        Start-Process -FilePath "$VARCD\w64devkit.exe" -ArgumentList "-y", "-o$VARCD" -Wait
+        Remove-Item "$VARCD\w64devkit.exe"
+    }
+}
+
+
+
+
 function Test-WindowsHypervisorPlatform {
     [CmdletBinding()]
     param()
@@ -420,7 +430,6 @@ Function CheckNode {
 ############# CheckNodeRMS
 Function CheckNodeRMS {
 Write-Message  -Message  "Checking for node 22.9.0" -Type "WARNING"
-$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\PG\bin;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools\Lib\venv\scripts\;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\nodeRMS"
 
  
    if (-not(Test-Path -Path "$VARCD\nodeRMS" )) {
@@ -982,6 +991,7 @@ Function CMDPrompt {
 	CheckGit
 	CheckPython
 	CheckNode
+    w64devkit
 	Start-Process -FilePath "cmd" -WorkingDirectory "$VARCD"
 
     if ((Get-Command adb -ErrorAction SilentlyContinue)) {		
@@ -2731,15 +2741,5 @@ $Button.Add_Click({WipeForwardRules})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-if ($Headless) {
-	Write-Message  -Message  "Running in headless mode" -Type "WARNING"
-	$Global:NOGUI = 1
-    & $Headless
-	exit
-}
-
 ############# SHOW FORM
 $main_form.ShowDialog()
-
-
-
