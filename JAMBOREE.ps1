@@ -135,7 +135,6 @@ $env:PGLOG = "$VARCD\PG\postgres.log"
 Write-Message  -Message  "Setting JAVA ENV Paths $VARCD" -Type "INFO"
 $env:JAVA_HOME = "$VARCD\jdk"
 
-W
 Write-Message  -Message  "Resetting Path variables to not use local python,java,node,adb,git,java,postgres ..." -Type "WARNING"
 $env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\PG\bin;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools\Lib\venv\scripts\;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\nodeRMS;$VARCD\node;$VARCD\w64devkit\bin"
 
