@@ -1,8 +1,36 @@
+# Re-launch hidden if console is visible (eliminates console flash when clicking .ps1)
+if ($env:JAMBOREE_HIDDEN -ne '1') {
+    $env:JAMBOREE_HIDDEN = '1'
+    $scriptPath = if ($PSCommandPath) { $PSCommandPath } else { $MyInvocation.MyCommand.Definition }
+    $wDir = Split-Path $scriptPath -Parent
+    $proc = New-Object System.Diagnostics.Process
+    $proc.StartInfo.FileName = "powershell.exe"
+    $proc.StartInfo.Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$scriptPath`""
+    $proc.StartInfo.WorkingDirectory = $wDir
+    $proc.StartInfo.UseShellExecute = $true
+    $proc.StartInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
+    $proc.Start() | Out-Null
+    [Environment]::Exit(0)
+}
+
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.6.2'
+$Global:VerNum = 'JAMBOREE 4.6.3'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
+
+# Load assemblies early so [System.Drawing.Color] is available in function definitions
+Add-Type -assembly System.Windows.Forms
+
+# Hide console as safety net (already hidden via -WindowStyle Hidden relaunch)
+Add-Type -Name ConsoleUtils -Namespace Win32Helper -MemberDefinition @'
+[DllImport("kernel32.dll")]
+public static extern IntPtr GetConsoleWindow();
+[DllImport("user32.dll")]
+public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+'@
+$consoleHwnd = [Win32Helper.ConsoleUtils]::GetConsoleWindow()
+[Win32Helper.ConsoleUtils]::ShowWindow($consoleHwnd, 0) | Out-Null
 
 function Write-Message  {
     <#
@@ -22,66 +50,124 @@ function Write-Message  {
         $Message
         )
 
-if  (($TYPE) -eq  ("INFO")) { $Tag = "INFO"  ; $Color = "Green"}
-if  (($TYPE) -eq  ("WARNING")) { $Tag = "WARNING"  ; $Color = "Yellow"}
-if  (($TYPE) -eq  ("ERROR")) { $Tag = "ERROR"  ; $Color = "Red"}
+if  (($TYPE) -eq  ("INFO")) { $Tag = "INFO"  ; $Color = "Green"; $DrawColor = [System.Drawing.Color]::LimeGreen}
+if  (($TYPE) -eq  ("WARNING")) { $Tag = "WARNING"  ; $Color = "Yellow"; $DrawColor = [System.Drawing.Color]::Gold}
+if  (($TYPE) -eq  ("ERROR")) { $Tag = "ERROR"  ; $Color = "Red"; $DrawColor = [System.Drawing.Color]::OrangeRed}
+$line = "$(Get-Date -UFormat '%m/%d:%T') $Tag $Message"
 Write-Host  (Get-Date -UFormat "%m/%d:%T")$($Tag)$($Message) -ForegroundColor $Color  
-#echo "$Message"
+if ($Global:OutputBox -ne $null) {
+    $Global:OutputBox.SelectionStart = $Global:OutputBox.TextLength
+    $Global:OutputBox.SelectionColor = $DrawColor
+    $Global:OutputBox.AppendText("$line`r`n")
+    $Global:OutputBox.ScrollToCaret()
+    [System.Windows.Forms.Application]::DoEvents()
+}
 }
 
-$splashArt = @"
- "                                  .
-      .              .   .'.     \   /
-    \   /      .'. .' '.'   '  -=  o  =-
-  -=  o  =-  .'   '              / | \
-    / | \                          |
-      |        JAMBOREE            |
-      |                            |
-      |                      .=====|
-      |=====.                |.---.|
-      |.---.|                ||=o=||
-      ||=o=||                ||   ||
-      ||   ||                |[___]|
-      ||___||                |[:::]|
-      |[:::]|                '-----'
-      '-----'  
-
-"@
-
-function Draw-Splash{
+function Write-OutputBox {
     param([string]$Text)
-
-    # Use a random colour for each character
-    $Text.ToCharArray() | ForEach-Object{
-        switch -Regex ($_){
-            # Ignore new line characters
-            "`r"{
-                break
-            }
-            # Start a new line
-            "`n"{
-                Write-Host " ";break
-            }
-            # Use random colours for displaying this non-space character
-            "[^ ]"{
-                # Splat the colours to write-host
-                $arrColors = @('DarkRed','DarkYellow','Gray','DarkGray','Green','Cyan','Red','Magenta','Yellow','White')
-                $writeHostOptions = @{
-                    ForegroundColor = ($arrColors) | get-random
-                    NoNewLine = $true
-                }
-                Write-Host $_ @writeHostOptions
-                break
-            }
-            " "{Write-Host " " -NoNewline}
-
-        }
+    if ($Global:OutputBox -ne $null) {
+        $Global:OutputBox.SelectionStart = $Global:OutputBox.TextLength
+        $Global:OutputBox.SelectionColor = [System.Drawing.Color]::White
+        $Global:OutputBox.AppendText("$Text`r`n")
+        $Global:OutputBox.ScrollToCaret()
+        [System.Windows.Forms.Application]::DoEvents()
     }
 }
 
-# splash art
-Draw-Splash $splashArt
+function Start-ProcessLogged {
+    <#
+    .SYNOPSIS
+        Wrapper for Start-Process that captures stdout/stderr to the output box.
+        Only applies to -NoNewWindow processes. Pass-through for all other params.
+    #>
+    param(
+        [string]$FilePath,
+        [string]$WorkingDirectory,
+        [string]$ArgumentList,
+        [switch]$Wait,
+        [switch]$NoNewWindow,
+        [switch]$Verbose,
+        [string]$RedirectStandardOutput,
+        [string]$RedirectStandardError
+    )
 
+    # If not NoNewWindow or already redirecting output, just pass through normally
+    if (-not $NoNewWindow -or $RedirectStandardOutput -or $RedirectStandardError) {
+        $params = @{ FilePath = $FilePath }
+        if ($WorkingDirectory) { $params.WorkingDirectory = $WorkingDirectory }
+        if ($ArgumentList) { $params.ArgumentList = $ArgumentList }
+        if ($Wait) { $params.Wait = $true }
+        if ($NoNewWindow) { $params.NoNewWindow = $true }
+        if ($Verbose) { $params.Verbose = $true }
+        if ($RedirectStandardOutput) { $params.RedirectStandardOutput = $RedirectStandardOutput }
+        if ($RedirectStandardError) { $params.RedirectStandardError = $RedirectStandardError }
+        Start-Process @params
+        return
+    }
+
+    $stdoutFile = "$env:TEMP\jamb_stdout_$([guid]::NewGuid().ToString('N')).tmp"
+    $stderrFile = "$env:TEMP\jamb_stderr_$([guid]::NewGuid().ToString('N')).tmp"
+
+    try {
+        $params = @{
+            FilePath = $FilePath
+            NoNewWindow = $true
+            RedirectStandardOutput = $stdoutFile
+            RedirectStandardError = $stderrFile
+        }
+        if ($WorkingDirectory) { $params.WorkingDirectory = $WorkingDirectory }
+        if ($ArgumentList) { $params.ArgumentList = $ArgumentList }
+        if ($Verbose) { $params.Verbose = $true }
+
+        if ($Wait) {
+            $params.Wait = $true
+            Start-Process @params
+            # dump captured output after process finishes
+            if (Test-Path $stdoutFile) {
+                $out = Get-Content $stdoutFile -Raw -ErrorAction SilentlyContinue
+                if ($out) { Write-OutputBox $out.TrimEnd() }
+            }
+            if (Test-Path $stderrFile) {
+                $err = Get-Content $stderrFile -Raw -ErrorAction SilentlyContinue
+                if ($err) {
+                    if ($Global:OutputBox -ne $null) {
+                        $Global:OutputBox.SelectionStart = $Global:OutputBox.TextLength
+                        $Global:OutputBox.SelectionColor = [System.Drawing.Color]::Salmon
+                        $Global:OutputBox.AppendText("$($err.TrimEnd())`r`n")
+                        $Global:OutputBox.ScrollToCaret()
+                        [System.Windows.Forms.Application]::DoEvents()
+                    }
+                }
+            }
+        } else {
+            # fire-and-forget: start process, then tail output in background
+            $proc = Start-Process @params -PassThru
+            # read what we can after a short pause
+            Start-Sleep -Milliseconds 500
+            if (Test-Path $stdoutFile) {
+                $out = Get-Content $stdoutFile -Raw -ErrorAction SilentlyContinue
+                if ($out) { Write-OutputBox $out.TrimEnd() }
+            }
+            if (Test-Path $stderrFile) {
+                $err = Get-Content $stderrFile -Raw -ErrorAction SilentlyContinue
+                if ($err) {
+                    if ($Global:OutputBox -ne $null) {
+                        $Global:OutputBox.SelectionStart = $Global:OutputBox.TextLength
+                        $Global:OutputBox.SelectionColor = [System.Drawing.Color]::Salmon
+                        $Global:OutputBox.AppendText("$($err.TrimEnd())`r`n")
+                        $Global:OutputBox.ScrollToCaret()
+                        [System.Windows.Forms.Application]::DoEvents()
+                    }
+                }
+            }
+        }
+    } finally {
+        Remove-Item $stdoutFile -Force -ErrorAction SilentlyContinue
+        Remove-Item $stderrFile -Force -ErrorAction SilentlyContinue
+    }
+}
+ 
 #backup USERPROFILE for BurpSuite Open Dialog Fix
 $USERPROFILE_BACKUP="$env:USERPROFILE"
 
@@ -136,7 +222,7 @@ Write-Message  -Message  "Setting JAVA ENV Paths $VARCD" -Type "INFO"
 $env:JAVA_HOME = "$VARCD\jdk"
 
 Write-Message  -Message  "Resetting Path variables to not use local python,java,node,adb,git,java,postgres ..." -Type "WARNING"
-$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\PG\bin;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools\Lib\venv\scripts\;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\nodeRMS;$VARCD\node;$VARCD\w64devkit\bin"
+$env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\PG\bin;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools\Lib\venv\scripts\;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\nodeRMS;$VARCD\node;$VARCD\w64devkit\bin;C:\Program Files\PowerShell\7\"
 
 
 # python
@@ -150,13 +236,26 @@ $env:WSLBIN= "C:\Windows\System32\wsl.exe"
 Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 
 # Setup Form
-Add-Type -assembly System.Windows.Forms
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
 $main_form.Text = "$VerNum"
 
 $hShift = 0
 $vShift = 0
+
+# Output RichTextBox on the right side
+$Global:OutputBox = New-Object System.Windows.Forms.RichTextBox
+$Global:OutputBox.Location = New-Object System.Drawing.Point(510, 0)
+$Global:OutputBox.Size = New-Object System.Drawing.Size(820, 620)
+$Global:OutputBox.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
+$Global:OutputBox.ForeColor = [System.Drawing.Color]::White
+$Global:OutputBox.Font = New-Object System.Drawing.Font("Consolas", 9)
+$Global:OutputBox.ReadOnly = $true
+$Global:OutputBox.WordWrap = $true
+$Global:OutputBox.ScrollBars = 'ForcedVertical'
+$Global:OutputBox.Anchor = 'Top,Left,Right,Bottom'
+$main_form.Controls.Add($Global:OutputBox)
+
 
 ### MAIN ###
 
@@ -215,7 +314,7 @@ function Test-WindowsHypervisorPlatform {
     }
     catch {
         Write-Message -Message "Unable to check Windows Hypervisor Platform status" -Type "ERROR"
-        Write-Host $_.Exception.Message -ForegroundColor Red
+        Write-OutputBox $_.Exception.Message
     }
 }
 
@@ -261,7 +360,7 @@ Function CheckAdmin {
 ############# WSLEnableUpdate
 Function WSLEnableUpdate {
  
-Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --version"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
+Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList  " --version"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
 Start-Sleep -Seconds 1
 $wslInfo = Get-Content -Path "RedirectStandardOutput.txt" 
 if (($wslInfo) -match  (".*:.2.*")  -or ($wslInfo) -match  (".*W.S.L. .v.e.r.s.i.o.n.:. .2.*"))  {
@@ -283,7 +382,7 @@ if (($wslInfo) -match  (".*:.2.*")  -or ($wslInfo) -match  (".*W.S.L. .v.e.r.s.i
 Function WSLOracleLinux {
 WSLEnableUpdate
 
-Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
+Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
 Start-Sleep -Seconds 1
 $wslInfo = Get-Content -Path "RedirectStandardOutput.txt" 
 if (($wslInfo) -match  (".*OracleLinux_9_1.*")  -or ($wslInfo) -match  (".*O.r.a.c.l.e.L.i.n.u.x.*"))  {
@@ -292,26 +391,26 @@ if (($wslInfo) -match  (".*OracleLinux_9_1.*")  -or ($wslInfo) -match  (".*O.r.a
 } else {
 	Write-Message  -Message  "OracleLinux_9_1 NOT found ..." -Type "WARNING"
 	Write-Message  -Message  "Updating WSL. You may need to reboot for changes to take effect " -Type "INFO"
-	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --update "  -wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " --update "  -wait -NoNewWindow
 
 	Write-Message  -Message  "Listing WSL options --list --online " -Type "INFO"
-	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --list --online " -wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " --list --online " -wait -NoNewWindow
 
 	Write-Message  -Message  "Removing OracleLinux_9_1" -Type "INFO"
-	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --shutdown -d OracleLinux_9_1 " -wait -NoNewWindow
-	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --unregister OracleLinux_9_1 " -wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " --shutdown -d OracleLinux_9_1 " -wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " --unregister OracleLinux_9_1 " -wait -NoNewWindow
 	
 	Write-Message  -Message  "Waiting 10 seconds.." -Type "INFO"
 	Start-Sleep -Seconds 10
 
 	Write-Message  -Message  "Installing OracleLinux_9_1" -Type "INFO"
-	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --install -d OracleLinux_9_1 " -NoNewWindow
+	Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " --install -d OracleLinux_9_1 " -NoNewWindow
 
 	Write-Message  -Message  "Waiting 10 seconds.." -Type "INFO"
 	Start-Sleep -Seconds 10
 
 	Write-Message  -Message  "Updating OracleLinux_9_1 this may take some time..." -Type "INFO"
-	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d OracleLinux_9_1 -u root -e bash -c `"yum -y update`" " -wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " -d OracleLinux_9_1 -u root -e bash -c `"yum -y update`" " -wait -NoNewWindow
 
 	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d OracleLinux_9_1 -u root"   
 }
@@ -335,19 +434,19 @@ Function CheckVolatility3 {
 			
 			
 			Write-Message -Message "Installing Setuptools" -Type "INFO"
-			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " -m pip install setuptools " -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " -m pip install setuptools " -wait -NoNewWindow
 			Write-Message -Message "Installing pyinstaller " -Type "INFO"
-			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " -m pip install pyinstaller " -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " -m pip install pyinstaller " -wait -NoNewWindow
 			Write-Message -Message "Installing requirements.txt" -Type "INFO"
-			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " -m pip install -r requirements.txt " -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " -m pip install -r requirements.txt " -wait -NoNewWindow
             
 			
 			Write-Message -Message "Building Volatility" -Type "INFO"
-			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " setup.py build " -wait -NoNewWindow
-			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " setup.py install " -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " setup.py build " -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\volatility3-develop\" -ArgumentList " setup.py install " -wait -NoNewWindow
 						
 			Write-Message  -Message  "Running pyinstaller to create binary  " -Type "INFO"
-			Start-Process -FilePath "$VARCD\python\tools\Scripts\pyinstaller.exe" -WorkingDirectory "$VARCD\volatility3-develop\volatility3"  -ArgumentList "  --upx-dir `"$VARCD\upx-3.96-win64`" ..\vol.spec " -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\python\tools\Scripts\pyinstaller.exe" -WorkingDirectory "$VARCD\volatility3-develop\volatility3"  -ArgumentList "  --upx-dir `"$VARCD\upx-3.96-win64`" ..\vol.spec " -wait -NoNewWindow
 
 			Write-Message  -Message  "Downloading Volatility Symbols ~800MB" -Type "INFO"
 			downloadFile "https://downloads.volatilityfoundation.org/volatility3/symbols/windows.zip" "$VARCD\windows.zip"
@@ -372,7 +471,7 @@ Function CheckVolatility3 {
 Function WSLUbuntu {
 WSLEnableUpdate
 
-Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
+Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt"
 Start-Sleep -Seconds 1
 $wslInfo = (Get-Content -Path "RedirectStandardOutput.txt" | select -first 15)
 if (($wslInfo) -match  (".*Ubuntu.*")  -or ($wslInfo) -match  (".*U.b.u.n.t.u.*"))  {
@@ -381,20 +480,20 @@ if (($wslInfo) -match  (".*Ubuntu.*")  -or ($wslInfo) -match  (".*U.b.u.n.t.u.*"
 } else {
 	Write-Message  -Message  "Ubuntu NOT found ..." -Type "WARNING"
 	Write-Message  -Message  "Updating WSL -update " -Type "INFO"
-	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --update "  -wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " --update "  -wait -NoNewWindow
 
 	Write-Message  -Message  "Listing WSL options --list --online " -Type "INFO"
-	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --list --online " -wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " --list --online " -wait -NoNewWindow
 
 	Write-Message  -Message  "Removing Ubuntu" -Type "INFO"
-	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --shutdown -d Ubuntu " -wait -NoNewWindow
-	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --unregister Ubuntu " -wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " --shutdown -d Ubuntu " -wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " --unregister Ubuntu " -wait -NoNewWindow
 	
 	Write-Message  -Message  "Waiting 10 seconds.." -Type "INFO"
 	Start-Sleep -Seconds 10
 
 	Write-Message  -Message  "Installing Ubuntu" -Type "INFO"
-	Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --install -d Ubuntu " -NoNewWindow
+	Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " --install -d Ubuntu " -NoNewWindow
 
 	Write-Message  -Message  "Waiting 10 seconds.." -Type "INFO"
 	Start-Sleep -Seconds 10
@@ -415,7 +514,7 @@ Function CheckNode {
             [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\node.zip", "$VARCD")
 			Get-ChildItem "$VARCD\node-*"  | Rename-Item -NewName "node"
 			Write-Message  -Message  "Updating npm" -Type "INFO"
-			Start-Process -FilePath "$VARCD\node\npm.cmd" -WorkingDirectory "$VARCD\node" -ArgumentList " install -g npm " -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\node\npm.cmd" -WorkingDirectory "$VARCD\node" -ArgumentList " install -g npm " -wait -NoNewWindow
 			}
                 catch {
                     throw $_.Exception.Message
@@ -442,7 +541,7 @@ Write-Message  -Message  "Checking for node 22.9.0" -Type "WARNING"
             [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\node.zip", "$VARCD")
 			Get-ChildItem "$VARCD\node-*"  | Rename-Item -NewName "nodeRMS"
 			Write-Message  -Message  "Updating npm" -Type "INFO"
-			Start-Process -FilePath "$VARCD\nodeRMS\npm.cmd" -WorkingDirectory "$VARCD\nodeRMS" -ArgumentList " install -g npm " -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\nodeRMS\npm.cmd" -WorkingDirectory "$VARCD\nodeRMS" -ArgumentList " install -g npm " -wait -NoNewWindow
 			}
                 catch {
                     throw $_.Exception.Message
@@ -463,7 +562,7 @@ Function StartRMS {
 	
 	if (-not(Test-Path -Path "$VARCD\nodeRMS\rms.cmd" )) {
 	try {
-		Start-Process -FilePath "$VARCD\nodeRMS\npm.cmd" -WorkingDirectory "$VARCD\nodeRMS" -ArgumentList " install -g rms-runtime-mobile-security " -wait -NoNewWindow
+		Start-ProcessLogged -FilePath "$VARCD\nodeRMS\npm.cmd" -WorkingDirectory "$VARCD\nodeRMS" -ArgumentList " install -g rms-runtime-mobile-security " -wait -NoNewWindow
 		}
 			catch {
 				throw $_.Exception.Message
@@ -478,7 +577,7 @@ Write-Message  -Message  "Killing node " -Type "INFO"
 Stop-process -name node -Force -ErrorAction SilentlyContinue |Out-Null
 
 Write-Message  -Message  "Starting rms-runtime-mobile-security please wait....." -Type "INFO"
-Start-Process -FilePath "$VARCD\nodeRMS\rms.cmd"    -WorkingDirectory "$VARCD\nodeRMS" -NoNewWindow
+Start-ProcessLogged -FilePath "$VARCD\nodeRMS\rms.cmd"    -WorkingDirectory "$VARCD\nodeRMS" -NoNewWindow
 Start-Sleep -Seconds 5
 Start-Process "http://127.0.0.1:5491/"
 }
@@ -493,7 +592,7 @@ Function StartSillyTavern {
 	try {
 		Write-Message  -Message  "Running git clone https://github.com/SillyTavern/SillyTavern -b staging" -Type "INFO"
   		# -b staging broke TTS Autogen!
-		Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/SillyTavern/SillyTavern`" -b staging " -wait -NoNewWindow
+		Start-ProcessLogged -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/SillyTavern/SillyTavern`" -b staging " -wait -NoNewWindow
 		}
 			catch {
 				throw $_.Exception.Message
@@ -504,7 +603,7 @@ Function StartSillyTavern {
 	}
 	
 Write-Message  -Message  "Starting SillyTavern please wait....." -Type "INFO"
-Start-Process -FilePath "$VARCD\SillyTavern\Start.bat"    -WorkingDirectory "$VARCD\SillyTavern" -NoNewWindow
+Start-ProcessLogged -FilePath "$VARCD\SillyTavern\Start.bat"    -WorkingDirectory "$VARCD\SillyTavern" -NoNewWindow
 
 }
 
@@ -542,7 +641,7 @@ function downloadFile($url, $file) {
     $req.UserAgent = "Mozilla/5.0"
     $webRes = $req.GetResponse()
     $expectedLen = $webRes.ContentLength
-    if ($expectedLen -gt 0) { Write-Host "  Expected size   : $([math]::Round($expectedLen / 1MB)) MB" }
+    if ($expectedLen -gt 0) { Write-OutputBox "  Expected size   : $([math]::Round($expectedLen / 1MB)) MB" }
     $res = $webRes.GetResponseStream()
     $fs  = [System.IO.FileStream]::new($file, 'Create')
     $buf = [byte[]]::new(256KB)
@@ -554,16 +653,16 @@ function downloadFile($url, $file) {
         if ($expectedLen -gt 0) {
             $pct = [math]::Floor($totalRead * 100 / $expectedLen)
             if ($pct -ne $lastPct -and $pct % 10 -eq 0) {
-                Write-Host "  Downloaded      : $pct% ($([math]::Round($totalRead / 1MB)) MB)" -ForegroundColor DarkGray
+                Write-OutputBox "  Downloaded      : $pct% ($([math]::Round($totalRead / 1MB)) MB)"
                 $lastPct = $pct
             }
         }
     }
     $fs.Flush(); $fs.Close(); $res.Close(); $webRes.Close()
     $actualLen = (Get-Item $file).Length
-    Write-Host "  Actual size     : $([math]::Round($actualLen / 1MB)) MB"
+    Write-OutputBox "  Actual size     : $([math]::Round($actualLen / 1MB)) MB"
     if ($expectedLen -gt 0 -and $actualLen -ne $expectedLen) {
-        Write-Error "Download INCOMPLETE: expected $expectedLen bytes, got $actualLen bytes"
+        Write-OutputBox "  Download INCOMPLETE: expected $expectedLen bytes, got $actualLen bytes"
         Remove-Item $file -Force -ErrorAction SilentlyContinue
         throw "Download verification failed for $file"
     }
@@ -619,12 +718,12 @@ Function CheckFrida {
 			# for frida/AVD
 			Write-Message  -Message  "Installing objection and python-xz needed for AVD" -Type "INFO"
 			
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection " -wait -NoNewWindow
+            Start-ProcessLogged -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install objection " -wait -NoNewWindow
             # for Frida Android Binary
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait -NoNewWindow
+            Start-ProcessLogged -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait -NoNewWindow
 			Write-Message  -Message  "Installing frida-tools" -Type "INFO"
-			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install frida==17.5.1 " -wait -NoNewWindow
-			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install frida-tools " -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install frida==17.5.1 " -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install frida-tools " -wait -NoNewWindow
 	 }
 }				
 
@@ -639,7 +738,7 @@ Function CheckPython {
             Add-Type -AssemblyName System.IO.Compression
             [System.IO.Compression.ZipFile]::ExtractToDirectory("$VARCD\python.zip", "$VARCD\python")
 			Write-Message  -Message  "Updating pip" -Type "INFO"
-			Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow
 
 New-Item -ItemType Directory -Path "$VARCD\python\tools\Scripts" -ErrorAction SilentlyContinue |Out-Null
 # DO NOT INDENT THIS PART
@@ -698,7 +797,7 @@ Write-Message  -Message  "Installing Base APKS" -Type "INFO"
 
 (Get-ChildItem -Path "$VARCD\APKS").FullName |ForEach-Object {
 	Write-Message  -Message  "Installing $_" -Type "INFO"
-    Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " install $_ "  -NoNewWindow -Wait
+    Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " install $_ "  -NoNewWindow -Wait
 	
     }
 Write-Message  -Message  "Complete Installing Base APKS" -Type "INFO"
@@ -719,7 +818,7 @@ $env:ANDROID_SERIAL=$varadb
 
 Write-Message  -Message  "Converting $VARCD\BURP.der to $VARCD\BURP.pem" -Type "INFO"
 Remove-Item -Path "$VARCD\BURP.pem" -Force -ErrorAction SilentlyContinue |Out-Null
-Start-Process -FilePath "$env:SYSTEMROOT\System32\certutil.exe" -ArgumentList  " -encode `"$VARCD\BURP.der`"  `"$VARCD\BURP.pem`" "  -NoNewWindow -Wait
+Start-ProcessLogged -FilePath "$env:SYSTEMROOT\System32\certutil.exe" -ArgumentList  " -encode `"$VARCD\BURP.der`"  `"$VARCD\BURP.pem`" "  -NoNewWindow -Wait
 
 Write-Message  -Message  "Copying PEM to Androind format just in case its not standard burp suite cert Subject Hash" -Type "INFO"
 # Rename a PEM in Android format (openssl -subject_hash_old ) with just certutil and powershell
@@ -729,20 +828,20 @@ $CertSubjectHash = ($CertSubjectHash.Context.PostContext[7]).SubString(24,2)+($C
 Copy-Item -Path "$VARCD\BURP.pem" -Destination "$VARCD\$CertSubjectHash" -Force
 
 Write-Message  -Message "Pushing $VARCD\$CertSubjectHash to /sdcard " -Type "INFO"
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\$CertSubjectHash`"   /sdcard"  -NoNewWindow -Wait
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\$CertSubjectHash`"   /sdcard"  -NoNewWindow -Wait
 
 Write-Message  -Message "Pushing $VARCD\BURP.der to  /data/local/tmp/cert-der.crt " -Type "INFO"
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\BURP.der`"   /data/local/tmp/cert-der.crt"  -NoNewWindow -Wait
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\BURP.der`"   /data/local/tmp/cert-der.crt"  -NoNewWindow -Wait
 
 Write-Message  -Message "Pushing Copying /scard/$CertSubjectHash /data/misc/user/0/cacerts-added " -Type "INFO"
 
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c mkdir /data/misc/user/0/cacerts-added`" "  -NoNewWindow -Wait
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c mkdir /data/misc/user/0/cacerts-added`" "  -NoNewWindow -Wait
 
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp /sdcard/$CertSubjectHash /data/misc/user/0/cacerts-added`" " -NoNewWindow -Wait
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp /sdcard/$CertSubjectHash /data/misc/user/0/cacerts-added`" " -NoNewWindow -Wait
 
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chown root:root /data/misc/user/0/cacerts-added/$CertSubjectHash"  -NoNewWindow -Wait
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chmod 644 /data/misc/user/0/cacerts-added/$CertSubjectHash"  -NoNewWindow -Wait
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c ls -laht /data/misc/user/0/cacerts-added/$CertSubjectHash"  -NoNewWindow -Wait
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chown root:root /data/misc/user/0/cacerts-added/$CertSubjectHash"  -NoNewWindow -Wait
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chmod 644 /data/misc/user/0/cacerts-added/$CertSubjectHash"  -NoNewWindow -Wait
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c ls -laht /data/misc/user/0/cacerts-added/$CertSubjectHash"  -NoNewWindow -Wait
 
 Write-Message  -Message  "Reboot for changes to take effect!" -Type "INFO"
 }
@@ -770,9 +869,9 @@ $varadb=CheckADB
 $env:ANDROID_SERIAL=$varadb
 
 Write-Message  -Message  "Pushing $VARCD\AlwaysTrustUserCerts.zip" -Type "INFO"
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\trustusercerts`"   /sdcard"  -NoNewWindow -Wait
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp -R /sdcard/trustusercerts /data/adb/modules`" " -NoNewWindow -Wait
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c find /data/adb/modules`" "  -NoNewWindow -Wait
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\trustusercerts`"   /sdcard"  -NoNewWindow -Wait
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp -R /sdcard/trustusercerts /data/adb/modules`" " -NoNewWindow -Wait
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c find /data/adb/modules`" "  -NoNewWindow -Wait
 
 }
 Function StartFrida {
@@ -796,7 +895,7 @@ with xz.open('frida-server-android_LATEST.xz') as f:
 '@
 # don't mess with spaces for these lines for python ...
 
-            Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\frida-server-extract.py`" " -NoNewWindow 
+            Start-ProcessLogged -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\frida-server-extract.py`" " -NoNewWindow 
             $PythonXZ | Out-File -FilePath frida-server-extract.py
             # change endoding from Windows-125R2 to UTF-8
             Set-Content -Path "$VARCD\frida-server-extract.py" -Value $PythonXZ -Encoding UTF8 -PassThru -Force
@@ -814,13 +913,13 @@ $varadb=CheckADB
 $env:ANDROID_SERIAL=$varadb
 
 Write-Message  -Message  "Pushing $VARCD\frida-server" -Type "INFO"
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c killall frida-server;sleep 1`" "  -NoNewWindow -Wait -ErrorAction SilentlyContinue |Out-Null
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\frida-server`"   /sdcard"  -NoNewWindow -Wait
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp -R /sdcard/frida-server /data/local/tmp`" " -NoNewWindow -Wait
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chmod 777 /data/local/tmp/frida-server`" "  -NoNewWindow -Wait
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c killall frida-server;sleep 1`" "  -NoNewWindow -Wait -ErrorAction SilentlyContinue |Out-Null
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " push `"$VARCD\frida-server`"   /sdcard"  -NoNewWindow -Wait
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c cp -R /sdcard/frida-server /data/local/tmp`" " -NoNewWindow -Wait
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chmod 777 /data/local/tmp/frida-server`" "  -NoNewWindow -Wait
 Write-Message  -Message  "Starting /data/local/tmp/frida-server" -Type "INFO"
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c /data/local/tmp/frida-server --version`" "  -NoNewWindow 
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c /data/local/tmp/frida-server & `" "  -NoNewWindow 
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c /data/local/tmp/frida-server --version`" "  -NoNewWindow 
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c /data/local/tmp/frida-server & `" "  -NoNewWindow 
 }
 
 Function StartJAMBOREE_SSL_N_ANTIROOT {
@@ -828,7 +927,7 @@ CheckFrida
 StartFrida
 
 Write-Message  -Message  "Running Frida-ps select package to run JAMBOREE_SSL_N_ANTIROOT.JS:" -Type "INFO"
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c pm list packages  `" "  -NoNewWindow -RedirectStandardOutput "$VARCD\RedirectStandardOutput.txt"
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c pm list packages  `" "  -NoNewWindow -RedirectStandardOutput "$VARCD\RedirectStandardOutput.txt"
 
 Start-Sleep -Seconds 2
 $PackageName = (Get-Content -Path "$VARCD\RedirectStandardOutput.txt") -replace 'package:',''    | Out-GridView -Title "Select Package to Run Objection" -OutputMode Single
@@ -837,7 +936,7 @@ Write-Message  -Message  "Downloading Frida Root/SSL Depinning JAMBOREE_SSL_N_AN
 downloadFile "https://raw.githubusercontent.com/freeload101/SCRIPTS/master/JS/JAMBOREE_SSL_N_ANTIROOT.JS" "$VARCD\JAMBOREE_SSL_N_ANTIROOT.JS"
 
 Write-Message  -Message  "Starting Frida with JAMBOREE_SSL_N_ANTIROOT.JS" -Type "INFO"
-Start-Process -FilePath "$VARCD\python\tools\Scripts\frida.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " -l `"$VARCD\JAMBOREE_SSL_N_ANTIROOT.JS`" -f $PackageName -U " -NoNewWindow
+Start-ProcessLogged -FilePath "$VARCD\python\tools\Scripts\frida.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " -l `"$VARCD\JAMBOREE_SSL_N_ANTIROOT.JS`" -f $PackageName -U " -NoNewWindow
 
 start-sleep -Seconds 5
 
@@ -848,12 +947,12 @@ CheckPython
 StartFrida
 
 Write-Message  -Message  "Running Frida-ps select package to run Objection on:" -Type "INFO"
-Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c pm list packages  `" "  -NoNewWindow -RedirectStandardOutput "$VARCD\RedirectStandardOutput.txt"
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c pm list packages  `" "  -NoNewWindow -RedirectStandardOutput "$VARCD\RedirectStandardOutput.txt"
 Start-Sleep -Seconds 2
 $PackageName = (Get-Content -Path "$VARCD\RedirectStandardOutput.txt") -replace 'package:',''    | Out-GridView -Title "Select Package to Run Objection" -OutputMode Single
 
 Write-Message  -Message  "Starting Objection" -Type "INFO"
-Start-Process -FilePath "$VARCD\python\tools\Scripts\objection.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " --gadget $PackageName explore " -NoNewWindow
+Start-ProcessLogged -FilePath "$VARCD\python\tools\Scripts\objection.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " --gadget $PackageName explore " -NoNewWindow
 
 #Send keys needd for objection or whatever...
 #Add-Type -AssemblyName System.Windows.Forms
@@ -888,13 +987,13 @@ Function AVDDownload {
 			Write-Message  -Message  "Running sdkmanager/Installing" -Type "INFO"
 			
 			# now we are using latest cmdline-tools ...!?
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platform-tools" -Verbose -Wait -NoNewWindow
-			#Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "extras;intel;Hardware_Accelerated_Execution_Manager" -Verbose -Wait -NoNewWindow
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platforms;android-30" -Verbose -Wait -NoNewWindow
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "emulator" -Verbose -Wait -NoNewWindow
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "system-images;android-30;google_apis_playstore;x86_64" -Verbose -Wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platform-tools" -Verbose -Wait -NoNewWindow
+			#Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "extras;intel;Hardware_Accelerated_Execution_Manager" -Verbose -Wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platforms;android-30" -Verbose -Wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "emulator" -Verbose -Wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "system-images;android-30;google_apis_playstore;x86_64" -Verbose -Wait -NoNewWindow
 			Write-Message  -Message  "AVD Install Complete Creating AVD Device" -Type "INFO"
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-30;google_apis_playstore;x86_64`"  -d `"pixel_2`" --force" -Wait -Verbose -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-30;google_apis_playstore;x86_64`"  -d `"pixel_2`" --force" -Wait -Verbose -NoNewWindow
 			Start-Sleep -Seconds 2
             }
         else {
@@ -931,7 +1030,7 @@ Function HAXMInstall {
 	Write-Message  -Message  "Extracting haxm-windows.zip" -Type "INFO"
     Expand-Archive -Path  "$VARCD\haxm-windows.zip" -DestinationPath "$VARCD\haxm-windows" -Force
     	Write-Message  -Message  "Running $VARCD\haxm-windows\silent_install.bat" -Type "INFO"
-	Start-Process -FilePath "$VARCD\haxm-windows\silent_install.bat" -WorkingDirectory "$VARCD\haxm-windows" -Wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$VARCD\haxm-windows\silent_install.bat" -WorkingDirectory "$VARCD\haxm-windows" -Wait -NoNewWindow
 	
 }
 
@@ -944,8 +1043,8 @@ Function AVDStart {
 			Write-Message  -Message  "Starting AVD emulator" -Type "INFO"
 			Start-Sleep -Seconds 2
 			Write-Message  -Message  "Do not run emulator with  -http-proxy 127.0.0.1:8080 it is not stable" -Type "INFO"
-			# DO NOT USE THIS IT IS BUGGY ... Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
-            Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system " -NoNewWindow
+			# DO NOT USE THIS IT IS BUGGY ... Start-ProcessLogged -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
+            Start-ProcessLogged -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system " -NoNewWindow
 				Start-Sleep -Seconds 10
 				Write-Message  -Message  "Enbleing keyboard in config.ini" -Type "INFO"
 				(Get-Content "$VARCD\avd\pixel_2.avd\config.ini") `
@@ -958,7 +1057,7 @@ Function AVDStart {
             Write-Message  -Message  "AVDStart $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup" -Type "WARNING"
 			Write-Message  -Message  "Starting AVD emulator" -Type "INFO"
 			Start-Sleep -Seconds 2
-			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system " -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system " -NoNewWindow
 			
             }
 }
@@ -974,7 +1073,7 @@ Function AVDPoweroff {
 	
 	if ($pause -eq '1') {
 		Write-Message  -Message  "Powering Off AVD" -Type "INFO"
-		Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell -t  `"reboot -p`"" -Wait -NoNewWindow
+		Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell -t  `"reboot -p`"" -Wait -NoNewWindow
 		KillADB
 	}
 	Elseif ($pause = '2') {
@@ -983,21 +1082,29 @@ Function AVDPoweroff {
 	}
 }
 
-############# CMDPrompt
 Function CMDPrompt {
-	ADBCheckBin
-	CheckJava
-	CheckGit
-	CheckPython
-	CheckNode
+    ADBCheckBin
+    CheckJava
+    CheckGit
+    CheckPython
+    CheckNode
     w64devkit
-	Start-Process -FilePath "cmd" -WorkingDirectory "$VARCD"
+
+    # Check if PowerShell Core (pwsh) is installed
+    if (Get-Command "pwsh" -ErrorAction SilentlyContinue) {
+        $ShellPath = "pwsh"
+    } else {
+        $ShellPath = "cmd"
+    }
+
+    # Start the determined shell
+    Start-Process -FilePath $ShellPath -WorkingDirectory "$VARCD"
 
     if ((Get-Command adb -ErrorAction SilentlyContinue)) {		
-		$varadb=CheckADB
-		$env:ANDROID_SERIAL=$varadb
-		Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell  " -ErrorAction SilentlyContinue |Out-Null
-	}
+        $varadb = CheckADB
+        $env:ANDROID_SERIAL = $varadb
+        Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList " shell " -ErrorAction SilentlyContinue | Out-Null
+    }
 }
 
 ############# AUTOMATIC1111
@@ -1020,13 +1127,13 @@ Function AUTOMATIC1111 {
 	$env:PYTHONPATH="$VARCD\pythonA111\tools\Lib\site-packages"
 	
 	Write-Message  -Message  "Running pip install --upgrade pip" -Type "INFO"
-	Start-Process -FilePath "$VARCD\pythonA111\tools\python.exe" -WorkingDirectory "$VARCD\pythonA111\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$VARCD\pythonA111\tools\python.exe" -WorkingDirectory "$VARCD\pythonA111\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow
            
 	   
 	Write-Message  -Message  "Cloning stable-diffusion-webui" -Type "INFO"
-	Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/AUTOMATIC1111/stable-diffusion-webui.git`" " -wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/AUTOMATIC1111/stable-diffusion-webui.git`" " -wait -NoNewWindow
 	
-	Start-Process -FilePath "$VARCD\stable-diffusion-webui\webui-user.bat" -WorkingDirectory "$VARCD\stable-diffusion-webui"  -ArgumentList " "  -wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$VARCD\stable-diffusion-webui\webui-user.bat" -WorkingDirectory "$VARCD\stable-diffusion-webui"  -ArgumentList " "  -wait -NoNewWindow
 	Write-Message  -Message  "Suggest creating hard links to your models with mklink /d DEST SORURCE" -Type "INFO"
 
  	Start-Process -FilePath "C:\Program Files\Chromium\Application\chrome.exe" -WorkingDirectory "$VARCD\" -ArgumentList " --disable-history-quick-provider --guest `"http://127.0.0.1:7860/`"" 
@@ -1052,13 +1159,13 @@ Function vladmandic_automatic {
 	$env:PYTHONPATH="$VARCD\pythonA111\tools\Lib\site-packages"
 	
 	Write-Message  -Message  "Running pip install --upgrade pip" -Type "INFO"
-	Start-Process -FilePath "$VARCD\pythonA111\tools\python.exe" -WorkingDirectory "$VARCD\pythonA111\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$VARCD\pythonA111\tools\python.exe" -WorkingDirectory "$VARCD\pythonA111\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow
            
 	   
 	Write-Message  -Message  "Cloning vladmandic_automatic" -Type "INFO"
-	Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/vladmandic/automatic.git`" " -wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/vladmandic/automatic.git`" " -wait -NoNewWindow
 	
-	Start-Process -FilePath "$VARCD\automatic\webui.bat" -WorkingDirectory "$VARCD\automatic"  -ArgumentList "  "  -wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$VARCD\automatic\webui.bat" -WorkingDirectory "$VARCD\automatic"  -ArgumentList "  "  -wait -NoNewWindow
 	Write-Message  -Message  "Suggest creating hard links to your models with mklink /d " -Type "INFO"
 
  	Start-Process -FilePath "C:\Program Files\Chromium\Application\chrome.exe" -WorkingDirectory "$VARCD\" -ArgumentList " --disable-history-quick-provider --guest `"http://127.0.0.1:7860/`"" 
@@ -1094,7 +1201,7 @@ Function AutoGPTEnv {
         try {
 
 	Write-Message  -Message  "Running pip install -r requirements.txt" -Type "INFO"
-	Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -ArgumentList " -m pip install -r requirements.txt  " -wait -NoNewWindow
+	Start-ProcessLogged -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\Auto-GPT"  -ArgumentList " -m pip install -r requirements.txt  " -wait -NoNewWindow
 
 	Write-Message  -Message  "Updating AutoGPT .env config for YOLO and Gpt-3 because I'm cheap" -Type "INFO"
 	$OPENAI_API_KEY = Read-Host 'Enter your OPENAI_API_KEY see: http://www.google.com/cse/ '
@@ -1149,7 +1256,7 @@ if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
 
 	cd "$VARCD\rootAVD-master"
 	Write-Message  -Message  "Running installing magisk via rootAVD to ramdisk.img" -Type "INFO"
-	Start-Process -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "system-images\android-30\google_apis_playstore\x86_64\ramdisk.img FAKEBOOTIMG " -WorkingDirectory "$VARCD\rootAVD-master\"  -NoNewWindow
+	Start-ProcessLogged -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "system-images\android-30\google_apis_playstore\x86_64\ramdisk.img FAKEBOOTIMG " -WorkingDirectory "$VARCD\rootAVD-master\"  -NoNewWindow
 
     Write-Message  -Message  "rootAVD Finished if the emulator did not close/poweroff try again" -Type "INFO"
 }
@@ -1162,7 +1269,7 @@ Function AVDWipeData {
 
 	if ($pause -eq '1') {
 		Write-Message  -Message  "Wiping data you will need to rerun Magisk and push cert" -Type "INFO"
-		Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -wipe-data" -NoNewWindow
+		Start-ProcessLogged -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -wipe-data" -NoNewWindow
 	}
 	Elseif ($pause = '2') {
 		Write-Message  -Message  "Not wiping data..." -Type "INFO"
@@ -1437,7 +1544,7 @@ $BurpConfigProxy |set-Content "$env:USERPROFILE\AppData\Roaming\BurpSuite\BurpCo
 ############# PullCert
 Function PullCert {
     Invoke-WebRequest -Uri "http://burp/cert" -Proxy 'http://localhost:8080'  -Out "$VARCD\BURP.der" -Verbose
-    Start-Process -FilePath "$env:SYSTEMROOT\System32\certutil.exe" -ArgumentList  " -user -addstore `"Root`"    `"$VARCD\BURP.der`"  "  -NoNewWindow -Wait
+    Start-ProcessLogged -FilePath "$env:SYSTEMROOT\System32\certutil.exe" -ArgumentList  " -user -addstore `"Root`"    `"$VARCD\BURP.der`"  "  -NoNewWindow -Wait
 }
 
 ############# ZAPCheck
@@ -1631,7 +1738,7 @@ Function CheckGit {
             downloadFile "$downloadUri" "$VARCD\git7zsfx.exe"
             # https://superuser.com/questions/1104567/how-can-i-find-out-the-command-line-options-for-git-bash-exe
             # file:///C:/Users/Administrator/SDUI/git/mingw64/share/doc/git-doc/git-bash.html#GIT-WRAPPER
-            Start-Process -FilePath "$VARCD\git7zsfx.exe" -WorkingDirectory "$VARCD\" -ArgumentList " -o`"$VARCD\PortableGit`" -y " -wait -NoNewWindow
+            Start-ProcessLogged -FilePath "$VARCD\git7zsfx.exe" -WorkingDirectory "$VARCD\" -ArgumentList " -o`"$VARCD\PortableGit`" -y " -wait -NoNewWindow
 
           
             }
@@ -1657,7 +1764,7 @@ Goals: ['tell me the weather for atlanta georgia using google.com website and no
 #>
 
 Write-Message  -Message  "Cloning https://github.com/Torantulino/Auto-GPT.git" -Type "INFO"
-Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/Significant-Gravitas/Auto-GPT.git`" " -wait -NoNewWindow
+Start-ProcessLogged -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD\" -ArgumentList " clone `"https://github.com/Significant-Gravitas/Auto-GPT.git`" " -wait -NoNewWindow
 $env:SystemRoot
 AutoGPTEnv
 
@@ -1681,8 +1788,8 @@ Function CheckPyCharm {
 			$downloadUri = (Invoke-RestMethod -Method GET -Uri "https://data.services.jetbrains.com/products?code=PCP%2CPCC&release.type=release").releases.downloads.windows.link -match 'pycharm-community'| select -first 1
             downloadFile "$downloadUri" "$VARCD\pycharm-community.exe"
 			Write-Message  -Message  "Extracting PyCharm" -Type "INFO"
-			Start-Process -FilePath "$VARCD\7zip\7z.exe" -ArgumentList "x `"$VARCD\pycharm-community.exe`" -o`"$VARCD\pycharm-community`"" -NoNewWindow -Wait
-			Start-Process -FilePath "$VARCD\pycharm-community\bin\pycharm64.exe" -WorkingDirectory "$VARCD\pycharm-community"   -NoNewWindow 
+			Start-ProcessLogged -FilePath "$VARCD\7zip\7z.exe" -ArgumentList "x `"$VARCD\pycharm-community.exe`" -o`"$VARCD\pycharm-community`"" -NoNewWindow -Wait
+			Start-ProcessLogged -FilePath "$VARCD\pycharm-community\bin\pycharm64.exe" -WorkingDirectory "$VARCD\pycharm-community"   -NoNewWindow 
             }
                 catch {
                     throw $_.Exception.Message
@@ -1690,7 +1797,7 @@ Function CheckPyCharm {
             }
         else {
             Write-Message  -Message  "$VARCD\pycharm-community already exists starting PyCharm" -Type "WARNING"
-			Start-Process -FilePath "$VARCD\pycharm-community\bin\pycharm64.exe" -WorkingDirectory "$VARCD\pycharm-community"   -NoNewWindow 
+			Start-ProcessLogged -FilePath "$VARCD\pycharm-community\bin\pycharm64.exe" -WorkingDirectory "$VARCD\pycharm-community"   -NoNewWindow 
 			}
 }
 
@@ -1702,7 +1809,7 @@ Function Check7zip {
 			$downloadUri = (Invoke-RestMethod -Method GET -Uri "https://www.7-zip.org/download.html")    -split '\n' -match '.*exe.*' | ForEach-Object {$_ -ireplace '.* href="','https://www.7-zip.org/' -ireplace  '".*',''}| select -first 1
             downloadFile "$downloadUri" "$VARCD\7zip.exe"
 			$Env:__COMPAT_LAYER='RunAsInvoker'
-			Start-Process -FilePath "$VARCD\7zip.exe" -ArgumentList "/S /D=$VARCD\7zip" -NoNewWindow -Wait
+			Start-ProcessLogged -FilePath "$VARCD\7zip.exe" -ArgumentList "/S /D=$VARCD\7zip" -NoNewWindow -Wait
 			}
                 catch {
                     throw $_.Exception.Message
@@ -1760,15 +1867,15 @@ Write-Message  -Message  "Checking for Arduino" -Type "INFO"
 
             # add Digistump board to Arduino
             Write-Message  -Message  "Adding Digistump board to Arduino IDE" -Type "INFO"
-            Start-Process -FilePath "$VARCD\Arduino\resources\app\lib\backend\resources\arduino-cli.exe" -WorkingDirectory "$VARCD\Arduino\resources\app\lib\backend\resources\" -ArgumentList " config init " -wait -NoNewWindow
-            Start-Process -FilePath "$VARCD\Arduino\resources\app\lib\backend\resources\arduino-cli.exe" -WorkingDirectory "$VARCD\Arduino\resources\app\lib\backend\resources\" -ArgumentList " config init " -wait -NoNewWindow
-            Start-Process -FilePath "$VARCD\Arduino\resources\app\lib\backend\resources\arduino-cli.exe" -WorkingDirectory "$VARCD\Arduino\resources\app\lib\backend\resources\" -ArgumentList " core update-index " -wait -NoNewWindow
-            Start-Process -FilePath "$VARCD\Arduino\resources\app\lib\backend\resources\arduino-cli.exe" -WorkingDirectory "$VARCD\Arduino\resources\app\lib\backend\resources\" -ArgumentList " core update-index --additional-urls `"https://raw.githubusercontent.com/digistump/arduino-boards-index/master/package_digistump_index.json`" " -wait -NoNewWindow
-            Start-Process -FilePath "$VARCD\Arduino\resources\app\lib\backend\resources\arduino-cli.exe" -WorkingDirectory "$VARCD\Arduino\resources\app\lib\backend\resources\" -ArgumentList " core install digistump:avr --additional-urls `"https://raw.githubusercontent.com/digistump/arduino-boards-index/master/package_digistump_index.json`" " -wait -NoNewWindow
+            Start-ProcessLogged -FilePath "$VARCD\Arduino\resources\app\lib\backend\resources\arduino-cli.exe" -WorkingDirectory "$VARCD\Arduino\resources\app\lib\backend\resources\" -ArgumentList " config init " -wait -NoNewWindow
+            Start-ProcessLogged -FilePath "$VARCD\Arduino\resources\app\lib\backend\resources\arduino-cli.exe" -WorkingDirectory "$VARCD\Arduino\resources\app\lib\backend\resources\" -ArgumentList " config init " -wait -NoNewWindow
+            Start-ProcessLogged -FilePath "$VARCD\Arduino\resources\app\lib\backend\resources\arduino-cli.exe" -WorkingDirectory "$VARCD\Arduino\resources\app\lib\backend\resources\" -ArgumentList " core update-index " -wait -NoNewWindow
+            Start-ProcessLogged -FilePath "$VARCD\Arduino\resources\app\lib\backend\resources\arduino-cli.exe" -WorkingDirectory "$VARCD\Arduino\resources\app\lib\backend\resources\" -ArgumentList " core update-index --additional-urls `"https://raw.githubusercontent.com/digistump/arduino-boards-index/master/package_digistump_index.json`" " -wait -NoNewWindow
+            Start-ProcessLogged -FilePath "$VARCD\Arduino\resources\app\lib\backend\resources\arduino-cli.exe" -WorkingDirectory "$VARCD\Arduino\resources\app\lib\backend\resources\" -ArgumentList " core install digistump:avr --additional-urls `"https://raw.githubusercontent.com/digistump/arduino-boards-index/master/package_digistump_index.json`" " -wait -NoNewWindow
             
             # add   digiduck for duck to ino
             Write-Message  -Message  "Downloading digiduck" -Type "INFO"
-            Start-Process -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD" -ArgumentList " clone `"https://github.com/molatho/digiduck.git`" " -wait -NoNewWindow
+            Start-ProcessLogged -FilePath "$VARCD\PortableGit\cmd\git.exe" -WorkingDirectory "$VARCD" -ArgumentList " clone `"https://github.com/molatho/digiduck.git`" " -wait -NoNewWindow
 
             # get old payloads 
             $downloadUri = "https://github.com/hak5/usbrubberducky-payloads/archive/1d3e9be7ba3f80cdb008885fac49be2ba926649d.zip"
@@ -1799,11 +1906,11 @@ Function PushDuckyLoad {
 CheckGit
 CheckPython
 Write-Message  -Message  "Opening digiduck\example.duck" -Type "INFO"
-Start-Process "notepad" -WorkingDirectory "$VARCD" -ArgumentList "`"$VARCD\digiduck\example.duck`" " -wait -NoNewWindow
+Start-ProcessLogged "notepad" -WorkingDirectory "$VARCD" -ArgumentList "`"$VARCD\digiduck\example.duck`" " -wait -NoNewWindow
 
 Write-Message  -Message  "Encoding digiduck.py ..\duck2spark\example.duck  -ofile ..\duck2spark\example.ino " -Type "INFO"
 Remove-Item -Path "$VARCD\digiduck\example.ino" -Force -ErrorAction SilentlyContinue |Out-Null
-Start-Process -FilePath "python" -WorkingDirectory "$VARCD\digiduck\"  -ArgumentList  " `"$VARCD\digiduck\digiduck.py`"  `"$VARCD\digiduck\example.duck`"  -ofile `"$VARCD\digiduck\example.ino`"  "  -NoNewWindow -Wait  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+Start-ProcessLogged -FilePath "python" -WorkingDirectory "$VARCD\digiduck\"  -ArgumentList  " `"$VARCD\digiduck\digiduck.py`"  `"$VARCD\digiduck\example.duck`"  -ofile `"$VARCD\digiduck\example.ino`"  "  -NoNewWindow -Wait  -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
 }
 
 function Get-ScriptPathFromCallStack {
@@ -1828,7 +1935,7 @@ Function UpdateJAMBO {
 $JAMBOPATH = Get-ScriptPathFromCallStack
 Write-Message  -Message  "Downloading latest JAMBOREE to $JAMBOPATH" -Type "INFO"
 Invoke-WebRequest -Method GET -Uri 'https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/raw/main/JAMBOREE.ps1' -OutFile "$JAMBOPATH"
-Write-Host "Restarting"
+Write-Message -Message "Restarting" -Type "INFO"
 Start-Sleep -Seconds 1
 Set-Variable -Name ErrorActionPreference -Value SilentlyContinue
 
@@ -1848,13 +1955,13 @@ Function CheckPostgres {
 			Write-Message  -Message  "setting __COMPAT_LAYER=RUNASINVOKER " -Type "INFO"
 			$env:__COMPAT_LAYER = "RUNASINVOKER"
 			Write-Message  -Message  "Extracting This takes a long time .. like 400 megs ..." -Type "INFO"
-			Start-Process -FilePath "$VARCD\postgresql.exe" -WorkingDirectory "$VARCD\PG" -ArgumentList " --extract-only 1 --mode unattended --prefix `"$VARCD\PG`" " -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\postgresql.exe" -WorkingDirectory "$VARCD\PG" -ArgumentList " --extract-only 1 --mode unattended --prefix `"$VARCD\PG`" " -wait -NoNewWindow
 			
 			Write-Message  -Message  "Wiping folder `"$VARCD\share\locale`" " -Type "INFO"
 			Remove-Item -Path "$VARCD\PG\share\locale" -Force -ErrorAction SilentlyContinue  -Confirm:$false -Recurse |Out-Null
 			Write-Message  -Message  "Init database... " -Type "INFO"
 			
-			Start-Process -FilePath "$VARCD\PG\bin\initdb.exe" -WorkingDirectory "$VARCD\PG" -ArgumentList " -U `"$env:PGUSER`" -A trust -E utf8 --locale=C "   -NoNewWindow -Wait
+			Start-ProcessLogged -FilePath "$VARCD\PG\bin\initdb.exe" -WorkingDirectory "$VARCD\PG" -ArgumentList " -U `"$env:PGUSER`" -A trust -E utf8 --locale=C "   -NoNewWindow -Wait
 			Write-Message  -Message  "Starting pg_ctl.exe " -Type "INFO"
 			Start-Process -FilePath "$VARCD\PG\bin\pg_ctl.exe" -WorkingDirectory "$VARCD\PG" -ArgumentList " -D `"$env:PGDATA`" -l `"$env:PGLOG`" -w start  " 
 			Start-Sleep -Seconds 10			
@@ -1896,7 +2003,7 @@ if (-not(Test-Path -Path "$VARCD\ytdlp" )) {
 Write-Message  -Message  "Opening $VARCD\ytdlp\LIST.txt" -Type "INFO"
 New-Item -Path "$VARCD\ytdlp\LIST.txt" -ItemType "file"  -ErrorAction SilentlyContinue -Force 
 start-sleep -Seconds 1
-Start-Process "notepad" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\ytdlp\LIST.txt`" " -wait -NoNewWindow
+Start-ProcessLogged "notepad" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\ytdlp\LIST.txt`" " -wait -NoNewWindow
 
     Get-Content "$VARCD\ytdlp\LIST.txt" | ForEach-Object { 
     Write-Message  -Message  "Downloading $_" -Type "INFO"
@@ -1904,7 +2011,7 @@ Start-Process "notepad" -WorkingDirectory "$VARCD" -ArgumentList " `"$VARCD\ytdl
    $GetDate = Get-Date -Format yyyyMMddTHHmmss 
     Write-Message  -Message  " --ffmpeg-location `"$VARCD\ytdlp\ffmpeg-master-latest-win64-gpl-shared\bin`" -o `"$GetDate %(upload_date)s - %(title)s.%(ext)s`"  `"$_`"     " -Type "INFO"
     
-    Start-Process "$VARCD\ytdlp\yt-dlp.exe" -WorkingDirectory "$VARCD\ytdlp" -ArgumentList " --ffmpeg-location `"$VARCD\ytdlp\ffmpeg-master-latest-win64-gpl-shared\bin`" -o `"$GetDate %(upload_date)s - %(title)s.%(ext)s`"  `"$_`"     " -wait -NoNewWindow
+    Start-ProcessLogged "$VARCD\ytdlp\yt-dlp.exe" -WorkingDirectory "$VARCD\ytdlp" -ArgumentList " --ffmpeg-location `"$VARCD\ytdlp\ffmpeg-master-latest-win64-gpl-shared\bin`" -o `"$GetDate %(upload_date)s - %(title)s.%(ext)s`"  `"$_`"     " -wait -NoNewWindow
   
     
     
@@ -1936,7 +2043,7 @@ $Global:distroSelectPath = $distroSelect -replace '.*,','' -replace '\\\\\?\\','
  
 Write-Message -Message  "Global:distroSelectPath: $Global:distroSelectPath" -Type "INFO"
 Write-Message -Message  "Shutting down wsl" -Type "INFO"
-Start-Process -FilePath "wsl" -ArgumentList "  --shutdown " -wait -NoNewWindow
+Start-ProcessLogged -FilePath "wsl" -ArgumentList "  --shutdown " -wait -NoNewWindow
 Start-Sleep -Seconds 10
 
 Write-Message  -Message "Optimize-VHD $Global:distroSelectPath *.vhd* " -Type "INFO" 
@@ -1953,7 +2060,7 @@ WSLEnableUpdate
     $env:WSL_UTF8 = 1
     $wslImage = "Ubuntu-22.04"
  
-    Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt" -Wait
+    Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt" -Wait
     Start-Sleep -Seconds 1
     
     $wslInfo = Get-Content -Path "RedirectStandardOutput.txt"
@@ -1987,7 +2094,7 @@ Start-Sleep 10
  
     $env:WSL_UTF8 = 1
     $wslImage = "Ubuntu-22.04"
-    Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt" -Wait
+    Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt" -Wait
     Start-Sleep -Seconds 1
     $wslInfo = Get-Content -Path "RedirectStandardOutput.txt"
 		# check for existing SOCFortress image
@@ -1998,21 +2105,21 @@ Start-Sleep 10
 		CheckImage
         # clone base image
         Write-Message "Cloning $wslImage to $wslImage.tar" -Type "INFO"
-        Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar.gz`" " -NoNewWindow -Wait
+        Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar.gz`" " -NoNewWindow -Wait
         Write-Output "Cloaning base $wslImage to SOCFortress WSL image"
-        Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --import SOCFortress SOCFortress `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
+        Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " --import SOCFortress SOCFortress `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
         
         # run install script ...
         Write-Message  -Message "Downloading / running SOCFortress_CoPilot_Fast.bash " -Type "INFO"
 		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d SOCFortress -u root -e bash -c `"wget -O SOCFortress_CoPilot_Fast.bash  https://raw.githubusercontent.com/freeload101/SCRIPTS/master/Bash/SOCFortress_CoPilot_Fast.bash`" "   -wait 
-        Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d SOCFortress -u root -e bash -c `"bash SOCFortress_CoPilot_Fast.bash `" "  -NoNewWindow
+        Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " -d SOCFortress -u root -e bash -c `"bash SOCFortress_CoPilot_Fast.bash `" "  -NoNewWindow
 		
 		#port fwd
-		Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d SOCFortress -u root -e bash -c `" ip route get 1.1.1.1  `" " -NoNewWindow -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+		Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " -d SOCFortress -u root -e bash -c `" ip route get 1.1.1.1  `" " -NoNewWindow -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
 		Start-Sleep 1
 		Get-Content RedirectStandardOutput.txt
 		
-		Start-Process -FilePath "netsh" -ArgumentList " interface portproxy show all " -NoNewWindow 
+		Start-ProcessLogged -FilePath "netsh" -ArgumentList " interface portproxy show all " -NoNewWindow 
 		
 		$INTERNETIP = Get-Content RedirectStandardOutput.txt | ForEach-Object { $elements = $_ -split ' '; $elements[6] }
 		 
@@ -2031,7 +2138,7 @@ Start-Sleep 10
 function WSLCheckOllama{
     $env:WSL_UTF8 = 1
     $wslImage = "Ubuntu-22.04"
-    Start-Process -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt" -Wait
+    Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList  " --list"  -NoNewWindow -RedirectStandardOutput "RedirectStandardOutput.txt" -Wait
     Start-Sleep -Seconds 1
     $wslInfo = Get-Content -Path "RedirectStandardOutput.txt"
      # check for existing Ollama_WSL image
@@ -2054,14 +2161,14 @@ function WSLInstallOllama{
 		if ($pause -eq '6') {
 			# clone base image
 			Write-Message "Cloning $wslImage to $wslImage.tar" -Type "INFO"
-			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar.gz`" " -NoNewWindow -Wait
+			Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar.gz`" " -NoNewWindow -Wait
 			Write-Output "Cloaning base $wslImage to Ollama_WSL WSL image"
-			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
+			Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
 
 			# run install script ...
 			Write-Message  -Message "Downloading / running OpenWebUI_Fast.bash " -Type "INFO"
 			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"wget -O OpenWebUI_Fast.bash  https://raw.githubusercontent.com/freeload101/SCRIPTS/refs/heads/master/Bash/OpenWebUI_Fast.bash`" "   -wait 
-			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"bash OpenWebUI_Fast.bash `" "  -NoNewWindow
+			Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"bash OpenWebUI_Fast.bash `" "  -NoNewWindow
 
 			# Run on boot for windows / persistance
 			Register-ScheduledTask -Force -TaskName 'StartOpenWebUI' -Trigger (New-ScheduledTaskTrigger -AtStartup) -Action (New-ScheduledTaskAction -Execute 'wsl' -Argument "-d OpenWebUI_WSL_MASTER --exec dbus-launch true") -User $env:username -Password (Get-Credential $env:username).GetNetworkCredential().Password -EA Stop
@@ -2074,23 +2181,23 @@ function WSLInstallOllama{
 		Elseif ($pause = '7') {
 			# clone base image
 			Write-Message "Cloning $wslImage to $wslImage.tar" -Type "INFO"
-			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar.gz`" " -NoNewWindow -Wait
+			Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " --export $wslImage `"$VARCD\$wslImage.tar.gz`" " -NoNewWindow -Wait
 			Write-Output "Cloaning base $wslImage to Ollama_WSL WSL image"
-			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
+			Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " --import Ollama_WSL Ollama_WSL `"$VARCD\$wslImage.tar.gz`" "  -NoNewWindow -Wait
 			
 			Write-Message  -Message "Downloading Ollama Installer" -Type "INFO"
 			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"curl -fsSL https://ollama.com/install.sh | sh`" "   -wait  
 		  
 			Write-Message  -Message "Setting up Ollama systemd to start listening on 0.0.0.0" -Type "INFO"
-			Start-Process -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"  sed -i `'/ExecStart/a Environment=OLLAMA_HOST=0.0.0.0`'   /etc/systemd/system/ollama.service `" "   -wait -NoNewWindow
-			Start-Process -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"  systemctl daemon-reload `" "   -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"  sed -i `'/ExecStart/a Environment=OLLAMA_HOST=0.0.0.0`'   /etc/systemd/system/ollama.service `" "   -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `"  systemctl daemon-reload `" "   -wait -NoNewWindow
 			Write-Message  -Message "Restarting Ollama" -Type "INFO"
-			Start-Process -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `" systemctl restart ollama.service `" "   -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "wsl" -ArgumentList " -d Ollama_WSL -u root -e bash -c `" systemctl restart ollama.service `" "   -wait -NoNewWindow
 			Start-Process -FilePath "$env:WSLBIN" -ArgumentList ' -d Ollama_WSL -u root journalctl  -f -n 999999 --no-pager -u ollama.service'  -WindowStyle minimized
 		}
 
 			#port fwd
-			Start-Process -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `" ip route get 1.1.1.1  `" " -NoNewWindow -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
+			Start-ProcessLogged -FilePath "$env:WSLBIN" -ArgumentList " -d Ollama_WSL -u root -e bash -c `" ip route get 1.1.1.1  `" " -NoNewWindow -RedirectStandardOutput RedirectStandardOutput.txt -RedirectStandardError RedirectStandardError.txt
 			Start-Sleep 10
 			Get-Content RedirectStandardOutput.txt
 
@@ -2106,7 +2213,7 @@ function WSLInstallOllama{
 Function WipeForwardRules {
 			CheckAdmin
 			Write-Message  -Message  "About to clear the following interface portproxy rules..." -Type "ERROR"
-			Start-Process -FilePath "netsh"  -ArgumentList "  interface portproxy show all   " -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "netsh"  -ArgumentList "  interface portproxy show all   " -wait -NoNewWindow
 			Start-Sleep 10
 			$output = netsh interface portproxy show all | ForEach-Object {
 			$_ -replace '^\s+','' -replace '\s+$',''
@@ -2116,45 +2223,7 @@ Function WipeForwardRules {
 			}
 			Write-Message  -Message  "Cleared interface portproxy rules..." -Type "INFO"
 }
-
-
-############# lowerright
-Function lowerright {
-Add-Type -TypeDefinition @"
-using System;
-using System.Runtime.InteropServices;
-
-public class Win32 {
-    [DllImport("user32.dll")]
-    public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
-
-    [DllImport("user32.dll")]
-    public static extern IntPtr GetForegroundWindow();
-
-    [DllImport("user32.dll")]
-    public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
-
-    public struct RECT {
-        public int Left;
-        public int Top;
-        public int Right;
-        public int Bottom;
-    }
-}
-"@
-
-$handle = [Win32]::GetForegroundWindow()
-$screen = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
-$rect = New-Object Win32+RECT
-[Win32]::GetWindowRect($handle, [ref]$rect)  |Out-Null
-$width = $rect.Right - $rect.Left
-$height = $rect.Bottom - $rect.Top
-# Position window in lower right
-$x = $screen.Right - $width
-$y = $screen.Bottom - $height
-[Win32]::MoveWindow($handle, $x, $y, $width, $height, $true) |Out-Null
-}
-
+ 
   
 ############# CheckVer
 Function CheckVer {
@@ -2196,14 +2265,14 @@ function EXECheckOllama{
 		New-Item -Path "$VARCD\Ollama\" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 		downloadFile "https://ollama.com/download/OllamaSetup.exe" "$VARCD\Ollama\OllamaSetup.exe"
 		Write-Message "Installing Ollama to $VARCD\Ollama" -Type "INFO"
-		Start-Process -FilePath "$VARCD\Ollama\OllamaSetup.exe" -WorkingDirectory "$VARCD\Ollama\" -ArgumentList " /SILENT /NORESTART /DIR=`"$VARCD\Ollama`" "  -NoNewWindow
+		Start-ProcessLogged -FilePath "$VARCD\Ollama\OllamaSetup.exe" -WorkingDirectory "$VARCD\Ollama\" -ArgumentList " /SILENT /NORESTART /DIR=`"$VARCD\Ollama`" "  -NoNewWindow
 		
 		Write-Message "Waiting for Ollama to start" -Type "INFO"
 		while(!(Get-Process "ollama app" -ErrorAction SilentlyContinue)){Start-Sleep -Seconds 5};Write-Message "Waiting for Ollama to start" -Type "INFO"
 
 		Write-Message "Installing base models" -Type "INFO"
-		Start-Process -FilePath "$VARCD\Ollama\Ollama.exe" -WorkingDirectory "$VARCD\Ollama\" -ArgumentList " pull nomic-embed-text " -wait -NoNewWindow
-		Start-Process -FilePath "$VARCD\Ollama\Ollama.exe" -WorkingDirectory "$VARCD\Ollama\" -ArgumentList " pull hf.co/Sweaterdog/Andy-3.6:Q4_K_M " -wait -NoNewWindow
+		Start-ProcessLogged -FilePath "$VARCD\Ollama\Ollama.exe" -WorkingDirectory "$VARCD\Ollama\" -ArgumentList " pull nomic-embed-text " -wait -NoNewWindow
+		Start-ProcessLogged -FilePath "$VARCD\Ollama\Ollama.exe" -WorkingDirectory "$VARCD\Ollama\" -ArgumentList " pull hf.co/Sweaterdog/Andy-3.6:Q4_K_M " -wait -NoNewWindow
 		
 		Remove-Item -Path "$env:USERPROFILE\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\Ollama.lnk" -Force -ErrorAction SilentlyContinue |Out-Null
 		
@@ -2256,34 +2325,34 @@ function ADBDumpDisplayName{
     $localPath = "$env:TEMP\aapt2"
 
     # Check if aapt2 exists on device
-    Write-Host "Checking for aapt2 on device..."
+    Write-Message -Message "Checking for aapt2 on device..." -Type "INFO"
     $aapt2Exists = adb shell "test -f $devicePath && echo 'exists' || echo 'missing'"
 
     if ($aapt2Exists -match "missing") {
-        Write-Host "aapt2 not found. Downloading and deploying..."
+        Write-Message -Message "aapt2 not found. Downloading and deploying..." -Type "INFO"
 
         try {
             Invoke-WebRequest -Uri $aapt2Url -OutFile $localPath -UseBasicParsing
-            Write-Host "Downloaded aapt2"
+            Write-Message -Message "Downloaded aapt2" -Type "INFO"
         } catch {
-            Write-Host "Error downloading aapt2: $_"
+            Write-Message -Message "Error downloading aapt2: $_" -Type "ERROR"
             return
         }
 
         adb push $localPath $devicePath | Out-Null
         adb shell "chmod 777 $devicePath" | Out-Null
-        Write-Host "aapt2 deployed successfully"
+        Write-Message -Message "aapt2 deployed successfully" -Type "INFO"
 
         Remove-Item $localPath -ErrorAction SilentlyContinue
     } else {
-        Write-Host "aapt2 already exists on device"
+        Write-Message -Message "aapt2 already exists on device" -Type "INFO"
     }
 
     # Get package list
-    Write-Host "Getting package list..."
+    Write-Message -Message "Getting package list..." -Type "INFO"
     $packages = adb shell pm list packages -3 | ForEach-Object { ($_ -replace 'package:', '').Trim() } | Where-Object { $_ }
 
-    Write-Host "Extracting display names for $($packages.Count) apps using $MaxThreads threads..."
+    Write-Message -Message "Extracting display names for $($packages.Count) apps using $MaxThreads threads..." -Type "INFO"
 
     # Create runspace pool
     $runspacePool = [runspacefactory]::CreateRunspacePool(1, $MaxThreads)
@@ -2353,7 +2422,7 @@ function ADBDumpDisplayName{
     # Export to CSV
     $apps | Export-Csv -Path $OutputPath -NoTypeInformation -Encoding UTF8
 
-    Write-Host "`nExported $($apps.Count) apps to $OutputPath"
+    Write-Message -Message "Exported $($apps.Count) apps to $OutputPath" -Type "INFO"
 	Invoke-Item "$OutputPath"
 }
 
@@ -2377,13 +2446,12 @@ function ADBCheckBin{
 				Set-Content -Path "$VARCD\android-sdk-licenses.zip" -Value $licenseContent -Encoding Byte
 				Expand-Archive  "$VARCD\android-sdk-licenses.zip"  -DestinationPath "$VARCD\"  -Force
 				
-		Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platform-tools" -Verbose -Wait -NoNewWindow
+		Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platform-tools" -Verbose -Wait -NoNewWindow
 	}
 }		
 			
 
 ######################################################################################################################### FUNCTIONS END
-lowerright
 CheckVer
 Test-WindowsHypervisorPlatform
 Test-PathLength
@@ -2463,7 +2531,7 @@ $vShift = $vShift + 30
 ############# CMDPrompt
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "CMD/ADB/Java/Python/Git/Node Prompt"
+$Button.Text = "Shell"
 $Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button.Add_Click({CMDPrompt})
 $main_form.Controls.Add($Button)
@@ -2740,5 +2808,17 @@ $Button.Add_Click({WipeForwardRules})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
+############# WipeForwardRules
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Clear Log"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({ $Global:OutputBox.Clear() })
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
 ############# SHOW FORM
 $main_form.ShowDialog()
+
+# Restore console window when GUI closes
+[Win32Helper.ConsoleUtils]::ShowWindow($consoleHwnd, 5) | Out-Null
