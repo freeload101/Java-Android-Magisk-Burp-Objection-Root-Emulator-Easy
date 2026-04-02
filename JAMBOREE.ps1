@@ -15,7 +15,7 @@ if ($env:JAMBOREE_HIDDEN -ne '1') {
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.6.4'
+$Global:VerNum = 'JAMBOREE 4.6.5'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -69,22 +69,36 @@ if  (($TYPE) -eq  ("ERROR")) { $Tag = "ERROR"  ; $Color = "Red"; $DrawColor = [S
 $line = "$(Get-Date -UFormat '%m/%d:%T') $Tag $Message"
 Write-Host  (Get-Date -UFormat "%m/%d:%T")$($Tag)$($Message) -ForegroundColor $Color  
 if ($Global:OutputBox -ne $null) {
-    $Global:OutputBox.SelectionStart = $Global:OutputBox.TextLength
-    $Global:OutputBox.SelectionColor = $DrawColor
-    $Global:OutputBox.AppendText("$line`r`n")
-    Scroll-OutputToBottom
-    [System.Windows.Forms.Application]::DoEvents()
+    $delegate = [Action]{
+        $Global:OutputBox.SelectionStart = $Global:OutputBox.TextLength
+        $Global:OutputBox.SelectionColor = $DrawColor
+        $Global:OutputBox.AppendText("$line`r`n")
+        Scroll-OutputToBottom
+    }
+    if ($Global:OutputBox.InvokeRequired) {
+        $Global:OutputBox.Invoke($delegate)
+    } else {
+        $delegate.Invoke()
+        [System.Windows.Forms.Application]::DoEvents()
+    }
 }
 }
 
 function Write-OutputBox {
     param([string]$Text)
     if ($Global:OutputBox -ne $null) {
-        $Global:OutputBox.SelectionStart = $Global:OutputBox.TextLength
-        $Global:OutputBox.SelectionColor = [System.Drawing.Color]::White
-        $Global:OutputBox.AppendText("$Text`r`n")
-        Scroll-OutputToBottom
-        [System.Windows.Forms.Application]::DoEvents()
+        $delegate = [Action]{
+            $Global:OutputBox.SelectionStart = $Global:OutputBox.TextLength
+            $Global:OutputBox.SelectionColor = [System.Drawing.Color]::White
+            $Global:OutputBox.AppendText("$Text`r`n")
+            Scroll-OutputToBottom
+        }
+        if ($Global:OutputBox.InvokeRequired) {
+            $Global:OutputBox.Invoke($delegate)
+        } else {
+            $delegate.Invoke()
+            [System.Windows.Forms.Application]::DoEvents()
+        }
     }
 }
 
@@ -142,14 +156,21 @@ function Start-ProcessLogged {
                 if ($out) { Write-OutputBox $out.TrimEnd() }
             }
             if (Test-Path $stderrFile) {
-                $err = Get-Content $stderrFile -Raw -ErrorAction SilentlyContinue
-                if ($err) {
+                $errText = Get-Content $stderrFile -Raw -ErrorAction SilentlyContinue
+                if ($errText) {
                     if ($Global:OutputBox -ne $null) {
-                        $Global:OutputBox.SelectionStart = $Global:OutputBox.TextLength
-                        $Global:OutputBox.SelectionColor = [System.Drawing.Color]::Salmon
-                        $Global:OutputBox.AppendText("$($err.TrimEnd())`r`n")
-                        Scroll-OutputToBottom
-                        [System.Windows.Forms.Application]::DoEvents()
+                        $delegate = [Action]{
+                            $Global:OutputBox.SelectionStart = $Global:OutputBox.TextLength
+                            $Global:OutputBox.SelectionColor = [System.Drawing.Color]::Salmon
+                            $Global:OutputBox.AppendText("$($errText.TrimEnd())`r`n")
+                            Scroll-OutputToBottom
+                        }
+                        if ($Global:OutputBox.InvokeRequired) {
+                            $Global:OutputBox.Invoke($delegate)
+                        } else {
+                            $delegate.Invoke()
+                            [System.Windows.Forms.Application]::DoEvents()
+                        }
                     }
                 }
             }
@@ -163,14 +184,21 @@ function Start-ProcessLogged {
                 if ($out) { Write-OutputBox $out.TrimEnd() }
             }
             if (Test-Path $stderrFile) {
-                $err = Get-Content $stderrFile -Raw -ErrorAction SilentlyContinue
-                if ($err) {
+                $errText = Get-Content $stderrFile -Raw -ErrorAction SilentlyContinue
+                if ($errText) {
                     if ($Global:OutputBox -ne $null) {
-                        $Global:OutputBox.SelectionStart = $Global:OutputBox.TextLength
-                        $Global:OutputBox.SelectionColor = [System.Drawing.Color]::Salmon
-                        $Global:OutputBox.AppendText("$($err.TrimEnd())`r`n")
-                        Scroll-OutputToBottom
-                        [System.Windows.Forms.Application]::DoEvents()
+                        $delegate = [Action]{
+                            $Global:OutputBox.SelectionStart = $Global:OutputBox.TextLength
+                            $Global:OutputBox.SelectionColor = [System.Drawing.Color]::Salmon
+                            $Global:OutputBox.AppendText("$($errText.TrimEnd())`r`n")
+                            Scroll-OutputToBottom
+                        }
+                        if ($Global:OutputBox.InvokeRequired) {
+                            $Global:OutputBox.Invoke($delegate)
+                        } else {
+                            $delegate.Invoke()
+                            [System.Windows.Forms.Application]::DoEvents()
+                        }
                     }
                 }
             }
@@ -269,6 +297,55 @@ $Global:OutputBox.WordWrap = $true
 $Global:OutputBox.ScrollBars = 'Both'
 $Global:OutputBox.Anchor = 'Top,Left,Right,Bottom'
 $main_form.Controls.Add($Global:OutputBox)
+
+# Override Start-Sleep to keep the UI responsive during waits
+function Start-Sleep {
+    param(
+        [int]$Seconds,
+        [int]$Milliseconds
+    )
+    $totalMs = ($Seconds * 1000) + $Milliseconds
+    $end = (Get-Date).AddMilliseconds($totalMs)
+    while ((Get-Date) -lt $end) {
+        [System.Windows.Forms.Application]::DoEvents()
+        Microsoft.PowerShell.Utility\Start-Sleep -Milliseconds 50
+    }
+}
+
+# Override Start-Process to make -Wait non-blocking for the UI
+function Start-Process {
+    param(
+        [string]$FilePath,
+        [string]$WorkingDirectory,
+        [object]$ArgumentList,
+        [switch]$Wait,
+        [switch]$NoNewWindow,
+        [switch]$Verbose,
+        [switch]$PassThru,
+        [string]$RedirectStandardOutput,
+        [string]$RedirectStandardError,
+        [string]$Verb
+    )
+    $params = @{ FilePath = $FilePath }
+    if ($WorkingDirectory) { $params.WorkingDirectory = $WorkingDirectory }
+    if ($ArgumentList) { $params.ArgumentList = $ArgumentList }
+    if ($NoNewWindow) { $params.NoNewWindow = $true }
+    if ($Verbose) { $params.Verbose = $true }
+    if ($RedirectStandardOutput) { $params.RedirectStandardOutput = $RedirectStandardOutput }
+    if ($RedirectStandardError) { $params.RedirectStandardError = $RedirectStandardError }
+    if ($Verb) { $params.Verb = $Verb }
+
+    $proc = Microsoft.PowerShell.Management\Start-Process @params -PassThru
+    
+    if ($Wait) {
+        while (-not $proc.HasExited) {
+            [System.Windows.Forms.Application]::DoEvents()
+            Microsoft.PowerShell.Utility\Start-Sleep -Milliseconds 100
+        }
+    }
+    
+    if ($PassThru) { return $proc }
+}
 
 
 ### MAIN ###
