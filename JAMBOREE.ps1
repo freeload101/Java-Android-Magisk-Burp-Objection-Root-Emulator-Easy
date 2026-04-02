@@ -2328,19 +2328,9 @@ Function CheckVer {
         # Compare versions
         if ($VerNumLatest -ne $Global:VerNum) {
 		Write-Message  -Message  "Version mismatch! Current version: $Global:VerNum, Latest version: $VerNumLatest" -Type "WARNING"
-		$wshell = New-Object -ComObject Wscript.Shell
-		$pause = $wshell.Popup("Version mismatch! Current version: $Global:VerNum, Latest version: $VerNumLatest . Would you like to Update JAMBOREE?", 0, "Update JAMBOREE?", 48+1)
-			if ($pause -eq '1') {
-			UpdateJAMBO
-			}
-			Elseif ($pause = '2') {
-			Write-Message  -Message  "Not Updating JAMBOREE" -Type "WARNING"
-			return
-			}
-
-			} else {
+		} else {
 			Write-Message  -Message  "Running Latest $Global:VerNum !" -Type "INFO"
-			}
+		}
     } else {
         Write-Message  -Message  "Could not find `$VerNum in the downloaded script" -Type "ERROR"
  
