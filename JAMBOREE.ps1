@@ -15,7 +15,7 @@ if ($env:JAMBOREE_HIDDEN -ne '1') {
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.6.3'
+$Global:VerNum = 'JAMBOREE 4.6.4'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -28,7 +28,20 @@ Add-Type -Name ConsoleUtils -Namespace Win32Helper -MemberDefinition @'
 public static extern IntPtr GetConsoleWindow();
 [DllImport("user32.dll")]
 public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+[DllImport("user32.dll", CharSet = CharSet.Auto)]
+public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
 '@
+
+function Scroll-OutputToBottom {
+    if ($Global:OutputBox -ne $null) {
+        # EM_SETSEL to end, then EM_SCROLLCARET for reliable auto-scroll
+        $len = $Global:OutputBox.TextLength
+        # EM_SETSEL = 0x00B1
+        [Win32Helper.ConsoleUtils]::SendMessage($Global:OutputBox.Handle, 0x00B1, [IntPtr]$len, [IntPtr]$len) | Out-Null
+        # EM_SCROLLCARET = 0x00B7
+        [Win32Helper.ConsoleUtils]::SendMessage($Global:OutputBox.Handle, 0x00B7, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null
+    }
+}
 $consoleHwnd = [Win32Helper.ConsoleUtils]::GetConsoleWindow()
 [Win32Helper.ConsoleUtils]::ShowWindow($consoleHwnd, 0) | Out-Null
 
@@ -59,7 +72,7 @@ if ($Global:OutputBox -ne $null) {
     $Global:OutputBox.SelectionStart = $Global:OutputBox.TextLength
     $Global:OutputBox.SelectionColor = $DrawColor
     $Global:OutputBox.AppendText("$line`r`n")
-    $Global:OutputBox.ScrollToCaret()
+    Scroll-OutputToBottom
     [System.Windows.Forms.Application]::DoEvents()
 }
 }
@@ -70,7 +83,7 @@ function Write-OutputBox {
         $Global:OutputBox.SelectionStart = $Global:OutputBox.TextLength
         $Global:OutputBox.SelectionColor = [System.Drawing.Color]::White
         $Global:OutputBox.AppendText("$Text`r`n")
-        $Global:OutputBox.ScrollToCaret()
+        Scroll-OutputToBottom
         [System.Windows.Forms.Application]::DoEvents()
     }
 }
@@ -135,7 +148,7 @@ function Start-ProcessLogged {
                         $Global:OutputBox.SelectionStart = $Global:OutputBox.TextLength
                         $Global:OutputBox.SelectionColor = [System.Drawing.Color]::Salmon
                         $Global:OutputBox.AppendText("$($err.TrimEnd())`r`n")
-                        $Global:OutputBox.ScrollToCaret()
+                        Scroll-OutputToBottom
                         [System.Windows.Forms.Application]::DoEvents()
                     }
                 }
@@ -156,7 +169,7 @@ function Start-ProcessLogged {
                         $Global:OutputBox.SelectionStart = $Global:OutputBox.TextLength
                         $Global:OutputBox.SelectionColor = [System.Drawing.Color]::Salmon
                         $Global:OutputBox.AppendText("$($err.TrimEnd())`r`n")
-                        $Global:OutputBox.ScrollToCaret()
+                        Scroll-OutputToBottom
                         [System.Windows.Forms.Application]::DoEvents()
                     }
                 }
@@ -238,6 +251,7 @@ Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 # Setup Form
 $main_form = New-Object System.Windows.Forms.Form
 $main_form.AutoSize = $true
+$main_form.MinimumSize = New-Object System.Drawing.Size(1350, 660)
 $main_form.Text = "$VerNum"
 
 $hShift = 0
@@ -249,10 +263,10 @@ $Global:OutputBox.Location = New-Object System.Drawing.Point(510, 0)
 $Global:OutputBox.Size = New-Object System.Drawing.Size(820, 620)
 $Global:OutputBox.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
 $Global:OutputBox.ForeColor = [System.Drawing.Color]::White
-$Global:OutputBox.Font = New-Object System.Drawing.Font("Consolas", 9)
+$Global:OutputBox.Font = New-Object System.Drawing.Font("Consolas", 7.5)
 $Global:OutputBox.ReadOnly = $true
 $Global:OutputBox.WordWrap = $true
-$Global:OutputBox.ScrollBars = 'ForcedVertical'
+$Global:OutputBox.ScrollBars = 'Both'
 $Global:OutputBox.Anchor = 'Top,Left,Right,Bottom'
 $main_form.Controls.Add($Global:OutputBox)
 
@@ -616,9 +630,6 @@ if ((Get-Command adb -ErrorAction SilentlyContinue)) {
     Write-Message  -Message  "Online Device: $varadb" -Type "INFO"
         if (($varadb.length -lt 1 )) {
             Write-Message  -Message  "ADB Failed! Check for unauthorized devices listed in ADB UI or use ! AVD Wipe Button" -Type "ERROR"
-			$wshShell = New-Object -ComObject Wscript.Shell
-			$message = "Check for unauthorized devices listed in ADB UI or use ! AVD Wipe Button"
-			$wshShell.Popup($message, 0, "ADB Failed!", 48)
 			adb devices  
         }
 	return $varadb
@@ -975,7 +986,7 @@ function StartADB {
 ############# AVDDownload
 Function AVDDownload {
 
-    if (-not(Test-Path -Path "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" )) {
+    if (-not(Test-Path -Path "$VARCD\emulator\emulator.exe" )) {
 			ADBCheckBin
 			CheckJava
 			CheckPython
@@ -997,7 +1008,7 @@ Function AVDDownload {
 			Start-Sleep -Seconds 2
             }
         else {
-            Write-Message  -Message  "AVDDownload: $VARCD\cmdline-tools already exists remove everything but this script to perform full reinstall/setup" -Type "WARNING"
+            Write-Message  -Message  "AVDDownload: $VARCD\emulator\emulator.exe already exists remove everything but this script to perform full reinstall/setup" -Type "WARNING"
             Write-Message  -Message  "Current Working Directory $VARCD" -Type "WARNING"
             Start-Sleep -Seconds 1
             }
@@ -1039,8 +1050,11 @@ Function AVDStart {
 	CheckProcess "Burp Suite" StartBurp
 	if (-not(Test-Path -Path "$VARCD\emulator" )) {
 			AVDDownload
-			Write-Message  -Message  "$VARCD\emulator already exists remove everything but this script to perform full reinstall/setup" -Type "INFO"
-			Write-Message  -Message  "Starting AVD emulator" -Type "INFO"
+			if (-not(Test-Path -Path "$VARCD\emulator" )) {
+				Write-Message  -Message  "AVDDownload failed - $VARCD\emulator not found after download" -Type "ERROR"
+				return
+			}
+			Write-Message  -Message  "AVD downloaded successfully, starting emulator" -Type "INFO"
 			Start-Sleep -Seconds 2
 			Write-Message  -Message  "Do not run emulator with  -http-proxy 127.0.0.1:8080 it is not stable" -Type "INFO"
 			# DO NOT USE THIS IT IS BUGGY ... Start-ProcessLogged -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
@@ -1054,8 +1068,7 @@ Function AVDStart {
 				Out-File -Encoding Ascii "$VARCD\avd\pixel_2.avd\config.ini"
             }
     else {
-            Write-Message  -Message  "AVDStart $VARCD\emulator already exists remove everything but this script to perform full reinstall/setup" -Type "WARNING"
-			Write-Message  -Message  "Starting AVD emulator" -Type "INFO"
+            Write-Message  -Message  "Emulator found at $VARCD\emulator - starting AVD" -Type "INFO"
 			Start-Sleep -Seconds 2
 			Start-ProcessLogged -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system " -NoNewWindow
 			
@@ -2445,7 +2458,7 @@ function ADBCheckBin{
 				$licenseContent = [System.Convert]::FromBase64String($licenseContentBase64)
 				Set-Content -Path "$VARCD\android-sdk-licenses.zip" -Value $licenseContent -Encoding Byte
 				Expand-Archive  "$VARCD\android-sdk-licenses.zip"  -DestinationPath "$VARCD\"  -Force
-				
+		Start-Sleep -Seconds 5		
 		Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platform-tools" -Verbose -Wait -NoNewWindow
 	}
 }		
