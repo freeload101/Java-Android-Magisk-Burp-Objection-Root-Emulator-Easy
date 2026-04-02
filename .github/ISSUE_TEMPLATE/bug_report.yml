@@ -1,0 +1,59 @@
+name: Bug Report
+description: Report a bug or issue with JAMBOREE
+labels: ["bug"]
+body:
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this issue?
+      value: |
+        1. 
+        2. 
+        3. 
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: JAMBOREE Version
+      description: "e.g. JAMBOREE 4.6.5"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Windows 10
+        - Windows 11
+    validations:
+      required: true
+  - type: input
+    id: subsystem
+    attributes:
+      label: Subsystem
+      description: "Which feature/button is affected? e.g. AVD, Burp Suite, WSL, Frida"
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Information
+      description: Any other context, screenshots, or log output.
+    validations:
+      required: false
