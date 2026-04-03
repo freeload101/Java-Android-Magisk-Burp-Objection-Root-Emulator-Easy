@@ -271,6 +271,16 @@ $env:Path = "$($latest.FullName)\bin\x64;$($latest.FullName)\bin;$env:Path"
 $env:DEVICE_TYPE="cuda"
 $env:WHISPER_COMPUTE_TYPE="float16"
 
+# -- Override every path Electron/Node resolves as "home" --
+$env:HOME              = "$VARCD"
+$env:HOMEDRIVE         = (Split-Path "$VARCD" -Qualifier)
+$env:XDG_CACHE_HOME    = "$VARCD\.cache"
+$env:XDG_CONFIG_HOME   = "$VARCD\.config"
+$env:XDG_DATA_HOME     = "$VARCD\.local\share"
+$env:LM_STUDIO_HOME    = "$VARCD\.lmstudio"
+$env:LM_STUDIO_CACHE   = "$VARCD\.cache\lm-studio"
+$env:LM_STUDIO_MODELS  = "$VARCD\.cache\lm-studio\models"
+$env:ELECTRON_NO_UPDATER = "1"
 
 #java
 Write-Message  -Message  "Setting JAVA ENV Paths $VARCD" -Type "INFO"
