@@ -15,7 +15,7 @@ if ($env:JAMBOREE_HIDDEN -ne '1') {
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.6.7'
+$Global:VerNum = 'JAMBOREE 4.6.9'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -2037,11 +2037,10 @@ Start-Process -FilePath "powershell" -WorkingDirectory "$VARCD\" -ArgumentList "
 Function CheckPostgres {
    if (-not(Test-Path -Path "$VARCD\PG" )) {
 			New-Item -Path "$VARCD\PG" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
-			$downloadUri = (Invoke-WebRequest -Uri "https://www.enterprisedb.com/downloads/postgres-postgresql-downloads"  -UseBasicParsing).Content  -split '>' -match '.*href.*sbp.enterprisedb.*' | ForEach-Object {$_ -ireplace ".*href=",'' } | Select-Object -Index 1
+			$downloadUri = (Invoke-WebRequest -Uri "https://www.enterprisedb.com/downloads/postgres-postgresql-downloads"  -UseBasicParsing).Content  -split '>' -match '.*href.*sbp.enterprisedb.*' | ForEach-Object {$_ -ireplace ".*href=",'' -ireplace "`"",''  } | Select-Object -Index 1
 			Write-Message  -Message  "Downloading postgres installer for windows $downloadUri" -Type "INFO"
-			
+			# idk I hate anti bots so much ...
 			downloadFile "$downloadUri" "$VARCD\postgresql.exe"
-			
 			Write-Message  -Message  "setting __COMPAT_LAYER=RUNASINVOKER " -Type "INFO"
 			$env:__COMPAT_LAYER = "RUNASINVOKER"
 			Write-Message  -Message  "Extracting This takes a long time .. like 400 megs ..." -Type "INFO"
