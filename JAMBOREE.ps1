@@ -267,6 +267,10 @@ $env:CUDA_PATH = $latest.FullName
 Set-Content "env:\$vVar" $latest.FullName
 $env:Path = "$($latest.FullName)\bin\x64;$($latest.FullName)\bin;$env:Path"
 
+# for Whispr /  GPU CUDA !
+$env:DEVICE_TYPE="cuda"
+$env:WHISPER_COMPUTE_TYPE="float16"
+
 
 #java
 Write-Message  -Message  "Setting JAVA ENV Paths $VARCD" -Type "INFO"
