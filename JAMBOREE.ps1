@@ -258,20 +258,15 @@ $env:PGLOCALEDIR = "$VARCD\PG\data"
 $env:PGDATA = "$VARCD\PG\share\locale"
 $env:PGLOG = "$VARCD\PG\postgres.log"
 
-#set NVIDIA GPU Computing Toolkit 
-$base = "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA"
+#set NVIDIA GPU Computing Toolkit $base = "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA"
 $latest = gci $base -Dir | ? { $_.Name -match '^v\d+\.\d+$' } | 
     sort { [version]($_.Name -replace 'v','') } -Desc | select -First 1
-
-if (!$latest) { throw Write-Message  -Message  "No CUDA folders in $base" -Type "WARNING"}
-
+if (!$latest) { throw "No CUDA folders in $base" }
 $vVar = "CUDA_PATH_$($latest.Name.Replace('.','_').ToUpper())"
 $env:CUDA_PATH = $latest.FullName
 Set-Content "env:\$vVar" $latest.FullName
-
 $env:Path = "$($latest.FullName)\bin\x64;$($latest.FullName)\bin;$env:Path"
 
-Write-Host "--- Local Session Variables Set ---`nCUDA_PATH: $env:CUDA_PATH`n$vVar: $($latest.FullName)" -F Green
 
 #java
 Write-Message  -Message  "Setting JAVA ENV Paths $VARCD" -Type "INFO"
