@@ -258,14 +258,16 @@ $env:PGLOCALEDIR = "$VARCD\PG\data"
 $env:PGDATA = "$VARCD\PG\share\locale"
 $env:PGLOG = "$VARCD\PG\postgres.log"
 
-#set NVIDIA GPU Computing Toolkit $base = "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA"
-$latest = gci $base -Dir | ? { $_.Name -match '^v\d+\.\d+$' } | 
-    sort { [version]($_.Name -replace 'v','') } -Desc | select -First 1
-if (!$latest) { throw "No CUDA folders in $base" }
-$vVar = "CUDA_PATH_$($latest.Name.Replace('.','_').ToUpper())"
-$env:CUDA_PATH = $latest.FullName
-Set-Content "env:\$vVar" $latest.FullName
-$env:Path = "$($latest.FullName)\bin\x64;$($latest.FullName)\bin;$env:Path"
+# 1. Dynamically locate the latest CUDA version and set primary environment variables
+$c="C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA"
+$l=gci $c -ad 2>$null|?{$_.Name -match '^v\d+\.\d+$'}|sort{[version]($_.Name-replace 'v')}|select -L 1
+if($l){
+    $b=$l.FullName; $env:CUDA_PATH=$b
+    ni "env:CUDA_PATH_$($l.Name-replace '\.','_')".ToUpper() -Value $b -F|Out-Null
+    $p=@("$b\bin","$b\bin\x64","$b\libnvvp","C:\Program Files\NVIDIA Corporation\NVIDIA App\NvDLISR","C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common")
+    $p|%{$path=$_; if($env:Path-split';'-notcontains $path){$env:Path="$path;$env:Path"}}
+    Write-Host "CUDA Path updated: $b" -F Green
+}else{Write-Warning "No CUDA found in $c"}
 
 # for Whispr /  GPU CUDA !
 $env:DEVICE_TYPE="cuda"
