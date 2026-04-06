@@ -15,7 +15,7 @@ if ($env:JAMBOREE_HIDDEN -ne '1') {
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.6.9'
+$Global:VerNum = 'JAMBOREE 4.6.10'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -298,6 +298,9 @@ $env:PYTHONHOME="$VARCD\python\tools"
 # wsl don't use system32 path !
 
 $env:WSLBIN= "C:\Windows\System32\wsl.exe"
+
+# VS code eating my env ...
+$env:PYTHONPATH = "C:\backup\OpenWebUI\python\tools\Lib\site-packages"
 
 #init stuff
 Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
@@ -1917,12 +1920,36 @@ Function CheckPyCharm {
 			}
 }
 
+############# CHECKvscode
+Function CheckVSCode {
+	Check7zip
+	CheckGit
+	CheckPython
+   if (-not(Test-Path -Path "$VARCD\vscode" )) {
+        try {
+            Write-Message  -Message  "Downloading latest VSCode" -Type "INFO"
+            downloadFile "https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-archive" "$VARCD\vscode.zip"
+			Write-Message  -Message  "Extracting VSCode" -Type "INFO"
+			Start-ProcessLogged -FilePath "$VARCD\7zip\7z.exe" -ArgumentList "x `"$VARCD\vscode.zip`" -o`"$VARCD\vscode`"" -NoNewWindow -Wait
+			Start-ProcessLogged -FilePath "$VARCD\vscode\Code.exe" -WorkingDirectory "$VARCD\vscode"   -NoNewWindow 
+            }
+                catch {
+                    throw $_.Exception.Message
+            }
+            }
+        else {
+            Write-Message  -Message  "$VARCD\vscode\Code.exe already exists starting" -Type "WARNING"
+			Start-ProcessLogged -FilePath "$VARCD\vscode\Code.exe" -WorkingDirectory "$VARCD\$VARCD\vscode"   -NoNewWindow 
+			}
+}
+
+
 ############# CHECK 7zip
 Function Check7zip {
    if (-not(Test-Path -Path "$VARCD\7zip" )) {
         try {
             Write-Message  -Message  "Downloading latest 7zip" -Type "INFO"
-			$downloadUri = (Invoke-RestMethod -Method GET -Uri "https://www.7-zip.org/download.html")    -split '\n' -match '.*exe.*' | ForEach-Object {$_ -ireplace '.* href="','https://www.7-zip.org/' -ireplace  '".*',''}| select -first 1
+			$downloadUri = (Invoke-RestMethod -Method GET -Uri "https://www.7-zip.org/download.html")    -split '\n' -match '.*exe.*' | ForEach-Object {$_ -ireplace '.* href="','' -ireplace  '".*',''}| select -first 1
             downloadFile "$downloadUri" "$VARCD\7zip.exe"
 			$Env:__COMPAT_LAYER='RunAsInvoker'
 			Start-ProcessLogged -FilePath "$VARCD\7zip.exe" -ArgumentList "/S /D=$VARCD\7zip" -NoNewWindow -Wait
@@ -2793,6 +2820,15 @@ $Button.AutoSize = $true
 $Button.Text = "PyCharm"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({CheckPyCharm})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# CheckPyCharm
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "VS Code"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({CheckVSCode})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
