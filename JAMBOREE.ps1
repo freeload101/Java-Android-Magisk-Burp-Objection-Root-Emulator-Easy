@@ -15,7 +15,7 @@ if ($env:JAMBOREE_HIDDEN -ne '1') {
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.6.10'
+$Global:VerNum = 'JAMBOREE 4.6.11'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -223,7 +223,7 @@ Write-Message  -Message  "Setting base path for HOMEPATH,USERPROFILE,APPDATA,LOC
 $env:HOMEPATH="$VARCD"
 $env:USERPROFILE="$VARCD"
 
-New-Item -Path "$VARCD\Deskop" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
+New-Item -Path "$VARCD\Desktop" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 
 New-Item -Path "$VARCD\AppData\Roaming" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 $env:APPDATA="$VARCD\AppData\Roaming"
