@@ -15,7 +15,7 @@ if ($env:JAMBOREE_HIDDEN -ne '1') {
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.6.11'
+$Global:VerNum = 'JAMBOREE 4.6.12'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
