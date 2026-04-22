@@ -15,7 +15,7 @@ if ($env:JAMBOREE_HIDDEN -ne '1') {
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.6.12'
+$Global:VerNum = 'JAMBOREE 4.6.14'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -1931,7 +1931,7 @@ Function CheckVSCode {
             downloadFile "https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-archive" "$VARCD\vscode.zip"
 			Write-Message  -Message  "Extracting VSCode" -Type "INFO"
 			Start-ProcessLogged -FilePath "$VARCD\7zip\7z.exe" -ArgumentList "x `"$VARCD\vscode.zip`" -o`"$VARCD\vscode`"" -NoNewWindow -Wait
-			Start-ProcessLogged -FilePath "$VARCD\vscode\Code.exe" -WorkingDirectory "$VARCD\vscode"   -NoNewWindow 
+			Start-ProcessLogged -FilePath "$VARCD\vscode\Code.exe" -WorkingDirectory "$VARCD\vscode"
             }
                 catch {
                     throw $_.Exception.Message
@@ -1939,7 +1939,7 @@ Function CheckVSCode {
             }
         else {
             Write-Message  -Message  "$VARCD\vscode\Code.exe already exists starting" -Type "WARNING"
-			Start-ProcessLogged -FilePath "$VARCD\vscode\Code.exe" -WorkingDirectory "$VARCD\$VARCD\vscode"   -NoNewWindow 
+			Start-ProcessLogged -FilePath "$VARCD\vscode\Code.exe" -WorkingDirectory "$VARCD\vscode"
 			}
 }
 
