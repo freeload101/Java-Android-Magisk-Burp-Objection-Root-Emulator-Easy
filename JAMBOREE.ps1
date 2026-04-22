@@ -300,7 +300,7 @@ $env:PYTHONHOME="$VARCD\python\tools"
 $env:WSLBIN= "C:\Windows\System32\wsl.exe"
 
 # VS code eating my env ...
-$env:PYTHONPATH = "C:\backup\OpenWebUI\python\tools\Lib\site-packages"
+$env:PYTHONPATH = "$VARCD\python\tools\Lib\site-packages"
 
 #init stuff
 Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
