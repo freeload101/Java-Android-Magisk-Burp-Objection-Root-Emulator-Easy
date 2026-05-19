@@ -1154,6 +1154,10 @@ Function HAXMInstall {
 ############# AVDStart
 Function AVDStart {
 	CheckProcess "Burp Suite" StartBurp
+	Stop-process -name emulator -Force -ErrorAction SilentlyContinue |Out-Null
+	Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
+	Stop-process -name qemu-system-x86_64 -Force -ErrorAction SilentlyContinue |Out-Null
+	
 	if (-not(Test-Path -Path "$VARCD\emulator" )) {
 			AVDDownload
 			if (-not(Test-Path -Path "$VARCD\emulator" )) {
