@@ -15,7 +15,7 @@ if ($env:JAMBOREE_HIDDEN -ne '1') {
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 4.6.14'
+$Global:VerNum = 'JAMBOREE 4.7.0'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -749,6 +749,27 @@ function KillADB {
     Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 }
 
+
+Function StartJAMBOREE_SSL_N_ANTIROOT {
+CheckFrida
+StartFrida
+
+Write-Message  -Message  "Running Frida-ps select package to run FridaBypassKit.js:" -Type "INFO"
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c pm list packages  `" "  -NoNewWindow -RedirectStandardOutput "$VARCD\RedirectStandardOutput.txt"
+
+Start-Sleep -Seconds 2
+$PackageName = (Get-Content -Path "$VARCD\RedirectStandardOutput.txt") -replace 'package:',''    | Out-GridView -Title "Select Package to Run Objection" -OutputMode Single
+
+Write-Message  -Message  "Downloading Frida Root/SSL Depinning FridaBypassKit.js" -Type "INFO"
+downloadFile "https://github.com/freeload101/FridaBypassKit/raw/refs/heads/okankurtuluss/main/FridaBypassKit.js" "$VARCD\FridaBypassKit.js"
+
+Write-Message  -Message  "Starting Frida with FridaBypassKit.js" -Type "INFO"
+Start-ProcessLogged -FilePath "$VARCD\python\tools\Scripts\frida.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " -l `"$VARCD\FridaBypassKit.js`" -f $PackageName -U " -NoNewWindow
+
+start-sleep -Seconds 5
+
+}
+
 ############# downloadFile
 function downloadFile($url, $file) {
     $req = [System.Net.HttpWebRequest]::Create($url)
@@ -839,7 +860,7 @@ Function CheckFrida {
             # for Frida Android Binary
             Start-ProcessLogged -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install python-xz " -wait -NoNewWindow
 			Write-Message  -Message  "Installing frida-tools" -Type "INFO"
-			Start-ProcessLogged -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install frida==17.5.1 " -wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install frida==17.9.10 " -wait -NoNewWindow
 			Start-ProcessLogged -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install frida-tools " -wait -NoNewWindow
 	 }
 }				
@@ -922,11 +943,6 @@ Write-Message  -Message  "Complete Installing Base APKS" -Type "INFO"
 
 ############# CertPush
 function CertPush {
-Write-Message  -Message  "Starting CertPush" -Type "INFO"
-
-$wshShell = New-Object -ComObject Wscript.Shell
-$message = "Be sure to go to WiFi settings and set proxy to 10.0.2.2:8080"
-$wshShell.Popup($message, 0, "Proxy Configuration Warning", 48)
 
 AlwaysTrustUserCerts
 
@@ -960,8 +976,28 @@ Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " s
 Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c chmod 644 /data/misc/user/0/cacerts-added/$CertSubjectHash"  -NoNewWindow -Wait
 Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c ls -laht /data/misc/user/0/cacerts-added/$CertSubjectHash"  -NoNewWindow -Wait
 
-Write-Message  -Message  "Reboot for changes to take effect!" -Type "INFO"
+Write-Message  -Message  "Starting CertPush" -Type "INFO"
+
+Write-Message  -Message   "Magisk should ask you to reboot!" -Type "WARNING"
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"am start -n com.topjohnwu.magisk/com.topjohnwu.magisk.ui.MainActivity"  -NoNewWindow -Wait
 }
+
+############# Startiptables
+Function Startiptables {
+$ETH0=((Get-NetIPConfiguration | Where-Object { $_.IPv4DefaultGateway }).IPv4Address.IPAddress)
+	
+
+Write-Message  -Message   "You can also try setting WiFi settings and set proxy to 10.0.2.2:8080 but will not work for all apps" -Type "WARNING"
+Write-Message  -Message   "Setting port 80 and 443 to $ETH0" -Type "INFO"
+Write-Message  -Message   "iptables -t nat -F" -Type "WARNING"
+Write-Message  -Message   "iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination  $($ETH0):8080" -Type "WARNING"
+Write-Message  -Message   "iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination  $($ETH0):8080" -Type "WARNING"
+
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c iptables -t nat -F`" "  -NoNewWindow -Wait
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination  $($ETH0):8080`" "  -NoNewWindow -Wait
+Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination  $($ETH0):8080`" "  -NoNewWindow -Wait
+}
+
 
 ############# AlwaysTrustUserCerts
 Function AlwaysTrustUserCerts {
@@ -991,16 +1027,69 @@ Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " s
 Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c find /data/adb/modules`" "  -NoNewWindow -Wait
 
 }
+
 Function StartFrida {
 CheckPython
 CheckFrida
    if (-not(Test-Path -Path "$VARCD\frida-server" )) {
         try {
-            Write-Message  -Message  "Downloading Frida 17.5.1 for x86_64" -Type "INFO"
-		
-			# fix this ..static binary bad !
-			downloadFile  "https://github.com/frida/frida/releases/download/17.5.1/frida-server-17.5.1-android-x86_64.xz" "$VARCD\frida-server-android_LATEST.xz"
-            Write-Message  -Message  "Extracting $downloadUri" -Type "INFO"
+ 	 
+	 
+	
+	# Auto-download Frida Server for connected Android device
+
+    # Step 1: Get device ABI
+	$abiRaw = & "$VARCD\platform-tools\adb.exe" shell getprop ro.product.cpu.abi
+	$abi = "$abiRaw".Trim()
+	Write-Host "[*] Device ABI: $abi"
+    # Step 2: Map ABI to Frida architecture string
+    $archMap = @{
+        "arm64-v8a"  = "arm64"
+        "armeabi-v7a"= "arm"
+        "armeabi"    = "arm"
+        "x86_64"     = "x86_64"
+        "x86"        = "x86"
+    }
+
+    if (-not $archMap.ContainsKey($abi)) {
+        Write-Error "Unsupported ABI: $abi"
+        return  # <-- CHANGED FROM 'exit 1'
+    }
+
+    $arch = $archMap[$abi]
+    Write-Host "[*] Frida arch: $arch"
+
+    # Step 3: Fetch latest release info from GitHub API
+    Write-Host "[*] Fetching latest Frida release info..."
+    $releaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/frida/frida/releases/latest" -Headers @{ "User-Agent" = "PowerShell" }
+    $version = $releaseInfo.tag_name
+    Write-Host "[*] Latest version: $version"
+
+    # Step 4: Find matching asset (frida-server for Android)
+    $assetName = "frida-server-$version-android-$arch.xz"
+    $asset = $releaseInfo.assets | Where-Object { $_.name -eq $assetName }
+
+    if (-not $asset) {
+        Write-Error "Could not find asset: $assetName"
+        Write-Host "Available assets:"
+        $releaseInfo.assets | ForEach-Object { Write-Host "  $($_.name)" }
+        return  # <-- CHANGED FROM 'exit 1'
+    }
+
+    # Step 5: Download
+    $downloadUrl = $asset.browser_download_url
+    $outputPath  = Join-Path $PWD $assetName
+    Write-Host "[*] Downloading $assetName ..."
+    #Invoke-WebRequest -Uri $downloadUrl -OutFile $outputPath	
+	downloadFile  "$downloadUrl" "$VARCD\frida-server-android_LATEST.xz"
+	
+    Write-Host "[+] Saved to: $outputPath"
+	
+	
+	
+	
+	 
+Write-Message  -Message  "Extracting $downloadUri" -Type "INFO"
 # don't mess with spaces for these lines for python ...
 $PythonXZ = @'
 import xz
@@ -1039,49 +1128,6 @@ Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " s
 Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c /data/local/tmp/frida-server & `" "  -NoNewWindow 
 }
 
-Function StartJAMBOREE_SSL_N_ANTIROOT {
-CheckFrida
-StartFrida
-
-Write-Message  -Message  "Running Frida-ps select package to run JAMBOREE_SSL_N_ANTIROOT.JS:" -Type "INFO"
-Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c pm list packages  `" "  -NoNewWindow -RedirectStandardOutput "$VARCD\RedirectStandardOutput.txt"
-
-Start-Sleep -Seconds 2
-$PackageName = (Get-Content -Path "$VARCD\RedirectStandardOutput.txt") -replace 'package:',''    | Out-GridView -Title "Select Package to Run Objection" -OutputMode Single
-
-Write-Message  -Message  "Downloading Frida Root/SSL Depinning JAMBOREE_SSL_N_ANTIROOT.JS" -Type "INFO"
-downloadFile "https://raw.githubusercontent.com/freeload101/SCRIPTS/master/JS/JAMBOREE_SSL_N_ANTIROOT.JS" "$VARCD\JAMBOREE_SSL_N_ANTIROOT.JS"
-
-Write-Message  -Message  "Starting Frida with JAMBOREE_SSL_N_ANTIROOT.JS" -Type "INFO"
-Start-ProcessLogged -FilePath "$VARCD\python\tools\Scripts\frida.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " -l `"$VARCD\JAMBOREE_SSL_N_ANTIROOT.JS`" -f $PackageName -U " -NoNewWindow
-
-start-sleep -Seconds 5
-
-}
-
-Function StartObjection {
-CheckPython
-StartFrida
-
-Write-Message  -Message  "Running Frida-ps select package to run Objection on:" -Type "INFO"
-Start-ProcessLogged -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " shell `"su -c pm list packages  `" "  -NoNewWindow -RedirectStandardOutput "$VARCD\RedirectStandardOutput.txt"
-Start-Sleep -Seconds 2
-$PackageName = (Get-Content -Path "$VARCD\RedirectStandardOutput.txt") -replace 'package:',''    | Out-GridView -Title "Select Package to Run Objection" -OutputMode Single
-
-Write-Message  -Message  "Starting Objection" -Type "INFO"
-Start-ProcessLogged -FilePath "$VARCD\python\tools\Scripts\objection.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " --gadget $PackageName explore " -NoNewWindow
-
-#Send keys needd for objection or whatever...
-#Add-Type -AssemblyName System.Windows.Forms
-#[System.Windows.Forms.SendKeys]::SendWait("android sslpinning disable")
-#start-sleep -Seconds 1
-#[System.Windows.Forms.SendKeys]::SendWait("{enter}")
-#[System.Windows.Forms.SendKeys]::SendWait("{enter}")
-
-Start-sleep -Seconds 5
- 
-}
-
 ############# StartADB
 function StartADB {
     $varadb=CheckADB
@@ -1106,11 +1152,11 @@ Function AVDDownload {
 			# now we are using latest cmdline-tools ...!?
 			Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platform-tools" -Verbose -Wait -NoNewWindow
 			#Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "extras;intel;Hardware_Accelerated_Execution_Manager" -Verbose -Wait -NoNewWindow
-			Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platforms;android-30" -Verbose -Wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platforms;android-31" -Verbose -Wait -NoNewWindow
 			Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "emulator" -Verbose -Wait -NoNewWindow
-			Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "system-images;android-30;google_apis_playstore;x86_64" -Verbose -Wait -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "system-images;android-31;google_apis_playstore;x86_64" -Verbose -Wait -NoNewWindow
 			Write-Message  -Message  "AVD Install Complete Creating AVD Device" -Type "INFO"
-			Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-30;google_apis_playstore;x86_64`"  -d `"pixel_2`" --force" -Wait -Verbose -NoNewWindow
+			Start-ProcessLogged -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-31;google_apis_playstore;x86_64`"  -d `"pixel_2`" --force" -Wait -Verbose -NoNewWindow
 			Start-Sleep -Seconds 2
             }
         else {
@@ -1379,10 +1425,13 @@ if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
 
 	cd "$VARCD\rootAVD-master"
 	Write-Message  -Message  "Running installing magisk via rootAVD to ramdisk.img" -Type "INFO"
-	Start-ProcessLogged -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "system-images\android-30\google_apis_playstore\x86_64\ramdisk.img FAKEBOOTIMG " -WorkingDirectory "$VARCD\rootAVD-master\"  -NoNewWindow
+	Start-ProcessLogged -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "system-images\android-31\google_apis_playstore\x86_64\ramdisk.img FAKEBOOTIMG " -WorkingDirectory "$VARCD\rootAVD-master\"  -NoNewWindow
 
     Write-Message  -Message  "rootAVD Finished if the emulator did not close/poweroff try again" -Type "INFO"
-}
+	Write-Message  -Message  "#######################################################################################" -Type "WARNING"
+	Write-Message  -Message  "# YOU MUST CLICK MAGISK AND INSTALL VIA PATCH IN THE DOWNLOADS FOLDER ON THE EMULATOR #" -Type "WARNING"
+	Write-Message  -Message  "#######################################################################################" -Type "WARNING"
+}r
 
 ############# AVDWipeData
 Function AVDWipeData {
@@ -2619,12 +2668,21 @@ $Button.Add_Click({RootAVD})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
-############# #CertPush
+############## CertPush
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
 $Button.Text = "Upload BURP.pem as System Cert"
 $Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
 $Button.Add_Click({CertPush})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############## Startiptables
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Force Traffic to BURP"
+$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
+$Button.Add_Click({Startiptables})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
