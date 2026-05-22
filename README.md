@@ -37,7 +37,7 @@ Features
 - Included Burp crawl config: `%USERPROFILE%\AppData\Roaming\BurpSuite\ConfigLibrary_JAMBOREE_Crawl_Level_01.json`
 
 Quick start
-## NOTE: YOU CAN RELOAD FRIDA PAYLOADS TO FIX SSL DEPINNING BY JUST MODIFYING THE SCRIPT IT WILL LIVE LOAD THE CHANGES!
+## ⚠️ NOTICE: IF SSL DEPINNING IS NOT WORKING, TRY RELOADING OR MODIFYING THE FRIDA SCRIPT. TIMING ISSUES BETWEEN APP INITIALIZATION AND HOOK INJECTION CAN CAUSE SSL PINNING BYPASS TO FAIL ON THE FIRST RUN. RELOADING THE SCRIPT AFTER THE APP HAS FULLY INITIALIZED OFTEN RESOLVES THE ISSUE.
 1. Download `JAMBOREE.ps1` into an empty folder, or run directly from a shell.
 2. Right-click the script and select Run with PowerShell — or run from CMD/PowerShell using the single-line installer below.
 3. Use the JAMBOREE PowerShell UI to start Burp and the AVD, then install and test target apps.
