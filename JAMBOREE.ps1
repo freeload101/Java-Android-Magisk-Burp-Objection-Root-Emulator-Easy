@@ -765,6 +765,7 @@ downloadFile "https://github.com/freeload101/FridaBypassKit/raw/refs/heads/okank
 
 Write-Message  -Message  "Starting Frida with FridaBypassKit.js" -Type "INFO"
 Start-ProcessLogged -FilePath "$VARCD\python\tools\Scripts\frida.exe" -WorkingDirectory "$VARCD\python\tools\Scripts" -ArgumentList " -l `"$VARCD\FridaBypassKit.js`" -f $PackageName -U " -NoNewWindow
+Write-Message  -Message  "⚠️ NOTICE: IF SSL DEPINNING IS NOT WORKING, TRY RELOADING OR MODIFYING THE FRIDA SCRIPT. TIMING ISSUES BETWEEN APP INITIALIZATION AND HOOK INJECTION CAN CAUSE SSL PINNING BYPASS TO FAIL ON THE FIRST RUN. RELOADING THE SCRIPT AFTER THE APP HAS FULLY INITIALIZED OFTEN RESOLVES THE ISSUE." -Type "INFO"
 
 start-sleep -Seconds 5
 
