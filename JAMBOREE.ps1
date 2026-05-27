@@ -2450,4 +2450,4 @@ $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
 
 ############# SHOW FORM
-$main_form.ShowDialog()
+$main_form.ShowDialog() 
