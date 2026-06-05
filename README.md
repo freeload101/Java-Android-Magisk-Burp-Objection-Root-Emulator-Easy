@@ -66,8 +66,7 @@ Quick start
 |Certs|✔️|[SOCFortress CoPilot](https://github.com/socfortress/OSSIEM) /  Velociraptor / Wazuh  WSL |✔️|
 
 ### Simple Powershell UI
-<img width="1670" height="861" alt="image" src="https://github.com/user-attachments/assets/b4079b47-501f-4de5-8093-9abefbfa8fdd" />
-
+<img width="1557" height="679" alt="{C6842EAF-EEC4-487C-A1A6-BF868263510A}" src="https://github.com/user-attachments/assets/f48fa2eb-8694-4f2a-b22b-5c05bb2ee32c" />
 
 
 ### How it works:
