@@ -5,7 +5,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 5.0'
+$Global:VerNum = 'JAMBOREE 5.1'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -2119,6 +2119,143 @@ Function CheckLMStudio {
 }
 
 
+############# Get-PythonNuGet
+function Get-PythonNuGet {
+    [CmdletBinding()]
+    param(
+        [Parameter()]
+        [string]$DownloadPath
+    )
+
+    $ErrorActionPreference = 'Stop'
+
+    if ([string]::IsNullOrEmpty($DownloadPath)) {
+        $DownloadPath = Join-Path -Path $env:USERPROFILE -ChildPath 'Downloads\python'
+    }
+
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+
+    try {
+        $response = Invoke-RestMethod -Uri 'https://api.nuget.org/v3-flatcontainer/python/index.json' -ErrorAction Stop
+        [string[]]$allVersions = $response.versions
+    } catch {
+        $currentError = $_
+        [System.Windows.Forms.MessageBox]::Show("Failed to fetch versions:`n$($currentError.Exception.Message)", 'Error', 'OK', 'Error') | Out-Null
+        return
+    }
+
+    [string[]]$stableVersions = $allVersions | Where-Object { $_ -notmatch '-' }
+
+    [string[]]$stableVersions = $stableVersions | Sort-Object -Descending -Property {
+        $parts = $_ -split '\.'
+        [int]$parts[0] * 1000000 + [int]$parts[1] * 10000 + [int]$parts[2] * 100 + $(if ($parts.Count -gt 3) { [int]$parts[3] } else { 0 })
+    }
+
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = 'Select Python Version'
+    $form.Size = New-Object System.Drawing.Size(450, 450)
+    $form.StartPosition = 'CenterScreen'
+    $form.FormBorderStyle = 'FixedDialog'
+    $form.MaximizeBox = $false
+
+    $label = New-Object System.Windows.Forms.Label
+    $label.Text = "Select a Python version to download:`nAll versions include pip. (3.7.2+ use: python -m pip)"
+    $label.Location = New-Object System.Drawing.Point(12, 12)
+    $label.Size = New-Object System.Drawing.Size(410, 36)
+    $form.Controls.Add($label)
+
+    $listBox = New-Object System.Windows.Forms.ListBox
+    $listBox.Location = New-Object System.Drawing.Point(12, 52)
+    $listBox.Size = New-Object System.Drawing.Size(410, 300)
+    $listBox.Font = New-Object System.Drawing.Font('Consolas', 10)
+    foreach ($ver in $stableVersions) { [void]$listBox.Items.Add($ver) }
+    $listBox.SelectedIndex = 0
+    $form.Controls.Add($listBox)
+
+    $btnOK = New-Object System.Windows.Forms.Button
+    $btnOK.Text = 'Download and Extract'
+    $btnOK.Location = New-Object System.Drawing.Point(12, 365)
+    $btnOK.Size = New-Object System.Drawing.Size(200, 30)
+    $btnOK.DialogResult = 'OK'
+    $form.Controls.Add($btnOK)
+
+    $btnCancel = New-Object System.Windows.Forms.Button
+    $btnCancel.Text = 'Cancel'
+    $btnCancel.Location = New-Object System.Drawing.Point(222, 365)
+    $btnCancel.Size = New-Object System.Drawing.Size(200, 30)
+    $btnCancel.DialogResult = 'Cancel'
+    $form.Controls.Add($btnCancel)
+
+    $form.AcceptButton = $btnOK
+    $form.CancelButton = $btnCancel
+    $listBox.Add_DoubleClick({ $form.DialogResult = 'OK'; $form.Close() })
+
+    if ($form.ShowDialog() -ne 'OK') { $form.Dispose(); return }
+
+    [string]$selectedVersion = $listBox.SelectedItem.ToString()
+    $form.Dispose()
+
+    [string]$nupkgFile = Join-Path -Path $env:TEMP -ChildPath "python.${selectedVersion}.nupkg"
+
+    if (-not (Test-Path -Path $DownloadPath)) {
+        New-Item -ItemType Directory -Path $DownloadPath -Force | Out-Null
+    }
+	Write-Message  -Message  "Downloading Python ${selectedVersion}..." -Type "INFO" 
+
+    $webClient = $null
+    try {
+        $webClient = New-Object System.Net.WebClient
+        $webClient.DownloadFile("https://www.nuget.org/api/v2/package/python/${selectedVersion}", $nupkgFile)
+    } catch {
+        $currentError = $_
+        [System.Windows.Forms.MessageBox]::Show("Download failed:`n$($currentError.Exception.Message)", 'Error', 'OK', 'Error') | Out-Null
+        return
+    } finally {
+        if ($webClient) { $webClient.Dispose() }
+    }
+
+    try {
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($nupkgFile, $DownloadPath)
+    } catch {
+        $currentError = $_
+        [System.Windows.Forms.MessageBox]::Show("Extraction failed:`n$($currentError.Exception.Message)", 'Error', 'OK', 'Error') | Out-Null
+        return
+    }
+
+    Remove-Item -Path $nupkgFile -Force -ErrorAction SilentlyContinue
+
+    [string]$pythonExe = Join-Path -Path $DownloadPath -ChildPath 'tools\python.exe'
+    [string]$pipExe = Join-Path -Path $DownloadPath -ChildPath 'tools\Scripts\pip3.exe'
+
+    if (Test-Path -Path $pipExe) {
+        [string]$pipInfo = "Pip: ${pipExe}"
+    } else {
+        [string]$pipInfo = "Pip: ${pythonExe} -m pip"
+    }
+
+    [System.Windows.Forms.MessageBox]::Show(
+        "Python ${selectedVersion} ready!`n`nPython: ${pythonExe}`n${pipInfo}`n`nPATH: $(Join-Path -Path $DownloadPath -ChildPath 'tools');$(Join-Path -Path $DownloadPath -ChildPath 'tools\Scripts')",
+        'Success', 'OK', 'Information'
+    ) | Out-Null
+	Write-Message  -Message "Done. Python ${selectedVersion} at: ${DownloadPath}" -Type "INFO"
+	New-Item -ItemType Directory -Path "$VARCD\python\tools\Scripts" -ErrorAction SilentlyContinue |Out-Null
+
+# DO NOT INDENT THIS PART
+$PipBatch = @'
+python -m pip %*
+'@
+$PipBatch | Out-File -Encoding Ascii -FilePath "$VARCD\python\tools\Scripts\pip.bat" -ErrorAction SilentlyContinue |Out-Null
+# DO NOT INDENT THIS PART
+
+	Write-Message  -Message  "Updating pip" -Type "INFO"
+	Start-Process -FilePath "$VARCD\python\tools\python.exe" -WorkingDirectory "$VARCD\python\tools" -ArgumentList " -m pip install --upgrade pip " -wait -NoNewWindow
+
+			
+}
+
+
 	
 ######################################################################################################################### FUNCTIONS END
 CheckVer
@@ -2349,6 +2486,16 @@ $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({CheckPyCharm})
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
+
+############# Get-PythonNuGet
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "PY PIC"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({Get-PythonNuGet -DownloadPath "$VARCD\python"})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
 
 ############# CheckVSCode
 $Button = New-Object System.Windows.Forms.Button
