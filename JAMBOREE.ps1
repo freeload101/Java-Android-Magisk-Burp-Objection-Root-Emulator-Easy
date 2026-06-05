@@ -2490,7 +2490,7 @@ $vShift = $vShift + 30
 ############# Get-PythonNuGet
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "PY PIC"
+$Button.Text = "DL Old Python"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({Get-PythonNuGet -DownloadPath "$VARCD\python"})
 $main_form.Controls.Add($Button)
