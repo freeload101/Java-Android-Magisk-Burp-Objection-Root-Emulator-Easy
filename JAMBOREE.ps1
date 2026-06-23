@@ -2442,7 +2442,7 @@ $main_form.Controls.Add($Button)
 $vShift = 0
 $hShift = $hShift + 250
 
-############# SharpHoundRun
+############# UpdateJAMBO
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
 $Button.Text = "Update"
