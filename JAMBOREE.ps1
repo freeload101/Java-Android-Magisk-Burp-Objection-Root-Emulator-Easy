@@ -2445,6 +2445,15 @@ $hShift = $hShift + 250
 ############# SharpHoundRun
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
+$Button.Text = "Update"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({UpdateJAMBO})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
+############# SharpHoundRun
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
 $Button.Text = "SharpHound"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({SharpHoundRun})
