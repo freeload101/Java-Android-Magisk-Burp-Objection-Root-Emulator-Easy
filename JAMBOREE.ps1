@@ -5,7 +5,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 5.2'
+$Global:VerNum = 'JAMBOREE 5.3'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -2442,15 +2442,6 @@ $main_form.Controls.Add($Button)
 $vShift = 0
 $hShift = $hShift + 250
 
-############# UpdateJAMBO
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Update"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({UpdateJAMBO})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
 ############# SharpHoundRun
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
@@ -2604,6 +2595,44 @@ $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({ $Global:OutputBox.Clear() })
 $main_form.Controls.Add($Button)
 $vShift = $vShift + 30
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+################# UpdateJAMBO ALWAYS LAST
+############# UpdateJAMBO
+$Button = New-Object System.Windows.Forms.Button
+$Button.AutoSize = $true
+$Button.Text = "Update"
+$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
+$Button.Add_Click({UpdateJAMBO})
+$main_form.Controls.Add($Button)
+$vShift = $vShift + 30
+
 
 ############# SHOW FORM
 $main_form.ShowDialog()
