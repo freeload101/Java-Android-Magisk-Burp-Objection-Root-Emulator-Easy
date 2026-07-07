@@ -1,11 +1,13 @@
 param(
     [Parameter(Mandatory=$false)]
-    [string]$Headless
+    [string]$Headless,
+    [Parameter(Mandatory=$false, Position=0)]
+    [string]$Command
 )
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 5.3'
+$Global:VerNum = 'JAMBOREE 5.6'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -2261,378 +2263,119 @@ $PipBatch | Out-File -Encoding Ascii -FilePath "$VARCD\python\tools\Scripts\pip.
 CheckVer
 Test-PathLength
 
-############# StartBurp
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "BurpSuite Community"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({StartBurp})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
+############# Single Command Mode - if $Command is provided, search functions or execute file
+if ($Command) {
+    # Get all function names defined in this script (exclude built-in/alias)
+    $allFuncs = (Get-ChildItem Function:\).Name | Sort-Object
+    
+    # Case-insensitive match against function names
+    $matchedFuncs = $allFuncs | Where-Object { $_ -like "*$Command*" }
+    
+    if ($matchedFuncs) {
+        Write-Message -Type "INFO" -Message "Found $($matchedFuncs.Count) matching function(s): $($matchedFuncs -join ', ')"
+        foreach ($fn in $matchedFuncs) {
+            Write-Message -Type "INFO" -Message "Executing: $fn"
+            & $fn
+        }
+    } else {
+        # Try to find and execute as a file (.bat, .ps1, .exe)
+        $extensions = @('.bat', '.ps1', '.exe')
+        $foundFile = $false
+        foreach ($ext in $extensions) {
+            $targetPath = "$VARCD\$Command$ext"
+            if (Test-Path $targetPath) {
+                Write-Message -Type "INFO" -Message "Executing file: $targetPath"
+                if ($ext -eq '.ps1') {
+                    & $targetPath
+                } else {
+                    Start-Process -FilePath $targetPath -WorkingDirectory "$VARCD"
+                }
+                $foundFile = $true
+                break
+            }
+        }
+        # Also try as a bare command (in PATH)
+        if (-not $foundFile) {
+            $cmd = Get-Command $Command -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($cmd) {
+                Write-Message -Type "INFO" -Message "Executing command: $($cmd.Name)"
+                Start-Process -FilePath $cmd.Source -WorkingDirectory "$VARCD" -ErrorAction SilentlyContinue
+                $foundFile = $true
+            }
+        }
+        if (-not $foundFile) {
+            Write-Message -Type "ERROR" -Message "No matching function or file found for: $Command"
+            Write-Message -Type "INFO" -Message "Available functions: $($allFuncs -join ', ')"
+        }
+    }
+}
 
-############# AVDStart
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Start AVD" #AVDStart
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({AVDStart})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
+############# Build Buttons
+$ButtonsCol1 = @(
+    @{Text="BurpSuite Community"; Action={StartBurp}},
+    @{Text="Start AVD"; Action={AVDStart}},
+    @{Text="RootAVD/Install Magisk"; Action={RootAVD}},
+    @{Text="Upload BURP.pem as System Cert"; Action={CertPush}},
+    @{Text="Force Traffic to BURP"; Action={Startiptables}},
+    @{Text="RMS: Runtime Mobile Security"; Action={StartRMS}},
+    @{Text="Start Frida-Server"; Action={StartFrida}},
+    @{Text="Frida/AntiRoot/SSLDepinning"; Action={StartJAMBOREE_SSL_N_ANTIROOT}},
+    @{Text="StartObjection"; Action={StartObjection}},
+    @{Text="Shell"; Action={CMDPrompt}},
+    @{Text="Burp Suite Pro"; Action={StartBurpPro}},
+    @{Text="Burp Suite Community/ZAP"; Action={BurpWithZap}},
+    @{Text="Burp Suite Pro/ZAP"; Action={BurpProWithZap}},
+    @{Text="ZAP"; Action={StartZAP}},
+    @{Text="ADB Logcat"; Action={StartADB}},
+    @{Text="Shutdown AVD"; Action={AVDPoweroff}},
+    @{Text="AVD -wipe-data (Fix unauthorized adb)"; Action={AVDWipeData}},
+    @{Text="Install Base APKs"; Action={InstallAPKS}},
+    @{Text="Dump App Names"; Action={ADBDumpDisplayName}},
+    @{Text="Kill adb.exe"; Action={KillADB}}
+)
 
-############# RootAVD
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "RootAVD/Install Magisk"
-$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button.Add_Click({RootAVD})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
+$ButtonsCol2 = @(
+    @{Text="SharpHound"; Action={SharpHoundRun}},
+    @{Text="Neo4j"; Action={Neo4jRun}},
+    @{Text="Bloodhound"; Action={BloodhoundRun}},
+    @{Text="LM Studio"; Action={CheckLMStudio}},
+    @{Text="PyCharm"; Action={CheckPyCharm}},
+    @{Text="DL Old Python"; Action={Get-PythonNuGet -DownloadPath "$VARCD\python"}},
+    @{Text="VS Code"; Action={CheckVSCode}},
+    @{Text="Ollama Windows EXE"; Action={EXECheckOllama}},
+    @{Text="WSL Shrink"; Action={WSLShrink}},
+    @{Text="SillyTavern"; Action={StartSillyTavern}},
+    @{Text="PostgreSQL"; Action={CheckPostgres}},
+    @{Text="Arduino IDE"; Action={CheckArduino}},
+    @{Text="Duck2Spark"; Action={PushDuckyLoad}},
+    @{Text="Ytdlp"; Action={Ytdlp}},
+    @{Text="Volatility 3"; Action={CheckVolatility3}},
+    @{Text="Clear netsh portproxy rules"; Action={WipeForwardRules}},
+    @{Text="Clear Log"; Action={$Global:OutputBox.Clear()}},
+    @{Text="Update JAMBOREE"; Action={UpdateJAMBO}}
+)
 
-############## CertPush
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Upload BURP.pem as System Cert"
-$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button.Add_Click({CertPush})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############## Startiptables
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Force Traffic to BURP"
-$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button.Add_Click({Startiptables})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# CheckRMS
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "RMS: Runtime Mobile Security"
-$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button.Add_Click({StartRMS})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# StartFrida
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Start Frida-Server"
-$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button.Add_Click({StartFrida})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# StartFrida/SSLDepinning
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Frida/AntiRoot/SSLDepinning"
-$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button.Add_Click({StartJAMBOREE_SSL_N_ANTIROOT})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# StartObjection
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "StartObjection"
-$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button.Add_Click({StartObjection})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
- 
-############# CMDPrompt
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Shell"
-$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button.Add_Click({CMDPrompt})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# StartBurpPro
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Burp Suite Pro"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({StartBurpPro})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# BurpWithZap
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Burp Suite Community/ZAP"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({BurpWithZap})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# BurpProWithZap
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Burp Suite Pro/ZAP"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({BurpProWithZap})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# StartZAP
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "ZAP"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({StartZAP})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# StartADB
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "ADB Logcat"
-$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button.Add_Click({StartADB})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# AVDPoweroff
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Shutdown AVD"
-$Button.Location = New-Object System.Drawing.Point(($hShift),($vShift+0))
-$Button.Add_Click({AVDPoweroff})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# AVDWipeData
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "AVD -wipe-data (Fix unauthorized adb)"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({AVDWipeData})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# InstallAPKS
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Install Base APKs"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({InstallAPKS})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# ADBDumpDisplayName
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Dump App Names"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({ADBDumpDisplayName})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############ KillADB
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Kill adb.exe"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({KillADB})
-$main_form.Controls.Add($Button)
+foreach ($btn in $ButtonsCol1) {
+    $Button = New-Object System.Windows.Forms.Button
+    $Button.AutoSize = $true
+    $Button.Text = $btn.Text
+    $Button.Location = New-Object System.Drawing.Point(($hShift),($vShift))
+    $Button.Add_Click($btn.Action)
+    $main_form.Controls.Add($Button)
+    $vShift += 30
+}
 $vShift = 0
-$hShift = $hShift + 250
+$hShift += 250
 
-############# SharpHoundRun
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "SharpHound"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({SharpHoundRun})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# Neo4jRun
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Neo4j"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({Neo4jRun})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# Bloodhound
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Bloodhound"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({BloodhoundRun})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# CheckLMStudio
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "LM Studio"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({CheckLMStudio})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# CheckPyCharm
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "PyCharm"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({CheckPyCharm})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# Get-PythonNuGet
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "DL Old Python"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({Get-PythonNuGet -DownloadPath "$VARCD\python"})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-
-############# CheckVSCode
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "VS Code"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({CheckVSCode})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# EXECheckOllama
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Ollama Windows EXE"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({EXECheckOllama})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# WSLShrink
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "WSL Shrink"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({WSLShrink})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# StartSillyTavern
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "SillyTavern"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({StartSillyTavern})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# CheckPostgres
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "PostgreSQL"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({CheckPostgres})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# CheckArduino
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Arduino IDE"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({CheckArduino})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# PushDuckyLoad
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Duck2Spark"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({PushDuckyLoad})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# Ytdlp
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Ytdlp"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({Ytdlp})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# CheckVolatility3
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Volatility 3"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({CheckVolatility3})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# WipeForwardRules
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Clear netsh portproxy rules"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({WipeForwardRules})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-############# WipeForwardRules
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Clear Log"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({ $Global:OutputBox.Clear() })
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-################# UpdateJAMBO ALWAYS LAST
-############# UpdateJAMBO
-$Button = New-Object System.Windows.Forms.Button
-$Button.AutoSize = $true
-$Button.Text = "Update JAMBOREE"
-$Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
-$Button.Add_Click({UpdateJAMBO})
-$main_form.Controls.Add($Button)
-$vShift = $vShift + 30
-
+foreach ($btn in $ButtonsCol2) {
+    $Button = New-Object System.Windows.Forms.Button
+    $Button.AutoSize = $true
+    $Button.Text = $btn.Text
+    $Button.Location = New-Object System.Drawing.Point(($hShift),($vShift))
+    $Button.Add_Click($btn.Action)
+    $main_form.Controls.Add($Button)
+    $vShift += 30
+}
 
 ############# SHOW FORM
 $main_form.ShowDialog()
