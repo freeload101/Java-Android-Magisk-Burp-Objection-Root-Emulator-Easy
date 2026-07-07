@@ -2627,7 +2627,7 @@ $vShift = $vShift + 30
 ############# UpdateJAMBO
 $Button = New-Object System.Windows.Forms.Button
 $Button.AutoSize = $true
-$Button.Text = "Update"
+$Button.Text = "Update JAMBOREE"
 $Button.Location = New-Object System.Drawing.Point(($hShift+0),($vShift+0))
 $Button.Add_Click({UpdateJAMBO})
 $main_form.Controls.Add($Button)
