@@ -1460,8 +1460,8 @@ Function CheckVSCode {
 $env:DP_P_INPUT="1.0"
 $env:DP_P_CACHE="0.05"
 $env:DP_P_OUT="15.0"
-$env:DP_CHECK_THRESHOLD="0.60"
-$env:DP_FORCE_THRESHOLD="0.85"
+$env:DP_CHECK_THRESHOLD="0.55"
+$env:DP_FORCE_THRESHOLD="0.75"
 
 	Check7zip
 	CheckGit
