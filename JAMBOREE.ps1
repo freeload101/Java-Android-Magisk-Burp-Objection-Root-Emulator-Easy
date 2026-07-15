@@ -7,7 +7,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 5.6'
+$Global:VerNum = 'JAMBOREE 5.7'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -235,6 +235,172 @@ Function CheckAdmin {
 	}
 }
 
+############# AVDStart
+  Function AVDStart {
+      param(
+          [Parameter(Mandatory)]
+          [ValidateSet("x86", "x86_64")]
+          [string]$Arch
+      )
+
+      switch ($Arch) {
+          "x86" {
+              $AndroidVersion = "android-30"
+              $SystemImage = "system-images;android-30;google_apis_playstore;x86"
+              $RamdiskPath = "system-images\android-30\google_apis_playstore\x86\ramdisk.img"
+          }
+          "x86_64" {
+              $AndroidVersion = "android-31"
+              $SystemImage = "system-images;android-31;google_apis_playstore;x86_64"
+              $RamdiskPath = "system-images\android-31\google_apis_playstore\x86_64\ramdisk.img"
+          }
+      }
+
+      CheckProcess "Burp Suite" StartBurp
+      Stop-Process -Name emulator -Force -ErrorAction SilentlyContinue | Out-Null
+      Stop-Process -Name adb -Force -ErrorAction SilentlyContinue | Out-Null
+      Stop-Process -Name qemu-system-x86_64 -Force -ErrorAction SilentlyContinue | Out-Null
+
+      if (-not(Test-Path -Path "$VARCD\emulator" )) {
+          AVDDownload -AndroidVersion $AndroidVersion -SystemImage $SystemImage
+          if (-not(Test-Path -Path "$VARCD\emulator" )) {
+              Write-Message -Message "AVDDownload failed - $VARCD\emulator not found after download" -Type "ERROR"
+              return
+          }
+          Write-Message -Message "AVD ($Arch) downloaded successfully, starting emulator" -Type "INFO"
+          Start-Sleep -Seconds 2
+          Write-Message -Message "Do not run emulator with -http-proxy 127.0.0.1:8080 it is not stable" -Type "INFO"
+          Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList " -avd pixel_2 -writable-system " -NoNewWindow
+          Start-Sleep -Seconds 10
+          Write-Message -Message "Enabling keyboard in config.ini" -Type "INFO"
+          (Get-Content "$VARCD\avd\pixel_2.avd\config.ini") `
+              -replace 'hw.keyboard = no', 'hw.keyboard = yes' `
+              -replace 'hw.camera.back.*', 'hw.camera.back = webcam0' `
+              -replace 'hw.camera.front.*', 'hw.camera.front = none' |
+              Out-File -Encoding Ascii "$VARCD\avd\pixel_2.avd\config.ini"
+      }
+      else {
+          Write-Message -Message "Emulator found at $VARCD\emulator - starting AVD ($Arch)" -Type "INFO"
+          Start-Sleep -Seconds 2
+          Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList " -avd pixel_2 -writable-system " -NoNewWindow
+      }
+  }
+
+  ############# AVDDownload
+  Function AVDDownload {
+      param(
+          [string]$AndroidVersion,
+          [string]$SystemImage
+      )
+
+      if (-not(Test-Path -Path "$VARCD\emulator\emulator.exe" )) {
+          ADBCheckBin
+          CheckJava
+          CheckPython
+          Write-Message -Message "Creating licenses Files" -Type "INFO"
+          $licenseContentBase64 =
+  "UEsDBBQAAAAAAKNK11IAAAAAAAAAAAAAAAAJAAAAbGljZW5zZXMvUEsDBAoAAAAAAJ1K11K7n0IrKgAAACoAAAAhAAAAbGljZW5zZXMvYW5kcm9pZC1nb29nbGV0di1saWNlbnNlDQo2MDEwODViOTRjZDc3ZjBiNTRmZjg2NDA2OTU3MDk5ZWJlNzljNGQ2UEsDBAoAAAAAAKBK11LzQumJKgAAACoAAAAkAAAAbGljZW5zZXMvYW5kcm9pZC1zZGstYXJtLWRidC1s
+  aWNlbnNlDQo4NTlmMzE3Njk2ZjY3ZWYzZDdmMzBhNTBhNTU2MGU3ODM0YjQzOTAzUEsDBAoAAAAAAKFK11IKSOJFKgAAACoAAAAcAAAAbGljZW5zZXMvYW5kcm9pZC1zZGstbGljZW5zZQ0KMjQzMzNmOGE2M2I2ODI1ZWE5YzU1MTRmODNjMjgyOWIwMDRkMWZlZVBLAwQKAAAAAACiStdSec1a4SoAAAAqAAAAJAAAAGxpY2Vuc2VzL2FuZHJvaWQtc2RrLXByZXZpZ
+  XctbGljZW5zZQ0KODQ4MzFiOTQwOTY0NmE5MThlMzA1NzNiYWI0YzljOTEzNDZkOGFiZFBLAwQKAAAAAACiStdSk6vQKCoAAAAqAAAAGwAAAGxpY2Vuc2VzL2dvb2dsZS1nZGstbGljZW5zZQ0KMzNiNmEyYjY0NjA3ZjExYjc1OWYzMjBlZjlkZmY0YWU1YzQ3ZDk3YVBLAwQKAAAAAACiStdSrE3jESoAAAAqAAAAJAAAAGxpY2Vuc2VzL2ludGVsLWFuZHJvaWQtZX
+  h0cmEtbGljZW5zZQ0KZDk3NWY3NTE2OThhNzdiNjYyZjEyNTRkZGJlZWQzOTAxZTk3NmY1YVBLAwQKAAAAAACjStdSkb1vWioAAAAqAAAAJgAAAGxpY2Vuc2VzL21pcHMtYW5kcm9pZC1zeXNpbWFnZS1saWNlbnNlDQplOWFjYWI1YjVmYmI1NjBhNzJjZmFlY2NlODk0Njg5NmZmNmFhYjlkUEsBAj8AFAAAAAAAo0rXUgAAAAAAAAAAAAAAAAkAJAAAAAAAAAAQAAA
+  AAAAAAGxpY2Vuc2VzLwoAIAAAAAAAAQAYACIHOBcRaNcBIgc4FxFo1wHBTVQTEWjXAVBLAQI/AAoAAAAAAJ1K11K7n0IrKgAAACoAAAAhACQAAAAAAAAAIAAAACcAAABsaWNlbnNlcy9hbmRyb2lkLWdvb2dsZXR2LWxpY2Vuc2UKACAAAAAAAAEAGACUEFUTEWjXAZQQVRMRaNcB6XRUExFo1wFQSwECPwAKAAAAAACgStdS80LpiSoAAAAqAAAAJAAkAAAAAAAAACAA
+  AACQAAAAbGljZW5zZXMvYW5kcm9pZC1zZGstYXJtLWRidC1saWNlbnNlCgAgAAAAAAABABgAsEM0FBFo1wGwQzQUEWjXAXb1MxQRaNcBUEsBAj8ACgAAAAAAoUrXUgpI4kUqAAAAKgAAABwAJAAAAAAAAAAgAAAA/AAAAGxpY2Vuc2VzL2FuZHJvaWQtc2RrLWxpY2Vuc2UKACAAAAAAAAEAGAAsMGUVEWjXASwwZRURaNcB5whlFRFo1wFQSwECPwAKAAAAAACiStdSe
+  c1a4SoAAAAqAAAAJAAkAAAAAAAAACAAAABgAQAAbGljZW5zZXMvYW5kcm9pZC1zZGstcHJldmlldy1saWNlbnNlCgAgAAAAAAABABgA7s3WFRFo1wHuzdYVEWjXAfGm1hURaNcBUEsBAj8ACgAAAAAAokrXUpOr0CgqAAAAKgAAABsAJAAAAAAAAAAgAAAAzAEAAGxpY2Vuc2VzL2dvb2dsZS1nZGstbGljZW5zZQoAIAAAAAAAAQAYAGRDRxYRaNcBZENHFhFo1wFfHE
+  cWEWjXAVBLAQI/AAoAAAAAAKJK11KsTeMRKgAAACoAAAAkACQAAAAAAAAAIAAAAC8CAABsaWNlbnNlcy9pbnRlbC1hbmRyb2lkLWV4dHJhLWxpY2Vuc2UKACAAAAAAAAEAGADGsq0WEWjXAcayrRYRaNcBxrKtFhFo1wFQSwECPwAKAAAAAACjStdSkb1vWioAAAAqAAAAJgAkAAAAAAAAACAAAACbAgAAbGljZW5zZXMvbWlwcy1hbmRyb2lkLXN5c2ltYWdlLWxpY2V
+  uc2UKACAAAAAAAAEAGAA4LjgXEWjXATguOBcRaNcBIgc4FxFo1wFQSwUGAAAAAAgACACDAwAACQMAAAAA"
+          $licenseContent = [System.Convert]::FromBase64String($licenseContentBase64)
+          Set-Content -Path "$VARCD\android-sdk-licenses.zip" -Value $licenseContent -Encoding Byte
+          Expand-Archive "$VARCD\android-sdk-licenses.zip" -DestinationPath "$VARCD\" -Force
+          Write-Message -Message "Running sdkmanager/Installing" -Type "INFO"
+
+          Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList "platform-tools" -Verbose -Wait -NoNewWindow
+          Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList "platforms;$AndroidVersion" -Verbose -Wait -NoNewWindow
+          Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList "emulator" -Verbose -Wait -NoNewWindow
+          Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList "$SystemImage" -Verbose -Wait -NoNewWindow
+          Write-Message -Message "AVD Install Complete Creating AVD Device" -Type "INFO"
+          Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList "create avd -n pixel_2 -k `"$SystemImage`" -d `"pixel_2`" --force" -Wait -Verbose -NoNewWindow
+          Start-Sleep -Seconds 2
+      }
+      else {
+          Write-Message -Message "AVDDownload: $VARCD\emulator\emulator.exe already exists remove everything but this script to perform full reinstall/setup" -Type "WARNING"
+          Write-Message -Message "Current Working Directory $VARCD" -Type "WARNING"
+          Start-Sleep -Seconds 1
+      }
+  }
+
+ 
+
+ 
+   
+
+############# RootAVD
+  Function RootAVD {
+      Start-Sleep -Seconds 2
+
+      if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
+          try {
+              Write-Message -Message "Downloading rootAVD" -Type "INFO"
+              downloadFile "https://gitlab.com/newbit/rootAVD/-/archive/master/rootAVD-master.zip" "$VARCD\rootAVD-master.zip"
+              Write-Message -Message "Extracting rootAVD (Turn On AVD 1st" -Type "INFO"
+              Expand-Archive -Path "$VARCD\rootAVD-master.zip" -DestinationPath "$VARCD" -Force
+          }
+          catch {
+              throw $_.Exception.Message
+          }
+      }
+      else {
+          Write-Message -Message "$VARCD\rootAVD-master already exists" -Type "WARNING"
+      }
+
+      $varadb = CheckADB
+      $env:ANDROID_SERIAL = $varadb
+
+      # Detect architecture from running AVD
+      $abiRaw = & "$VARCD\platform-tools\adb.exe" shell getprop ro.product.cpu.abi
+      $abi = "$abiRaw".Trim()
+      Write-Message -Message "Device ABI: $abi" -Type "INFO"
+
+      $archMap = @{
+          "arm64-v8a"   = "arm64"
+          "armeabi-v7a" = "arm"
+          "armeabi"     = "arm"
+          "x86_64"      = "x86_64"
+          "x86"         = "x86"
+      }
+
+      if (-not $archMap.ContainsKey($abi)) {
+          Write-Message -Message "Unsupported ABI: $abi" -Type "ERROR"
+          return
+      }
+
+      $arch = $archMap[$abi]
+      Write-Message -Message "Detected arch: $arch" -Type "INFO"
+
+      # Map arch to ramdisk path
+      switch ($arch) {
+          "x86" {
+              $RamdiskPath = "system-images\android-30\google_apis_playstore\x86\ramdisk.img"
+          }
+          "x86_64" {
+              $RamdiskPath = "system-images\android-31\google_apis_playstore\x86_64\ramdisk.img"
+          }
+          default {
+              Write-Message -Message "No ramdisk mapping for arch: $arch" -Type "ERROR"
+              return
+          }
+      }
+
+      cd "$VARCD\rootAVD-master"
+      Write-Message -Message "Running installing magisk via rootAVD to $RamdiskPath" -Type "INFO"
+      Start-Process -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList "$RamdiskPath FAKEBOOTIMG" -WorkingDirectory "$VARCD\rootAVD-master\" -NoNewWindow
+
+      Write-Message -Message "rootAVD Finished if the emulator did not close/poweroff try again" -Type "INFO"
+      Write-Message -Message "#######################################################################################" -Type "WARNING"
+      Write-Message -Message "# YOU MUST CLICK MAGISK AND INSTALL VIA PATCH IN THE DOWNLOADS FOLDER ON THE EMULATOR #" -Type "WARNING"
+      Write-Message -Message "#######################################################################################" -Type "WARNING"
+  }
+
+  
 ############# CheckVolatility3
 Function CheckVolatility3 {
    if (-not(Test-Path -Path "$VARCD\volatility3-develop" )) { 
@@ -795,75 +961,8 @@ function StartADB {
 	$env:ANDROID_SERIAL=$varadb
     Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList  " logcat *:W  "
 }
-
-############# AVDDownload
-Function AVDDownload {
-
-    if (-not(Test-Path -Path "$VARCD\emulator\emulator.exe" )) {
-			ADBCheckBin
-			CheckJava
-			CheckPython
-			Write-Message  -Message  "Creating licenses Files" -Type "INFO"
-			$licenseContentBase64 = "UEsDBBQAAAAAAKNK11IAAAAAAAAAAAAAAAAJAAAAbGljZW5zZXMvUEsDBAoAAAAAAJ1K11K7n0IrKgAAACoAAAAhAAAAbGljZW5zZXMvYW5kcm9pZC1nb29nbGV0di1saWNlbnNlDQo2MDEwODViOTRjZDc3ZjBiNTRmZjg2NDA2OTU3MDk5ZWJlNzljNGQ2UEsDBAoAAAAAAKBK11LzQumJKgAAACoAAAAkAAAAbGljZW5zZXMvYW5kcm9pZC1zZGstYXJtLWRidC1saWNlbnNlDQo4NTlmMzE3Njk2ZjY3ZWYzZDdmMzBhNTBhNTU2MGU3ODM0YjQzOTAzUEsDBAoAAAAAAKFK11IKSOJFKgAAACoAAAAcAAAAbGljZW5zZXMvYW5kcm9pZC1zZGstbGljZW5zZQ0KMjQzMzNmOGE2M2I2ODI1ZWE5YzU1MTRmODNjMjgyOWIwMDRkMWZlZVBLAwQKAAAAAACiStdSec1a4SoAAAAqAAAAJAAAAGxpY2Vuc2VzL2FuZHJvaWQtc2RrLXByZXZpZXctbGljZW5zZQ0KODQ4MzFiOTQwOTY0NmE5MThlMzA1NzNiYWI0YzljOTEzNDZkOGFiZFBLAwQKAAAAAACiStdSk6vQKCoAAAAqAAAAGwAAAGxpY2Vuc2VzL2dvb2dsZS1nZGstbGljZW5zZQ0KMzNiNmEyYjY0NjA3ZjExYjc1OWYzMjBlZjlkZmY0YWU1YzQ3ZDk3YVBLAwQKAAAAAACiStdSrE3jESoAAAAqAAAAJAAAAGxpY2Vuc2VzL2ludGVsLWFuZHJvaWQtZXh0cmEtbGljZW5zZQ0KZDk3NWY3NTE2OThhNzdiNjYyZjEyNTRkZGJlZWQzOTAxZTk3NmY1YVBLAwQKAAAAAACjStdSkb1vWioAAAAqAAAAJgAAAGxpY2Vuc2VzL21pcHMtYW5kcm9pZC1zeXNpbWFnZS1saWNlbnNlDQplOWFjYWI1YjVmYmI1NjBhNzJjZmFlY2NlODk0Njg5NmZmNmFhYjlkUEsBAj8AFAAAAAAAo0rXUgAAAAAAAAAAAAAAAAkAJAAAAAAAAAAQAAAAAAAAAGxpY2Vuc2VzLwoAIAAAAAAAAQAYACIHOBcRaNcBIgc4FxFo1wHBTVQTEWjXAVBLAQI/AAoAAAAAAJ1K11K7n0IrKgAAACoAAAAhACQAAAAAAAAAIAAAACcAAABsaWNlbnNlcy9hbmRyb2lkLWdvb2dsZXR2LWxpY2Vuc2UKACAAAAAAAAEAGACUEFUTEWjXAZQQVRMRaNcB6XRUExFo1wFQSwECPwAKAAAAAACgStdS80LpiSoAAAAqAAAAJAAkAAAAAAAAACAAAACQAAAAbGljZW5zZXMvYW5kcm9pZC1zZGstYXJtLWRidC1saWNlbnNlCgAgAAAAAAABABgAsEM0FBFo1wGwQzQUEWjXAXb1MxQRaNcBUEsBAj8ACgAAAAAAoUrXUgpI4kUqAAAAKgAAABwAJAAAAAAAAAAgAAAA/AAAAGxpY2Vuc2VzL2FuZHJvaWQtc2RrLWxpY2Vuc2UKACAAAAAAAAEAGAAsMGUVEWjXASwwZRURaNcB5whlFRFo1wFQSwECPwAKAAAAAACiStdSec1a4SoAAAAqAAAAJAAkAAAAAAAAACAAAABgAQAAbGljZW5zZXMvYW5kcm9pZC1zZGstcHJldmlldy1saWNlbnNlCgAgAAAAAAABABgA7s3WFRFo1wHuzdYVEWjXAfGm1hURaNcBUEsBAj8ACgAAAAAAokrXUpOr0CgqAAAAKgAAABsAJAAAAAAAAAAgAAAAzAEAAGxpY2Vuc2VzL2dvb2dsZS1nZGstbGljZW5zZQoAIAAAAAAAAQAYAGRDRxYRaNcBZENHFhFo1wFfHEcWEWjXAVBLAQI/AAoAAAAAAKJK11KsTeMRKgAAACoAAAAkACQAAAAAAAAAIAAAAC8CAABsaWNlbnNlcy9pbnRlbC1hbmRyb2lkLWV4dHJhLWxpY2Vuc2UKACAAAAAAAAEAGADGsq0WEWjXAcayrRYRaNcBxrKtFhFo1wFQSwECPwAKAAAAAACjStdSkb1vWioAAAAqAAAAJgAkAAAAAAAAACAAAACbAgAAbGljZW5zZXMvbWlwcy1hbmRyb2lkLXN5c2ltYWdlLWxpY2Vuc2UKACAAAAAAAAEAGAA4LjgXEWjXATguOBcRaNcBIgc4FxFo1wFQSwUGAAAAAAgACACDAwAACQMAAAAA"
-			$licenseContent = [System.Convert]::FromBase64String($licenseContentBase64)
-			Set-Content -Path "$VARCD\android-sdk-licenses.zip" -Value $licenseContent -Encoding Byte
-			Expand-Archive  "$VARCD\android-sdk-licenses.zip"  -DestinationPath "$VARCD\"  -Force
-			Write-Message  -Message  "Running sdkmanager/Installing" -Type "INFO"
-			
-			# now we are using latest cmdline-tools ...!?
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platform-tools" -Verbose -Wait -NoNewWindow
-			#Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "extras;intel;Hardware_Accelerated_Execution_Manager" -Verbose -Wait -NoNewWindow
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "platforms;android-31" -Verbose -Wait -NoNewWindow
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "emulator" -Verbose -Wait -NoNewWindow
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\sdkmanager.bat" -ArgumentList  "system-images;android-31;google_apis_playstore;x86_64" -Verbose -Wait -NoNewWindow
-			Write-Message  -Message  "AVD Install Complete Creating AVD Device" -Type "INFO"
-			Start-Process -FilePath "$VARCD\cmdline-tools\latest\bin\avdmanager.bat" -ArgumentList  "create avd -n pixel_2 -k `"system-images;android-31;google_apis_playstore;x86_64`"  -d `"pixel_2`" --force" -Wait -Verbose -NoNewWindow
-			Start-Sleep -Seconds 2
-            }
-        else {
-            Write-Message  -Message  "AVDDownload: $VARCD\emulator\emulator.exe already exists remove everything but this script to perform full reinstall/setup" -Type "WARNING"
-            Write-Message  -Message  "Current Working Directory $VARCD" -Type "WARNING"
-            Start-Sleep -Seconds 1
-            }
  
    
-  
-}
-  
-############# AVDStart
-Function AVDStart {
-	CheckProcess "Burp Suite" StartBurp
-	Stop-process -name emulator -Force -ErrorAction SilentlyContinue |Out-Null
-	Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
-	Stop-process -name qemu-system-x86_64 -Force -ErrorAction SilentlyContinue |Out-Null
-	
-	if (-not(Test-Path -Path "$VARCD\emulator" )) {
-			AVDDownload
-			if (-not(Test-Path -Path "$VARCD\emulator" )) {
-				Write-Message  -Message  "AVDDownload failed - $VARCD\emulator not found after download" -Type "ERROR"
-				return
-			}
-			Write-Message  -Message  "AVD downloaded successfully, starting emulator" -Type "INFO"
-			Start-Sleep -Seconds 2
-			Write-Message  -Message  "Do not run emulator with  -http-proxy 127.0.0.1:8080 it is not stable" -Type "INFO"
-			# DO NOT USE THIS IT IS BUGGY ... Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system -http-proxy 127.0.0.1:8080" -NoNewWindow
-            Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system " -NoNewWindow
-				Start-Sleep -Seconds 10
-				Write-Message  -Message  "Enbleing keyboard in config.ini" -Type "INFO"
-				(Get-Content "$VARCD\avd\pixel_2.avd\config.ini") `
-				-replace 'hw.keyboard = no', 'hw.keyboard = yes' `
-				-replace 'hw.camera.back.*', 'hw.camera.back = webcam0' `
-				-replace 'hw.camera.front.*', 'hw.camera.front = none' ` |
-				Out-File -Encoding Ascii "$VARCD\avd\pixel_2.avd\config.ini"
-            }
-    else {
-            Write-Message  -Message  "Emulator found at $VARCD\emulator - starting AVD" -Type "INFO"
-			Start-Sleep -Seconds 2
-			Start-Process -FilePath "$VARCD\emulator\emulator.exe" -ArgumentList  " -avd pixel_2 -writable-system " -NoNewWindow
-			
-            }
-}
-
 ############# AVDPoweroff
 Function AVDPoweroff {
     $varadb=CheckADB
@@ -907,40 +1006,7 @@ Function CMDPrompt {
         Start-Process -FilePath "$VARCD\platform-tools\adb.exe" -ArgumentList " shell " -ErrorAction SilentlyContinue | Out-Null
     }
 }
-  
-############# RootAVD
-Function RootAVD {
-    # I had to start the image before I enabled keyboard ....
-	Start-Sleep -Seconds 2
-
-if (-not(Test-Path -Path "$VARCD\rootAVD-master" )) {
-    try {
-            Write-Message  -Message  "Downloading rootAVD" -Type "INFO"
-            # Just in cases : downloadFile "https://github.com/newbit1/rootAVD/archive/refs/heads/master.zip" "$VARCD\rootAVD-master.zip"
-	    downloadFile "https://gitlab.com/newbit/rootAVD/-/archive/master/rootAVD-master.zip" "$VARCD\rootAVD-master.zip"
-            Write-Message  -Message  "Extracting rootAVD (Turn On AVD 1st" -Type "INFO"
-            Expand-Archive -Path  "$VARCD\rootAVD-master.zip" -DestinationPath "$VARCD" -Force
-        }
-            catch {
-            throw $_.Exception.Message
-            }
-        }
-        else {
-            Write-Message  -Message  "$VARCD\rootAVD-master already exists" -Type "WARNING"
-        }
    
-	$varadb=CheckADB
-	$env:ANDROID_SERIAL=$varadb
-
-	cd "$VARCD\rootAVD-master"
-	Write-Message  -Message  "Running installing magisk via rootAVD to ramdisk.img" -Type "INFO"
-	Start-Process -FilePath "$VARCD\rootAVD-master\rootAVD.bat" -ArgumentList  "system-images\android-31\google_apis_playstore\x86_64\ramdisk.img FAKEBOOTIMG " -WorkingDirectory "$VARCD\rootAVD-master\"  -NoNewWindow
-
-    Write-Message  -Message  "rootAVD Finished if the emulator did not close/poweroff try again" -Type "INFO"
-	Write-Message  -Message  "#######################################################################################" -Type "WARNING"
-	Write-Message  -Message  "# YOU MUST CLICK MAGISK AND INSTALL VIA PATCH IN THE DOWNLOADS FOLDER ON THE EMULATOR #" -Type "WARNING"
-	Write-Message  -Message  "#######################################################################################" -Type "WARNING"
-}
 
 ############# AVDWipeData
 Function AVDWipeData {
@@ -2320,7 +2386,8 @@ if ($Command) {
 ############# Build Buttons
 $ButtonsCol1 = @(
     @{Text="BurpSuite Community"; Action={StartBurp}},
-    @{Text="Start AVD"; Action={AVDStart}},
+    @{Text="X86 AVD"; Action={AVDStart -Arch "x86"}},
+    @{Text="X86_64 AVD"; Action={AVDStart -Arch "x86_64"}},
     @{Text="RootAVD/Install Magisk"; Action={RootAVD}},
     @{Text="Upload BURP.pem as System Cert"; Action={CertPush}},
     @{Text="Force Traffic to BURP"; Action={Startiptables}},
