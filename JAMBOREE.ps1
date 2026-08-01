@@ -7,7 +7,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 5.7'
+$Global:VerNum = 'JAMBOREE 5.8'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -718,6 +718,7 @@ $PipBatch | Out-File -Encoding Ascii -FilePath "$VARCD\python\tools\Scripts\pip.
         else {
             Write-Message  -Message  "$VARCD\python already exists" -Type "WARNING"
             }
+			FixTCLTK
 			Write-Message  -Message  "CheckPython Complete" -Type "INFO"
 }
 
@@ -2329,9 +2330,116 @@ $PipBatch | Out-File -Encoding Ascii -FilePath "$VARCD\python\tools\Scripts\pip.
 
 			
 }
-
-
 	
+############# FixTCLTK
+Function FixTCLTK {
+        # Resolve python root directory (parent of python.exe)
+    $pyRoot = "$VARCD\python\tools"
+    $pythonExe = "$pyRoot\python.exe"
+
+    if (-not (Test-Path $pythonExe)) {
+        Write-Message -Type "ERROR" -Message "Python not found at $pythonExe. Run CheckPython first."
+        return
+    }
+
+    # Extract version: e.g. "3.12.10"
+    $fullVer = (& $pythonExe --version 2>&1 | Out-String) -replace 'Python\s*', '' | ForEach-Object { $_.Trim() }
+    Write-Message -Type "INFO" -Message "Found Python: $fullVer at $pyRoot"
+
+    # Check if tkinter already works
+    & $pythonExe -c "import tkinter" >$null 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Message -Type "INFO" -Message "tkinter is already working. Nothing to do."
+        return
+    }
+
+    # Download tcltk.msi
+    $msiUrl = "https://www.python.org/ftp/python/$fullVer/amd64/tcltk.msi"
+    $msiPath = "$pyRoot\_tcltk.msi"
+    $extractDir = "$pyRoot\_tcltk_extract"
+
+    Write-Message -Type "INFO" -Message "Downloading tcltk.msi for Python $fullVer ..."
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        downloadFile "$msiUrl" "$msiPath"
+    }
+    catch {
+        Write-Message -Type "ERROR" -Message "Download failed: $($_.Exception.Message)"
+        return
+    }
+
+    if (-not (Test-Path $msiPath)) {
+        Write-Message -Type "ERROR" -Message "tcltk.msi download failed."
+        return
+    }
+
+    # Extract MSI
+    Write-Message -Type "INFO" -Message "Extracting tcltk.msi ..."
+    if (Test-Path $extractDir) { Remove-Item $extractDir -Recurse }
+
+    Start-Process -FilePath 'msiexec.exe' `
+        -ArgumentList "/a", "$msiPath", "/qn", "TARGETDIR=`"$extractDir`"" `
+        -Wait -NoNewWindow
+
+    # Copy files to the right places
+    Write-Message -Type "INFO" -Message "Installing tkinter components ..."
+    $copyCount = 0
+
+    # 1. DLLs → python root (next to python.exe)
+    $dllSrc = "$extractDir\DLLs"
+    foreach ($dll in @("_tkinter.pyd", "tcl86t.dll", "tk86t.dll")) {
+        $src = "$dllSrc\$dll"
+        if (Test-Path $src) {
+            Copy-Item $src "$pyRoot\$dll" -Force
+            Write-Message -Type "INFO" -Message "  [+] $dll -> python root"
+            $copyCount++
+        }
+    }
+
+    # zlib1.dll (optional, may exist in newer versions)
+    $zlibSrc = "$dllSrc\zlib1.dll"
+    if (Test-Path $zlibSrc) {
+        Copy-Item $zlibSrc "$pyRoot\zlib1.dll" -Force
+        Write-Message -Type "INFO" -Message "  [+] zlib1.dll -> python root"
+        $copyCount++
+    }
+
+    # 2. Lib\tkinter\ -> python\Lib\tkinter\
+    $tkLibSrc = "$extractDir\Lib\tkinter"
+    if (Test-Path $tkLibSrc) {
+        $tkLibDst = "$pyRoot\Lib\tkinter"
+        if (Test-Path $tkLibDst) { Remove-Item $tkLibDst -Recurse }
+        Copy-Item $tkLibSrc $tkLibDst -Recurse -Force
+        Write-Message -Type "INFO" -Message "  [+] Lib\tkinter\ -> python\Lib\"
+        $copyCount++
+    }
+
+    # 3. tcl/ library -> python root
+    $tclSrc = "$extractDir\tcl"
+    if (Test-Path $tclSrc) {
+        $tclDst = "$pyRoot\tcl"
+        if (Test-Path $tclDst) { Remove-Item $tclDst -Recurse }
+        Copy-Item $tclSrc $tclDst -Recurse -Force
+        Write-Message -Type "INFO" -Message "  [+] tcl/ -> python root"
+        $copyCount++
+    }
+
+    # Cleanup temp files
+    Write-Message -Type "INFO" -Message "Cleaning up ..."
+    Remove-Item $extractDir -Recurse -ErrorAction SilentlyContinue
+    Remove-Item $msiPath -ErrorAction SilentlyContinue
+
+    # Verify
+    Write-Message -Type "INFO" -Message "Verifying tkinter ..."
+    & $pythonExe -c "import tkinter" >$null 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Message -Type "INFO" -Message "tkinter is ready! ($copyCount components installed)"
+    }
+    else {
+        Write-Message -Type "WARNING" -Message "Verification failed. Check Python version compatibility."
+    }
+}
+
 ######################################################################################################################### FUNCTIONS END
 CheckVer
 Test-PathLength
