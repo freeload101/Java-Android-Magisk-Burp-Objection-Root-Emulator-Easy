@@ -1524,11 +1524,17 @@ Function CheckPyCharm {
 ############# CHECKvscode
 Function CheckVSCode {
 # for https://pi.dev/packages/pi-better-compact Sorry.. 
-$env:DP_P_INPUT="1.0"
-$env:DP_P_CACHE="0.05"
-$env:DP_P_OUT="15.0"
-$env:DP_CHECK_THRESHOLD="0.55"
-$env:DP_FORCE_THRESHOLD="0.75"
+[Environment]::SetEnvironmentVariable("DP_P_INPUT","0","User")
+[Environment]::SetEnvironmentVariable("DP_P_CACHE","0","User")
+[Environment]::SetEnvironmentVariable("DP_P_OUT","0","User")
+[Environment]::SetEnvironmentVariable("DP_S","800","User")
+[Environment]::SetEnvironmentVariable("DP_R","0.85","User")
+[Environment]::SetEnvironmentVariable("DP_BETA","0.02","User")
+[Environment]::SetEnvironmentVariable("DP_FORCE_THRESHOLD","0.75","User")
+[Environment]::SetEnvironmentVariable("DP_CHECK_THRESHOLD","0.50","User")
+[Environment]::SetEnvironmentVariable("DP_MIN_KEEP_RATIO","0.15","User")
+
+
 
 	Check7zip
 	CheckGit
