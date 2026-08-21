@@ -41,7 +41,13 @@ Quick start
 1. Download `JAMBOREE.ps1` into an empty folder, or run directly from a shell.
 2. Right-click the script and select Run with PowerShell — or run from CMD/PowerShell using the single-line installer below.
 3. Use the JAMBOREE PowerShell UI to start Burp and the AVD, then install and test target apps.
-<img width="403" height="654" alt="{FCADCDF9-30A5-4874-9728-8E26C64899B5}" src="https://github.com/user-attachments/assets/06a742ca-67c7-4860-9a76-7d1127502f05" />
+
+### Simple Powershell UI
+<img width="1554" height="676" alt="{E8BAED31-3B4C-43D9-8773-7DB063E84901}" src="https://github.com/user-attachments/assets/68265e28-29c4-43d5-be69-2c7779262935" />
+
+
+### Video
+
 
 [![Watch the demo](https://img.youtube.com/vi/XdXleap0BiM/maxresdefault.jpg)](https://youtu.be/XdXleap0BiM)
 
