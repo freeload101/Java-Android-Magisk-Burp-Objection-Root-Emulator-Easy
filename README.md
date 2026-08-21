@@ -1,4 +1,5 @@
-![image](https://github.com/freeload101/Java-Android-Magisk-Burp-Objection-Root-Emulator-Easy/assets/4307863/857a419a-9f79-4d50-9c73-1f021642aa0f)
+<img width="1380" height="752" alt="image" src="https://github.com/user-attachments/assets/3f25b5a0-5b01-4d33-88c9-726c99505d81" />
+
 
 ### Java Android Magisk Burp Objection Root Emulator Easy (JAMBOREE)
 
