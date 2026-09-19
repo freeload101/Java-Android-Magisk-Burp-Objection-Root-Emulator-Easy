@@ -182,6 +182,16 @@ $env:WSLBIN= "C:\Windows\System32\wsl.exe"
 # VS code eating my env ...
 $env:PYTHONPATH = "$VARCD\python\tools\Lib\site-packages"
 
+# for https://pi.dev/packages/pi-better-compact Sorry.. 
+# pi-better-compact updated config
+$env:DP_P_INPUT = "3.0"
+$env:DP_P_CACHE = "0.3"
+$env:DP_P_OUT = "3.0"
+$env:DP_V = "8000"
+$env:DP_S = "500"
+$env:DP_R = "0.7"
+$env:DP_BETA = "0.01"
+
 #init stuff
 Stop-process -name adb -Force -ErrorAction SilentlyContinue |Out-Null
 
@@ -1523,17 +1533,7 @@ Function CheckPyCharm {
 
 ############# CHECKvscode
 Function CheckVSCode {
-# for https://pi.dev/packages/pi-better-compact Sorry.. 
-[Environment]::SetEnvironmentVariable("DP_P_INPUT","0","User")
-[Environment]::SetEnvironmentVariable("DP_P_CACHE","0","User")
-[Environment]::SetEnvironmentVariable("DP_P_OUT","0","User")
-[Environment]::SetEnvironmentVariable("DP_S","800","User")
-[Environment]::SetEnvironmentVariable("DP_R","0.85","User")
-[Environment]::SetEnvironmentVariable("DP_BETA","0.02","User")
-[Environment]::SetEnvironmentVariable("DP_FORCE_THRESHOLD","0.75","User")
-[Environment]::SetEnvironmentVariable("DP_CHECK_THRESHOLD","0.50","User")
-[Environment]::SetEnvironmentVariable("DP_MIN_KEEP_RATIO","0.15","User")
-
+ 
 
 
 	Check7zip
