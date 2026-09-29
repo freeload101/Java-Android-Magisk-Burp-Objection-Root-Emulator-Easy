@@ -7,7 +7,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 5.8'
+$Global:VerNum = 'JAMBOREE 5.9'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -2497,6 +2497,41 @@ if ($Command) {
     }
 }
 
+
+############# CheckPIAGENT
+Function CheckPIAGENT {
+    if (-not(Test-Path -Path "$VARCD\.pi")) {
+        try {
+            Write-Message -Message "Installing Pi Coding Agent" -Type "INFO"
+            Start-Process -FilePath "$VARCD\node\npm.cmd" -WorkingDirectory "$VARCD" -ArgumentList "install -g --ignore-scripts @earendil-works/pi-coding-agent" -Wait -NoNewWindow
+
+            Write-Message -Message "Updating Pi Agent" -Type "INFO"
+            Start-Process -FilePath "$VARCD\node\pi.cmd" -WorkingDirectory "$VARCD" -ArgumentList "update" -Wait -NoNewWindow
+
+            Write-Message -Message "Installing pi-better-compact extension" -Type "INFO"
+            Start-Process -FilePath "$VARCD\node\pi.cmd" -WorkingDirectory "$VARCD" -ArgumentList "install npm:pi-better-compact" -Wait -NoNewWindow
+
+            Write-Message -Message "Installing pi-continue extension" -Type "INFO"
+            Start-Process -FilePath "$VARCD\node\pi.cmd" -WorkingDirectory "$VARCD" -ArgumentList "install npm:pi-continue" -Wait -NoNewWindow
+
+            Write-Message -Message "Updating Pi Agent extensions" -Type "INFO"
+            Start-Process -FilePath "$VARCD\node\pi.cmd" -WorkingDirectory "$VARCD" -ArgumentList "update --extensions" -Wait -NoNewWindow
+
+            Write-Message -Message "Launching Pi Agent" -Type "INFO"
+            Start-Process -FilePath "$VARCD\node\pi.cmd" -WorkingDirectory "$VARCD" -Wait  
+        }
+        catch {
+            throw $_.Exception.Message
+        }
+    }
+    else {
+            Write-Message -Message "$VARCD\.pi already Exist" -Type "WARNING"
+		    Write-Message -Message "Launching Pi Agent" -Type "INFO"
+            Start-Process -FilePath "$VARCD\node\pi.cmd" -WorkingDirectory "$VARCD" -Wait 
+    }
+}
+
+
 ############# Build Buttons
 $ButtonsCol1 = @(
     @{Text="BurpSuite Community"; Action={StartBurp}},
@@ -2523,6 +2558,8 @@ $ButtonsCol1 = @(
 )
 
 $ButtonsCol2 = @(
+
+    @{Text="PI Agent"; Action={CheckPIAGENT}},
     @{Text="SharpHound"; Action={SharpHoundRun}},
     @{Text="Neo4j"; Action={Neo4jRun}},
     @{Text="Bloodhound"; Action={BloodhoundRun}},
