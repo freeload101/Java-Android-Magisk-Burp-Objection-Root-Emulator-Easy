@@ -7,7 +7,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 5.9'
+$Global:VerNum = 'JAMBOREE 5.9.1'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -2339,7 +2339,6 @@ $PipBatch | Out-File -Encoding Ascii -FilePath "$VARCD\python\tools\Scripts\pip.
 	
 ############# FixTCLTK
 Function FixTCLTK {
-        # Resolve python root directory (parent of python.exe)
     $pyRoot = "$VARCD\python\tools"
     $pythonExe = "$pyRoot\python.exe"
 
@@ -2348,23 +2347,20 @@ Function FixTCLTK {
         return
     }
 
-    # Extract version: e.g. "3.12.10"
-    $fullVer = (& $pythonExe --version 2>&1 | Out-String) -replace 'Python\s*', '' | ForEach-Object { $_.Trim() }
+    $fullVer = (& $pythonExe --version 2>&1 | Out-String).Trim()
     Write-Message -Type "INFO" -Message "Found Python: $fullVer at $pyRoot"
 
-    # Check if tkinter already works
+    # Skip if tkinter already works
     & $pythonExe -c "import tkinter" >$null 2>$null
     if ($LASTEXITCODE -eq 0) {
-        Write-Message -Type "INFO" -Message "tkinter is already working. Nothing to do."
+        Write-Message -Type "INFO" -Message "tkinter already working — skipping."
         return
     }
 
-    # Download tcltk.msi
-    $msiUrl = "https://www.python.org/ftp/python/$fullVer/amd64/tcltk.msi"
-    $msiPath = "$pyRoot\_tcltk.msi"
+    $msiUrl   = "https://www.python.org/ftp/python/$fullVer/amd64/tcltk.msi"
+    $msiPath  = "$pyRoot\_tcltk.msi"
     $extractDir = "$pyRoot\_tcltk_extract"
 
-    Write-Message -Type "INFO" -Message "Downloading tcltk.msi for Python $fullVer ..."
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         downloadFile "$msiUrl" "$msiPath"
@@ -2379,70 +2375,51 @@ Function FixTCLTK {
         return
     }
 
-    # Extract MSI
-    Write-Message -Type "INFO" -Message "Extracting tcltk.msi ..."
+    # Extract MSI quietly
     if (Test-Path $extractDir) { Remove-Item $extractDir -Recurse }
+    $mspArgs = @()
+    $mspArgs += '/a'
+    $mspArgs += '"' + $msiPath + '"'
+    $mspArgs += '/qn'
+    $mspArgs += 'TARGETDIR="' + $extractDir + '"'
+    Start-Process msiexec.exe -ArgumentList $mspArgs -Wait -NoNewWindow
 
-    Start-Process -FilePath 'msiexec.exe' `
-        -ArgumentList "/a", "$msiPath", "/qn", "TARGETDIR=`"$extractDir`"" `
-        -Wait -NoNewWindow
+    $dllSrc   = "$extractDir\DLLs"
 
-    # Copy files to the right places
-    Write-Message -Type "INFO" -Message "Installing tkinter components ..."
-    $copyCount = 0
-
-    # 1. DLLs → python root (next to python.exe)
-    $dllSrc = "$extractDir\DLLs"
-    foreach ($dll in @("_tkinter.pyd", "tcl86t.dll", "tk86t.dll")) {
-        $src = "$dllSrc\$dll"
-        if (Test-Path $src) {
-            Copy-Item $src "$pyRoot\$dll" -Force
-            Write-Message -Type "INFO" -Message "  [+] $dll -> python root"
-            $copyCount++
-        }
+    # DLLs → python root
+    foreach ($f in '_tkinter.pyd', 'tcl86t.dll', 'tk86t.dll') {
+        $src = "$dllSrc\$f"
+        if (Test-Path $src) { Copy-Item $src "$pyRoot\$f" -Force }
+    }
+    # zlib1.dll optional
+    if (Test-Path "$dllSrc\zlib1.dll") {
+        Copy-Item "$dllSrc\zlib1.dll" "$pyRoot\zlib1.dll" -Force
     }
 
-    # zlib1.dll (optional, may exist in newer versions)
-    $zlibSrc = "$dllSrc\zlib1.dll"
-    if (Test-Path $zlibSrc) {
-        Copy-Item $zlibSrc "$pyRoot\zlib1.dll" -Force
-        Write-Message -Type "INFO" -Message "  [+] zlib1.dll -> python root"
-        $copyCount++
+    # Lib\tkinter\
+    if (Test-Path "$extractDir\Lib\tkinter") {
+        $dstTk = "$pyRoot\Lib\tkinter"
+        Remove-Item $dstTk -Recurse -ErrorAction SilentlyContinue
+        Copy-Item "$extractDir\Lib\tkinter" $dstTk -Recurse -Force
     }
 
-    # 2. Lib\tkinter\ -> python\Lib\tkinter\
-    $tkLibSrc = "$extractDir\Lib\tkinter"
-    if (Test-Path $tkLibSrc) {
-        $tkLibDst = "$pyRoot\Lib\tkinter"
-        if (Test-Path $tkLibDst) { Remove-Item $tkLibDst -Recurse }
-        Copy-Item $tkLibSrc $tkLibDst -Recurse -Force
-        Write-Message -Type "INFO" -Message "  [+] Lib\tkinter\ -> python\Lib\"
-        $copyCount++
+    # tcl/ lib
+    if (Test-Path "$extractDir\tcl") {
+        $dstTcl = "$pyRoot\tcl"
+        Remove-Item $dstTcl -Recurse -ErrorAction SilentlyContinue
+        Copy-Item "$extractDir\tcl" $dstTcl -Recurse -Force
     }
 
-    # 3. tcl/ library -> python root
-    $tclSrc = "$extractDir\tcl"
-    if (Test-Path $tclSrc) {
-        $tclDst = "$pyRoot\tcl"
-        if (Test-Path $tclDst) { Remove-Item $tclDst -Recurse }
-        Copy-Item $tclSrc $tclDst -Recurse -Force
-        Write-Message -Type "INFO" -Message "  [+] tcl/ -> python root"
-        $copyCount++
-    }
-
-    # Cleanup temp files
-    Write-Message -Type "INFO" -Message "Cleaning up ..."
+    # Cleanup
     Remove-Item $extractDir -Recurse -ErrorAction SilentlyContinue
     Remove-Item $msiPath -ErrorAction SilentlyContinue
 
     # Verify
-    Write-Message -Type "INFO" -Message "Verifying tkinter ..."
     & $pythonExe -c "import tkinter" >$null 2>$null
     if ($LASTEXITCODE -eq 0) {
-        Write-Message -Type "INFO" -Message "tkinter is ready! ($copyCount components installed)"
-    }
-    else {
-        Write-Message -Type "WARNING" -Message "Verification failed. Check Python version compatibility."
+        Write-Message -Type "INFO" -Message "tkinter installed successfully."
+    } else {
+        Write-Message -Type "WARNING" -Message "Verification failed — check Python version compatibility."
     }
 }
 
@@ -2497,41 +2474,6 @@ if ($Command) {
     }
 }
 
-
-############# CheckPIAGENT
-Function CheckPIAGENT {
-    if (-not(Test-Path -Path "$VARCD\.pi")) {
-        try {
-            Write-Message -Message "Installing Pi Coding Agent" -Type "INFO"
-            Start-Process -FilePath "$VARCD\node\npm.cmd" -WorkingDirectory "$VARCD" -ArgumentList "install -g --ignore-scripts @earendil-works/pi-coding-agent" -Wait -NoNewWindow
-
-            Write-Message -Message "Updating Pi Agent" -Type "INFO"
-            Start-Process -FilePath "$VARCD\node\pi.cmd" -WorkingDirectory "$VARCD" -ArgumentList "update" -Wait -NoNewWindow
-
-            Write-Message -Message "Installing pi-better-compact extension" -Type "INFO"
-            Start-Process -FilePath "$VARCD\node\pi.cmd" -WorkingDirectory "$VARCD" -ArgumentList "install npm:pi-better-compact" -Wait -NoNewWindow
-
-            Write-Message -Message "Installing pi-continue extension" -Type "INFO"
-            Start-Process -FilePath "$VARCD\node\pi.cmd" -WorkingDirectory "$VARCD" -ArgumentList "install npm:pi-continue" -Wait -NoNewWindow
-
-            Write-Message -Message "Updating Pi Agent extensions" -Type "INFO"
-            Start-Process -FilePath "$VARCD\node\pi.cmd" -WorkingDirectory "$VARCD" -ArgumentList "update --extensions" -Wait -NoNewWindow
-
-            Write-Message -Message "Launching Pi Agent" -Type "INFO"
-            Start-Process -FilePath "$VARCD\node\pi.cmd" -WorkingDirectory "$VARCD" -Wait  
-        }
-        catch {
-            throw $_.Exception.Message
-        }
-    }
-    else {
-            Write-Message -Message "$VARCD\.pi already Exist" -Type "WARNING"
-		    Write-Message -Message "Launching Pi Agent" -Type "INFO"
-            Start-Process -FilePath "$VARCD\node\pi.cmd" -WorkingDirectory "$VARCD" -Wait 
-    }
-}
-
-
 ############# Build Buttons
 $ButtonsCol1 = @(
     @{Text="BurpSuite Community"; Action={StartBurp}},
@@ -2558,8 +2500,6 @@ $ButtonsCol1 = @(
 )
 
 $ButtonsCol2 = @(
-
-    @{Text="PI Agent"; Action={CheckPIAGENT}},
     @{Text="SharpHound"; Action={SharpHoundRun}},
     @{Text="Neo4j"; Action={Neo4jRun}},
     @{Text="Bloodhound"; Action={BloodhoundRun}},
