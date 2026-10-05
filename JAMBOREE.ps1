@@ -7,7 +7,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 5.9.1'
+$Global:VerNum = 'JAMBOREE 5.9.2'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -2353,7 +2353,7 @@ Function FixTCLTK {
     # Skip if tkinter already works
     & $pythonExe -c "import tkinter" >$null 2>$null
     if ($LASTEXITCODE -eq 0) {
-        Write-Message -Type "INFO" -Message "tkinter already working — skipping."
+        Write-Message -Type "INFO" -Message "tkinter already working -- skipping."
         return
     }
 
@@ -2419,7 +2419,7 @@ Function FixTCLTK {
     if ($LASTEXITCODE -eq 0) {
         Write-Message -Type "INFO" -Message "tkinter installed successfully."
     } else {
-        Write-Message -Type "WARNING" -Message "Verification failed — check Python version compatibility."
+        Write-Message -Type "WARNING" -Message "Verification failed -- check Python version compatibility."
     }
 }
 
