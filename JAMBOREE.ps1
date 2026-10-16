@@ -7,7 +7,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 5.9.1'
+$Global:VerNum = 'JAMBOREE 5.9.2'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -2423,6 +2423,73 @@ Function FixTCLTK {
     }
 }
 
+ 
+############# CheckPIAGENT
+Function CheckPIAGENT {
+    $npm = "$VARCD\node\npm.cmd"
+    $pi  = "$VARCD\node\pi.cmd"
+
+    try {
+        if (-not (Test-Path -Path "$VARCD\.pi")) {
+            $steps = @(
+                @{ Msg = "Installing Pi Coding Agent";             Exe = $npm; Args = "install -g --ignore-scripts @earendil-works/pi-coding-agent" },
+                @{ Msg = "Installing pi-better-compact extension"; Exe = $pi;  Args = "install npm:pi-better-compact" },
+                @{ Msg = "Installing pi-continue extension";       Exe = $pi;  Args = "install npm:pi-continue" },
+                @{ Msg = "Updating Pi Agent extensions";           Exe = $pi;  Args = "update --extensions" }
+            )
+
+            foreach ($s in $steps) {
+                Write-Message -Message $s.Msg -Type "INFO"
+                $p = Start-Process -FilePath $s.Exe -WorkingDirectory $VARCD -ArgumentList $s.Args -Wait -NoNewWindow -PassThru
+                if ($p.ExitCode -ne 0) { throw "$($s.Msg) failed (exit code $($p.ExitCode))" }
+            }
+        }
+        else {
+            Write-Message -Message "$VARCD\.pi already exists" -Type "WARNING"
+        }
+
+        Write-Message -Message "Launching Pi Agent" -Type "INFO"
+        Start-Process -FilePath $pi -WorkingDirectory $VARCD -Wait
+    }
+    catch {
+        throw $_.Exception.Message
+    }
+	
+# 1. Build the target path and create the folder tree
+$targetDir  = Join-Path -Path $VARCD -ChildPath '.pi\agent'
+$targetFile = Join-Path -Path $targetDir -ChildPath 'models.json'
+
+if (-not (Test-Path -LiteralPath $targetDir)) {
+    New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+    Write-Host "Created directory: $targetDir"
+}
+
+# 2. The JSON payload (single-quoted here-string, so $schema is NOT expanded)
+$json = @'
+{
+  "$schema": "https://pi.dev/schemas/models.schema.json",
+  "providers": {
+    "lmstudio": {
+      "baseUrl": "http://localhost:1234/v1",
+      "api": "openai-completions",
+      "apiKey": "lm-studio",
+      "models": [
+        {
+          "id": "smollm2-135m-instruct",
+          "name": "SmolLM2 135M Instruct (LM Studio)"
+        }
+      ]
+    }
+  }
+}
+'@
+
+# 3. Write it as UTF-8 WITHOUT a BOM
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($targetFile, $json, $utf8NoBom)
+
+}
+
 ######################################################################################################################### FUNCTIONS END
 CheckVer
 Test-PathLength
@@ -2463,7 +2530,7 @@ if ($Command) {
             $cmd = Get-Command $Command -ErrorAction SilentlyContinue | Select-Object -First 1
             if ($cmd) {
                 Write-Message -Type "INFO" -Message "Executing command: $($cmd.Name)"
-                Start-Process -FilePath $cmd.Source -WorkingDirectory "$VARCD" -ErrorAction SilentlyContinue
+                Start-Process -FilePath $cmd.Source -WorkingDirectory "$VARCD" -ErrorAction SilentlyContinue 
                 $foundFile = $true
             }
         }
@@ -2504,6 +2571,7 @@ $ButtonsCol2 = @(
     @{Text="Neo4j"; Action={Neo4jRun}},
     @{Text="Bloodhound"; Action={BloodhoundRun}},
     @{Text="LM Studio"; Action={CheckLMStudio}},
+	@{Text="PI Agent"; Action={CheckPIAGENT}},
     @{Text="PyCharm"; Action={CheckPyCharm}},
     @{Text="DL Old Python"; Action={Get-PythonNuGet -DownloadPath "$VARCD\python"}},
     @{Text="VS Code"; Action={CheckVSCode}},
