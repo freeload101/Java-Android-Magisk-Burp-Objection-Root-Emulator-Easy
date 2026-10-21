@@ -7,7 +7,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 5.9.2'
+$Global:VerNum = 'JAMBOREE 5.9.3'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -1056,8 +1056,7 @@ Function CheckBurp {
 Write-Message  -Message  "Creating folders for custom CloudFlare bypass and ZAP support" -Type "INFO"
 New-Item -Path "$env:USERPROFILE\AppData\Roaming\BurpSuite\ConfigLibrary\" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
 CheckJava
-BurpConfigPush
-BurpConfigProxy
+
    if (-not(Test-Path -Path "$VARCD\burpsuite_community.jar" )) {
         try {
             Write-Message  -Message  "Downloading Burpsuite Community" -Type "INFO"
@@ -1070,6 +1069,9 @@ BurpConfigProxy
         else {
             Write-Message  -Message  "$VARCD\Burpsuite already exists" -Type "WARNING"
             }
+BurpConfigPush
+BurpConfigProxy
+
 }
 
 ############# CheckBurpPro
@@ -1092,14 +1094,12 @@ Function CheckBurpPro {
     }
 Write-Message  -Message  "Creating folders for custom CloudFlare bypass and ZAP support" -Type "INFO"
 New-Item -Path "$env:USERPROFILE\AppData\Roaming\BurpSuite\ConfigLibrary\" -ItemType Directory  -ErrorAction SilentlyContinue |Out-Null
-CheckJava
-BurpConfigPush
-BurpConfigProxy
+
     if (-not(Test-Path -Path "$VARCD\burpsuite_pro.jar" )) {
         try {
             Write-Message  -Message  "Downloading Burpsuite Pro" -Type "INFO"
 	    # don't need this I don't think $downloadUri = (Invoke-RestMethod -Method GET -Uri "https://portswigger.net/burp/releases/community/latest")  -split '<li><a download="release" href=' -match '.*startdownload.*pro.*type=jar.*' | ForEach-Object {$_ -ireplace '\/burp\/releases','https://portswigger.net/burp/releases' -ireplace '>.*','' } | select -first 1
-            downloadFile "https://portswigger.net/burp/releases/startdownload?product=pro&amp;type=jar" "$VARCD\burpsuite_pro.jar"
+            downloadFile "https://portswigger.net/burp/releases/startdownload?product=pro&type=jar" "$VARCD\burpsuite_pro.jar"
 	    }
                 catch {
                     throw $_.Exception.Message
@@ -1108,7 +1108,10 @@ BurpConfigProxy
         else {
             Write-Message  -Message  "$VARCD\Burpsuite Pro already exists" -Type "WARNING"
             }
-SecListsCheck			
+CheckJava
+BurpConfigPush
+BurpConfigProxy
+SecListsCheck
 }
 
 ############# StartBurp
@@ -1133,7 +1136,7 @@ Function StartBurpSocks {
 
 ############# StartBurpPro
 Function StartBurpPro {
-    CheckBurp
+    CheckBurpPro
 	Write-Message  -Message  "Setting $env:USERPROFILE back to $USERPROFILE_BACKUP to fix open dialog for Burp Suite" -Type "INFO"
 	$env:USERPROFILE="$USERPROFILE_BACKUP"
 	$BurpProLatest = Get-ChildItem -Force -Recurse -File -Path "$VARCD" -Depth 0 -Filter *pro*.jar -ErrorAction SilentlyContinue | Sort-Object LastwriteTime -Descending | select -first 1
