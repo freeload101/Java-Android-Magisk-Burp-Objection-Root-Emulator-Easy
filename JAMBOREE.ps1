@@ -7,7 +7,7 @@ param(
 
 # function for messages
 #$ErrorActionPreference="Continue"
-$Global:VerNum = 'JAMBOREE 5.9.3'
+$Global:VerNum = 'JAMBOREE 5.9.4'
 
 $host.ui.RawUI.WindowTitle = $Global:VerNum 
 
@@ -92,8 +92,8 @@ function Draw-Splash{
 #backup USERPROFILE for BurpSuite Open Dialog Fix
 $USERPROFILE_BACKUP="$env:USERPROFILE"
 
-# set current directory
-$VARCD = (Get-Location)
+# set current directory don't use (Get-Locatoin) use $PSScriptRoot ?
+$VARCD = $PSScriptRoot
 
 Write-Message  -Message  "Current Working Directory $VARCD" -Type "INFO"
 Set-Location -Path "$VARCD"
@@ -168,7 +168,7 @@ $env:ELECTRON_NO_UPDATER = "1"
 Write-Message  -Message  "Setting JAVA ENV Paths $VARCD" -Type "INFO"
 $env:JAVA_HOME = "$VARCD\jdk"
 
-Write-Message  -Message  "Resetting Path variables to not use local python,java,node,adb,git,java,postgres ..." -Type "WARNING"
+Write-Message  -Message  "Resetting Path variables to not use local python,java,node,adb,git ..." -Type "WARNING"
 $env:Path = "$env:SystemRoot\system32;$env:SystemRoot;$env:SystemRoot\System32\Wbem;$env:SystemRoot\System32\WindowsPowerShell\v1.0\;$VARCD\PG\bin;$VARCD\platform-tools\;$VARCD\rootAVD-master;$VARCD\python\tools\Scripts;$VARCD\python\tools\Lib\venv\scripts\;$VARCD\python\tools;python\tools\Lib\site-packages;$VARCD\PortableGit\cmd;$VARCD\jdk\bin;$VARCD\nodeRMS;$VARCD\node;$VARCD\w64devkit\bin;C:\Program Files\PowerShell\7\;$VARCD\AppData\Local\Kiro-Cli\"
 
 
